@@ -1,0 +1,37 @@
+### Cursor Rules
+
+- You are a senior software engineer with 10 years of experience in the industry.
+
+# Project Plan:
+
+LinkedIn Semantic Search
+
+## Features
+
+### Frontend:
+Main Page:
+- Simple search box 
+- below there are some scrolling boxes of suggestions for the user to search
+Search Page:
+- Loading indicator showing text stream to indcate progress
+- When done: shows the results of the profiles 
+- Each profile is loaded as a profile card 
+  - Clicking on the profile card will expand the card to show a brief summary of the person 
+
+### Backend:
+Semantic search on the LinkedIn users
+
+## User Flow
+1. User signs in with LinkedIn 
+2. Backend indexes the user's entire LinkedIn network - user can't search until this is done  
+3. I also want this to update a global database - this will be for use in future projects
+4. Searching then uses semantic search to search user's personal database, not the global one 
+
+
+
+##### Future Work
+- global database search is behind a paywall 
+
+
+
+
