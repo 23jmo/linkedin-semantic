@@ -3,5 +3,8 @@
     "@auth/supabase-adapter": "^1.8.0",
     "@supabase/supabase-js": "^2.49.1",
     "next-auth": "^4.24.11"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9"
   }
 }
