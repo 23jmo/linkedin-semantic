@@ -29,9 +29,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // This callback is called after a user is successfully authenticated
     async signIn({ user, account, profile, email, credentials }) {
       console.log("signIn", user, account, profile, email, credentials);
-      // Check if the user already exists in the database
-
-      // If not, create a new user
+      if (account?.provider === "linkedin") {
+        // Check if the user already exists in the database
+        // If not, create a new user
+      }
 
       return true;
     },

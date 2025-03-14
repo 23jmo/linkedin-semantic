@@ -7,84 +7,24 @@ from app.services.profiles import create_profile, get_profile, get_profiles, upd
 
 router = APIRouter()
 
-@router.post("/", response_model=ProfileResponse, status_code=status.HTTP_201_CREATED)
-async def create_profile_endpoint(
-    profile: ProfileCreate,
-    current_user = Depends(get_current_user)
+@router.post("/check-user-exists", response_model=dict, status_code=status.HTTP_200_OK)
+async def check_user_exists(
+    profile_data: ProfileCreate,
+    bearer_token: str = Depends(get_current_user)
 ):
-    """
-    Create a new LinkedIn profile
-    """
-    return create_profile(profile, current_user)
+    return await check_user_exists_service(profile_data, bearer_token)
 
-@router.get("/", response_model=List[ProfileResponse])
-async def get_profiles_endpoint(
-    skip: int = 0,
-    limit: int = 100,
-    current_user = Depends(get_current_user)
+@router.post("/create-user")
+async def create_user(
+    profile_data: ProfileCreate,
+    bearer_token: str = Depends(get_current_user)
 ):
-    """
-    Get all LinkedIn profiles for the current user
-    """
-    return get_profiles(skip, limit, current_user)
+    return await create_user_service(profile_data, bearer_token)
 
-@router.get("/{profile_id}", response_model=ProfileResponse)
-async def get_profile_endpoint(
-    profile_id: str,
-    current_user = Depends(get_current_user)
-):
-    """
-    Get a specific LinkedIn profile by ID
-    """
-    profile = get_profile(profile_id, current_user)
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found"
-        )
-    return profile
 
-@router.put("/{profile_id}", response_model=ProfileResponse)
-async def update_profile_endpoint(
-    profile_id: str,
-    profile: ProfileUpdate,
-    current_user = Depends(get_current_user)
-):
-    """
-    Update a LinkedIn profile
-    """
-    updated_profile = update_profile(profile_id, profile, current_user)
-    if not updated_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found"
-        )
-    return updated_profile
+async def check_user_exists_service(profile_data: ProfileCreate, bearer_token: str):
+    
 
-@router.delete("/{profile_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_profile_endpoint(
-    profile_id: str,
-    current_user = Depends(get_current_user)
-):
-    """
-    Delete a LinkedIn profile
-    """
-    success = delete_profile(profile_id, current_user)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found"
-        )
-    return None
+async def create_user_service(profile_data: ProfileCreate, bearer_token: str):
+    return await create_user(profile_data, bearer_token)
 
-@router.post("/index", status_code=status.HTTP_202_ACCEPTED)
-async def index_profiles(
-    current_user = Depends(get_current_user)
-):
-    """
-    Index all LinkedIn profiles for the current user
-    This is an asynchronous operation that will run in the background
-    """
-    # This would trigger the background task to index profiles
-    # For now, return a placeholder
-    return {"message": "Profile indexing started"} 
