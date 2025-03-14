@@ -3,7 +3,6 @@ from typing import List
 
 import pydantic
 from app.schemas.profiles import ProfileExistsRequest, ProfileExistsResponse, ProfileCreateRequest, ProfileCreateResponse, Profile
-from app.services.auth import get_current_user
 from app.services.embeddings import generate_embedding
 import app.services.supabase as supabase
 import uuid
@@ -14,7 +13,7 @@ router = APIRouter()
 @router.post("/check-user-exists", response_model=dict, status_code=status.HTTP_200_OK)
 async def check_user_exists(
     profile_data: ProfileExistsRequest,
-    bearer_token: str = Depends(get_current_user)
+    bearer_token: str = Depends(lambda request: request.headers.get("Authorization").replace("Bearer ", ""))
 ):
     print(f"{check_user_exists} profile_data: {profile_data}, bearer_token: {bearer_token}")
     return await check_user_exists_service(profile_data, bearer_token)
@@ -22,7 +21,7 @@ async def check_user_exists(
 @router.post("/create-user")
 async def create_user(
     profile_data: ProfileCreateRequest,
-    bearer_token: str = Depends(get_current_user)
+    bearer_token: str = Depends(lambda request: request.headers.get("Authorization").replace("Bearer ", ""))
 ):
     print(f"{create_user} profile_data: {profile_data}, bearer_token: {bearer_token}")
     return await create_user_service(profile_data, bearer_token)
