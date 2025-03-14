@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import SearchBox from "@/components/SearchBox";
 import SuggestionBox from "@/components/SuggestionBox";
-import Header from "@/components/Header";
+import Layout from "@/components/Layout";
 import AuthPrompt from "@/components/AuthPrompt";
 
 export default async function Home() {
@@ -23,58 +23,51 @@ export default async function Home() {
     {
       title: "By Skill",
       items: [
+        "People with React.js experience",
         "Machine Learning experts",
-        "React developers",
-        "People with leadership experience",
-        "Public speaking skills",
-        "Project management certified",
+        "Project Management professionals",
+        "Public Speaking skills",
+        "Leadership experience in startups",
       ],
     },
     {
       title: "By Company",
       items: [
-        "Ex-Google employees",
-        "People who worked at startups",
-        "Microsoft alumni",
-        "Amazon employees",
+        "Former Google employees",
+        "People who worked at Microsoft",
+        "Amazon alumni in product roles",
         "Facebook engineers",
+        "Apple designers",
       ],
     },
   ];
 
   return (
-    <>
-      <Header />
-      <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
-        <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm">
-          <h1 className="text-4xl font-bold text-center mb-8">
-            LinkedIn Semantic Search
+    <Layout>
+      <div className="py-8">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800 dark:text-gray-200">
+            Search Your LinkedIn Network
           </h1>
-
-          <div className="mb-12 w-full">
-            {session ? <SearchBox /> : <AuthPrompt />}
+          <div className="mb-8">
+            <SearchBox />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {suggestions.map((suggestion, index) => (
-              <SuggestionBox
-                key={index}
-                title={suggestion.title}
-                items={suggestion.items}
-              />
-            ))}
-          </div>
-
-          {!isAuthenticated && (
-            <div className="mt-12 text-center text-gray-600">
-              <p>
-                Sign in to unlock the full power of semantic search on your
-                LinkedIn network
-              </p>
+          {isAuthenticated ? (
+            <div className="space-y-8 mt-8">
+              {suggestions.map((group, index) => (
+                <SuggestionBox
+                  key={index}
+                  title={group.title}
+                  items={group.items}
+                />
+              ))}
             </div>
+          ) : (
+            <AuthPrompt />
           )}
         </div>
-      </main>
-    </>
+      </div>
+    </Layout>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useRef, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaTimes } from "react-icons/fa";
+import { useTheme } from "@/lib/theme-context";
 
 interface SearchBoxProps {
   initialQuery?: string;
@@ -11,6 +12,15 @@ interface SearchBoxProps {
 export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    if (initialQuery !== query) {
+      setQuery(initialQuery);
+    }
+  }, [initialQuery]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -19,26 +29,51 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
     }
   };
 
+  const clearSearch = () => {
+    setQuery("");
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full"
-    >
-      <div className="relative">
+    <div className="w-full max-w-3xl mx-auto">
+      <form
+        onSubmit={handleSubmit}
+        className="relative"
+      >
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for people by skills, experience, or company..."
-          className="w-full p-4 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder="Search your professional network..."
+          className={`w-full py-4 px-12 text-lg rounded-full shadow-md focus:outline-none focus:ring-2 ${
+            resolvedTheme === "light"
+              ? "bg-white text-gray-800 focus:ring-blue-400 border-gray-200"
+              : "bg-gray-800 text-gray-200 focus:ring-blue-600 border-gray-700"
+          } border`}
         />
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center">
+          <FaSearch
+            className={
+              resolvedTheme === "light" ? "text-gray-400" : "text-gray-500"
+            }
+          />
+        </div>
         <button
           type="submit"
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-600"
+          className={`absolute inset-y-0 right-0 px-6 flex items-center ${
+            resolvedTheme === "light"
+              ? "text-blue-600 hover:text-blue-800"
+              : "text-blue-400 hover:text-blue-300"
+          } font-medium transition-colors`}
         >
-          <FaSearch size={20} />
+          Search
         </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

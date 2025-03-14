@@ -1,55 +1,58 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { FaSpinner } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { FaSpinner } from "react-icons/fa";
+import { useTheme } from "@/lib/theme-context";
 
-interface LoadingIndicatorProps {
-  messages: string[];
-}
+const loadingMessages = [
+  "Searching your professional network...",
+  "Analyzing connections...",
+  "Finding the most relevant profiles...",
+  "Matching skills and experiences...",
+  "Preparing results...",
+];
 
-export default function LoadingIndicator({ messages }: LoadingIndicatorProps) {
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [displayedMessages, setDisplayedMessages] = useState<string[]>([]);
-  
+export default function LoadingIndicator() {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const { resolvedTheme } = useTheme();
+
   useEffect(() => {
-    // Add the latest message to the displayed messages
-    if (messages.length > displayedMessages.length) {
-      setDisplayedMessages(messages);
-    }
-    
-    // Cycle through messages for the current message indicator
     const interval = setInterval(() => {
-      setCurrentMessageIndex(prev => (prev + 1) % messages.length);
-    }, 2000);
-    
+      setMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
+    }, 3000);
+
     return () => clearInterval(interval);
-  }, [messages, displayedMessages.length]);
-  
+  }, []);
+
   return (
-    <div className="w-full bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-center mb-6">
-        <FaSpinner className="animate-spin text-blue-600 mr-3" size={24} />
-        <h2 className="text-xl font-semibold">Searching...</h2>
-      </div>
-      
-      <div className="space-y-4">
-        {displayedMessages.map((message, index) => (
-          <div 
-            key={index} 
-            className={`flex items-start ${index === currentMessageIndex ? 'text-blue-600 font-medium' : 'text-gray-600'}`}
-          >
-            <span className="mr-2">•</span>
-            <p>{message}</p>
-          </div>
-        ))}
-      </div>
-      
-      <div className="mt-6 w-full bg-gray-200 rounded-full h-2.5">
-        <div 
-          className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
-          style={{ width: `${Math.min(100, (displayedMessages.length / 10) * 100)}%` }}
-        ></div>
+    <div
+      className={`${
+        resolvedTheme === "light"
+          ? "bg-white border-gray-200"
+          : "bg-gray-800 border-gray-700"
+      } w-full max-w-3xl mx-auto p-8 rounded-lg shadow-md text-center border`}
+    >
+      <div className="flex flex-col items-center justify-center">
+        <FaSpinner
+          className={`${
+            resolvedTheme === "light" ? "text-blue-600" : "text-blue-400"
+          } text-4xl animate-spin mb-4`}
+        />
+        <h2
+          className={`text-xl font-bold mb-2 ${
+            resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
+          }`}
+        >
+          {loadingMessages[messageIndex]}
+        </h2>
+        <p
+          className={`${
+            resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
+          }`}
+        >
+          This may take a moment...
+        </p>
       </div>
     </div>
   );
-} 
+}

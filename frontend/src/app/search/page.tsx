@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import SearchBox from "@/components/SearchBox";
 import ProfileCard from "@/components/ProfileCard";
 import LoadingIndicator from "@/components/LoadingIndicator";
-import Header from "@/components/Header";
+import Layout from "@/components/Layout";
 import UnauthenticatedSearchWarning from "@/components/UnauthenticatedSearchWarning";
 
 interface Profile {
@@ -24,131 +24,168 @@ interface Profile {
 }
 
 export default function SearchPage() {
-  const { status } = useSession();
-  const isAuthenticated = status === "authenticated";
   const searchParams = useSearchParams();
-  const query = searchParams.get("q") || "";
-
-  const [loading, setLoading] = useState(true);
-  const [searchResults, setSearchResults] = useState<Profile[]>([]);
-  const [searchStream, setSearchStream] = useState<string[]>([
-    "Searching for profiles matching your query...",
-    "Analyzing semantic meaning...",
-    "Retrieving relevant profiles...",
-  ]);
+  const { data: session, status } = useSession();
+  const [query, setQuery] = useState<string>("");
+  const [results, setResults] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!query || !isAuthenticated) return;
+    const q = searchParams.get("q");
+    if (q) {
+      setQuery(q);
+      if (status === "authenticated") {
+        performSearch(q);
+      }
+    }
+  }, [searchParams, status]);
 
-    // Reset state
+  const performSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
+
     setLoading(true);
-    setSearchResults([]);
+    setError(null);
 
-    // Simulate loading with stream of text
-    const streamInterval = setInterval(() => {
-      setSearchStream((prev) => [
-        ...prev,
-        `Found ${Math.floor(Math.random() * 5) + 1} potential matches...`,
-      ]);
-    }, 1000);
+    try {
+      // Mock API call - replace with actual API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // Simulate API call
-    setTimeout(() => {
-      clearInterval(streamInterval);
-
-      // Mock data
-      const mockResults: Profile[] = [
+      // Mock data for demonstration
+      const mockProfiles: Profile[] = [
         {
           id: "1",
           linkedin_id: "john-doe",
           name: "John Doe",
-          headline: "Software Engineer at Google",
+          headline: "Senior Software Engineer at Tech Company",
           summary:
-            "Experienced software engineer with a focus on AI and machine learning.",
+            "Experienced software engineer with a passion for building scalable applications. Over 8 years of experience in full-stack development with a focus on React, Node.js, and cloud technologies.",
           location: "San Francisco, CA",
-          industry: "Technology",
+          industry: "Information Technology",
           profile_url: "https://linkedin.com/in/john-doe",
           profile_image_url: "https://randomuser.me/api/portraits/men/1.jpg",
-          score: 0.95,
-          highlights: ["AI experience", "Machine learning", "Google"],
+          score: 0.92,
+          highlights: ["React", "Node.js", "Cloud Technologies"],
         },
         {
           id: "2",
           linkedin_id: "jane-smith",
           name: "Jane Smith",
-          headline: "Product Manager at Microsoft",
-          summary: "Product leader with experience in enterprise software.",
-          location: "Seattle, WA",
-          industry: "Technology",
+          headline: "Product Manager | AI Enthusiast",
+          summary:
+            "Product leader with experience in AI and machine learning products. Passionate about creating user-centric solutions that leverage cutting-edge technology.",
+          location: "New York, NY",
+          industry: "Artificial Intelligence",
           profile_url: "https://linkedin.com/in/jane-smith",
           profile_image_url: "https://randomuser.me/api/portraits/women/2.jpg",
           score: 0.85,
-          highlights: [
-            "Product management",
-            "Enterprise software",
-            "Microsoft",
-          ],
+          highlights: ["Product Management", "AI", "Machine Learning"],
         },
         {
           id: "3",
-          linkedin_id: "bob-johnson",
-          name: "Bob Johnson",
-          headline: "Data Scientist at Amazon",
+          linkedin_id: "alex-johnson",
+          name: "Alex Johnson",
+          headline: "UX Designer at Design Studio",
           summary:
-            "Data scientist with expertise in machine learning and big data.",
-          location: "New York, NY",
-          industry: "Technology",
-          profile_url: "https://linkedin.com/in/bob-johnson",
+            "Creative UX designer focused on creating beautiful and functional user experiences. Skilled in user research, wireframing, and prototyping.",
+          location: "Seattle, WA",
+          industry: "Design",
+          profile_url: "https://linkedin.com/in/alex-johnson",
           profile_image_url: "https://randomuser.me/api/portraits/men/3.jpg",
-          score: 0.75,
-          highlights: ["Data science", "Machine learning", "Amazon"],
+          score: 0.78,
+          highlights: ["UX Design", "User Research", "Prototyping"],
+        },
+        {
+          id: "4",
+          linkedin_id: "sarah-williams",
+          name: "Sarah Williams",
+          headline: "Data Scientist | Python Expert",
+          summary:
+            "Data scientist with a strong background in statistics and machine learning. Experienced in Python, R, and SQL for data analysis and model building.",
+          location: "Boston, MA",
+          industry: "Data Science",
+          profile_url: "https://linkedin.com/in/sarah-williams",
+          profile_image_url: "https://randomuser.me/api/portraits/women/4.jpg",
+          score: 0.72,
+          highlights: ["Python", "Machine Learning", "Data Analysis"],
+        },
+        {
+          id: "5",
+          linkedin_id: "michael-brown",
+          name: "Michael Brown",
+          headline: "Marketing Director at Health Tech",
+          summary:
+            "Marketing professional specializing in healthcare technology. Experienced in digital marketing, content strategy, and brand development.",
+          location: "Chicago, IL",
+          industry: "Healthcare",
+          profile_url: "https://linkedin.com/in/michael-brown",
+          profile_image_url: "https://randomuser.me/api/portraits/men/5.jpg",
+          score: 0.65,
+          highlights: ["Healthcare Marketing", "Digital Strategy", "Branding"],
         },
       ];
 
-      setSearchResults(mockResults);
+      setResults(mockProfiles);
+    } catch (err) {
+      console.error("Search error:", err);
+      setError("An error occurred while searching. Please try again.");
+    } finally {
       setLoading(false);
-    }, 5000);
-
-    return () => clearInterval(streamInterval);
-  }, [query, isAuthenticated]);
+    }
+  };
 
   return (
-    <>
-      <Header />
-      <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
-        <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm">
-          <h1 className="text-4xl font-bold text-center mb-8">
-            LinkedIn Semantic Search
-          </h1>
+    <Layout>
+      <div className="py-6">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6">Search Results</h1>
 
-          <div className="mb-12 w-full">
+          <div className="mb-8">
             <SearchBox initialQuery={query} />
           </div>
 
-          {!isAuthenticated ? (
+          {status === "unauthenticated" ? (
             <UnauthenticatedSearchWarning />
-          ) : loading ? (
-            <LoadingIndicator messages={searchStream} />
           ) : (
-            <div className="w-full">
-              <h2 className="text-2xl font-semibold mb-4">Search Results</h2>
-              <p className="mb-6">
-                Found {searchResults.length} profiles matching &quot;{query}
-                &quot;
-              </p>
-
-              <div className="space-y-6">
-                {searchResults.map((profile) => (
-                  <ProfileCard
-                    key={profile.id}
-                    profile={profile}
-                  />
-                ))}
-              </div>
-            </div>
+            <>
+              {loading ? (
+                <LoadingIndicator />
+              ) : error ? (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                  {error}
+                </div>
+              ) : (
+                <>
+                  {results.length > 0 ? (
+                    <div className="space-y-6">
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Found {results.length} results for "{query}"
+                      </p>
+                      {results.map((profile) => (
+                        <ProfileCard
+                          key={profile.id}
+                          profile={profile}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    query && (
+                      <div className="text-center py-12">
+                        <p className="text-gray-600 dark:text-gray-400 mb-2">
+                          No results found for "{query}"
+                        </p>
+                        <p className="text-gray-500 dark:text-gray-500">
+                          Try a different search term or broaden your query
+                        </p>
+                      </div>
+                    )
+                  )}
+                </>
+              )}
+            </>
           )}
         </div>
-      </main>
-    </>
+      </div>
+    </Layout>
   );
 }
