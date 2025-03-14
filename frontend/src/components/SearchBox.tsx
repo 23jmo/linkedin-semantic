@@ -49,8 +49,8 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Search your professional network..."
-          className={`w-full py-4 px-12 text-lg rounded-full shadow-md focus:outline-none focus:ring-2 ${
+          placeholder="Search your network with natural language"
+          className={`w-full py-4 px-12 text-lg rounded-xl shadow-sm focus:outline-none focus:ring-2 ${
             resolvedTheme === "light"
               ? "bg-white text-gray-800 focus:ring-blue-400 border-gray-200"
               : "bg-gray-800 text-gray-200 focus:ring-blue-600 border-gray-700"

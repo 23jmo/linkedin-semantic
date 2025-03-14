@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import LinkedIn from "next-auth/providers/linkedin";
+import { SupabaseAdapter } from "@auth/supabase-adapter";
 
 // Configure NextAuth with proper callback handling
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -25,6 +26,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // Add callbacks to handle redirects and session management
   callbacks: {
     // This callback is called after a user is successfully authenticated
+    async signIn({ user, account, profile, email, credentials }) {
+      console.log("signIn", user, account, profile, email, credentials);
+      // Check if the user already exists in the database
+
+      // If not, create a new user
+
+      return true;
+    },
     // It controls where the user is redirected after sign in
     async redirect({ url, baseUrl }) {
       // If the URL is relative, prepend the base URL
@@ -40,10 +49,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     // This callback is called whenever a session is checked
     // You can use it to customize the session object
-    async session({ session, token }) {
+    async session({ session, user }) {
       // Add the user ID to the session
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
+      if (session.user) {
+        session.user.id = user.id;
       }
       return session;
     },
@@ -61,6 +70,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
   },
+  adapter: SupabaseAdapter({
+    url: process.env.SUPABASE_URL!,
+    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  }),
   pages: {
     // Customize the sign-in page URL
     signIn: "/",

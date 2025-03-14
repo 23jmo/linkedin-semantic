@@ -65,24 +65,26 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center justify-center space-x-8">
             <Link
               href="/"
-              className="flex-shrink-0 flex items-center"
+              className="flex items-center justify-center"
             >
-              <FaLinkedin
-                className={`h-8 w-8 ${
+              <p
+                className={`h-8 w-8 flex items-center justify-center font-bold text-xl ${
                   resolvedTheme === "dark"
                     ? "text-[#0077b5]/90"
                     : "text-[#0077b5]"
                 }`}
-              />
+              >
+                LSS
+              </p>
               <h1
                 className={`ml-2 text-xl font-bold ${
                   resolvedTheme === "light" ? "text-gray-900" : "text-white"
                 } hidden md:block`}
               >
-                LinkedIn Semantic Search
+                Semantic Search
               </h1>
             </Link>
           </div>

@@ -23,7 +23,7 @@ export default function HomeContent({
     <div className="py-8">
       <div className="max-w-3xl mx-auto">
         <h1
-          className={`text-3xl font-bold mb-6 text-center ${
+          className={`text-3xl font-bold mb-8 pt-16 pb-8 text-center ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
         >

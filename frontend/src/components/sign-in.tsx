@@ -4,7 +4,10 @@ import { FaLinkedin } from "react-icons/fa";
 import { signIn } from "next-auth/react";
 import { useTheme } from "@/lib/theme-context";
 
-export default function SignIn() {
+/**
+ * @param className - Additional classes for positioning/spacing the button
+ */
+export default function SignIn({ className }: { className?: string }) {
   const { resolvedTheme } = useTheme();
 
   const handleSignIn = async () => {
@@ -14,7 +17,9 @@ export default function SignIn() {
   return (
     <button
       onClick={handleSignIn}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-md text-white ${
+      className={`${
+        className || ""
+      } flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-white ${
         resolvedTheme === "light"
           ? "bg-[#0077b5] hover:bg-[#0066a1]"
           : "bg-[#0077b5]/90 hover:bg-[#0077b5]"
