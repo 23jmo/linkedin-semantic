@@ -1,0 +1,14 @@
+2025-03-14 15:57:14,516 - __main__ - INFO - Starting LinkedIn Semantic Search API
+2025-03-14 15:57:14,517 - __main__ - INFO - Configuring CORS for frontend URL: http://localhost:3000
+2025-03-14 15:57:14,517 - __main__ - INFO - Including API routers
+2025-03-14 15:57:14,519 - __main__ - INFO - Starting uvicorn server
+2025-03-14 15:57:15,115 - __mp_main__ - INFO - Starting LinkedIn Semantic Search API
+2025-03-14 15:57:15,115 - __mp_main__ - INFO - Configuring CORS for frontend URL: http://localhost:3000
+2025-03-14 15:57:15,115 - __mp_main__ - INFO - Including API routers
+2025-03-14 15:57:15,126 - app.main - INFO - Starting LinkedIn Semantic Search API
+2025-03-14 15:57:15,126 - app.main - INFO - Configuring CORS for frontend URL: http://localhost:3000
+2025-03-14 15:57:15,126 - app.main - INFO - Including API routers
+2025-03-14 15:57:15,195 - watchfiles.main - INFO - 1 change detected
+2025-03-14 15:58:07,449 - watchfiles.main - INFO - 9 changes detected
+2025-03-14 15:58:08,038 - watchfiles.main - INFO - 4 changes detected
+2025-03-14 15:58:08,809 - watchfiles.main - INFO - 12 changes detected

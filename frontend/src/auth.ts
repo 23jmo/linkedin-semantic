@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import LinkedIn from "next-auth/providers/linkedin";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
 import jwt from "jsonwebtoken";
-
+import { checkUserExists, createUser } from "@/lib/api";
 // Configure NextAuth with proper callback handling
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -31,7 +31,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log("signIn", user, account, profile, email, credentials);
       if (account?.provider === "linkedin") {
         // Check if the user already exists in the database
+        const response = await checkUserExists(user, profile);
         // If not, create a new user
+        if (!response.user_exists) {
+          const response = await createUser(user, profile);
+        }
       }
 
       return true;
