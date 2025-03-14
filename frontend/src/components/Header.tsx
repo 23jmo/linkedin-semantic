@@ -3,14 +3,20 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession, signOut } from "next-auth/react";
 import { FaUser, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
+import SignIn from "./sign-in";
+import { useSession } from "next-auth/react";
 
 export default function Header() {
   const { data: session, status } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  const handleSignOut = async () => {
+    const { signOut } = await import("next-auth/react");
+    await signOut({ callbackUrl: "/" });
+  };
 
   return (
     <header className="bg-white shadow-sm">
@@ -36,10 +42,10 @@ export default function Header() {
                     className="flex items-center max-w-xs bg-white rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <span className="sr-only">Open user menu</span>
-                    {session.user.image ? (
+                    {session?.user?.image ? (
                       <Image
                         className="h-8 w-8 rounded-full"
-                        src={session.user.image}
+                        src={session?.user?.image}
                         alt=""
                         width={32}
                         height={32}
@@ -50,7 +56,7 @@ export default function Header() {
                       </div>
                     )}
                     <span className="ml-2 text-gray-700">
-                      {session.user.name}
+                      {session?.user?.name}
                     </span>
                     <FaChevronDown className="ml-1 text-gray-400" />
                   </button>
@@ -59,7 +65,7 @@ export default function Header() {
                 {menuOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
+                      onClick={handleSignOut}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
                       <FaSignOutAlt className="mr-2" />
@@ -69,12 +75,7 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link
-                href="/auth/signin"
-                className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Sign in
-              </Link>
+              <SignIn />
             )}
           </div>
         </div>

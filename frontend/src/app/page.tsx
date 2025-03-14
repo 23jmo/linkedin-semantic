@@ -1,14 +1,12 @@
-"use client";
-
-import { useSession } from "next-auth/react";
+import { auth } from "@/auth";
 import SearchBox from "@/components/SearchBox";
 import SuggestionBox from "@/components/SuggestionBox";
 import Header from "@/components/Header";
 import AuthPrompt from "@/components/AuthPrompt";
 
-export default function Home() {
-  const { data: session, status } = useSession();
-  const isAuthenticated = status === "authenticated";
+export default async function Home() {
+  const session = await auth();
+  const isAuthenticated = !!session;
 
   // Sample suggestions for demonstration
   const suggestions = [
@@ -54,7 +52,7 @@ export default function Home() {
           </h1>
 
           <div className="mb-12 w-full">
-            {isAuthenticated ? <SearchBox /> : <AuthPrompt />}
+            {session ? <SearchBox /> : <AuthPrompt />}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
