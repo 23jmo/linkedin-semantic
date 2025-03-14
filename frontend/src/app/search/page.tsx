@@ -49,7 +49,8 @@ export default function SearchPage() {
 
     try {
       // Mock API call - replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log("Starting search with loading state:", loading);
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Mock data for demonstration
       const mockProfiles: Profile[] = [
@@ -164,7 +165,17 @@ export default function SearchPage() {
                       {results.map((profile) => (
                         <ProfileCard
                           key={profile.id}
-                          profile={profile}
+                          profile={{
+                            ...profile,
+                            firstName: profile.name.split(" ")[0],
+                            lastName: profile.name
+                              .split(" ")
+                              .slice(1)
+                              .join(" "),
+                            profileUrl: profile.profile_url || "",
+                            profilePicture: profile.profile_image_url,
+                          }}
+                          matchScore={profile.score}
                         />
                       ))}
                     </div>

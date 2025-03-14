@@ -10,8 +10,8 @@ import {
   FaMapMarkerAlt,
   FaIndustry,
 } from "react-icons/fa";
-import { Profile } from "@/types/profile";
 import { useTheme } from "@/lib/theme-context";
+import { Profile } from "@/types/profile";
 
 interface ProfileCardProps {
   profile: Profile;

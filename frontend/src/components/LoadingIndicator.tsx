@@ -9,6 +9,9 @@ const loadingMessages = [
   "Analyzing connections...",
   "Finding the most relevant profiles...",
   "Matching skills and experiences...",
+  "Finding matches in your network...",
+  "Discovering 3 potential matches...",
+  "Found 5 connections that match your query...",
   "Preparing results...",
 ];
 
@@ -19,7 +22,7 @@ export default function LoadingIndicator() {
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
-    }, 3000);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, []);
