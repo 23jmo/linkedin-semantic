@@ -4,8 +4,7 @@ from typing import List
 import pydantic
 from app.schemas.profiles import ProfileExistsRequest, ProfileExistsResponse, ProfileCreateRequest, ProfileCreateResponse, Profile
 from app.services.auth import get_current_user
-from app.services.profiles import create_profile, get_profile, get_profiles, update_profile, delete_profile
-from app.services.embedding import generate_embedding
+from app.services.embeddings import generate_embedding
 import app.services.supabase as supabase
 import uuid
 from datetime import datetime

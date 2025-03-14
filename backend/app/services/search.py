@@ -5,7 +5,6 @@ from openai import OpenAI
 from app.core.config import settings
 from app.schemas.search import SearchResult
 from app.schemas.auth import UserResponse
-from app.services.profiles import profiles_db
 from app.utils.supabase_client import get_supabase_client
 import logging
 

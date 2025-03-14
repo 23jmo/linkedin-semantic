@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
+import { Session } from "next-auth";
 import LinkedIn from "next-auth/providers/linkedin";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
-import jwt from "jsonwebtoken";
+import * as jose from "jose";
 import { checkUserExists, createUser } from "@/lib/api";
 // Configure NextAuth with proper callback handling
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -26,9 +27,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   // Add callbacks to handle redirects and session management
   callbacks: {
+    async session({ session, user }) {
+      const signingSecret = process.env.SUPABASE_JWT_SECRET;
+      if (signingSecret) {
+        const payload = {
+          aud: "authenticated",
+          exp: Math.floor(new Date(session.expires).getTime() / 1000),
+          sub: user.id,
+          email: user.email,
+          role: "authenticated",
+        };
+
+        const secret = new TextEncoder().encode(signingSecret);
+        session.supabaseAccessToken = await new jose.SignJWT(payload)
+          .setProtectedHeader({ alg: "HS256" })
+          .sign(secret);
+      }
+      return session;
+    },
     // This callback is called after a user is successfully authenticated
+
     async signIn({ user, account, profile, email, credentials }) {
-      console.log("signIn", user, account, profile, email, credentials);
+      console.log("signIn callback triggered", {
+        user: user?.email,
+        accountType: account?.provider,
+        hasProfile: !!profile,
+      });
+
       if (account?.provider === "linkedin") {
         // Check if the user already exists in the database
         const response = await checkUserExists(user, profile);
@@ -55,20 +80,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     // This callback is called whenever a session is checked
     // You can use it to customize the session object
-    async session({ session, user }) {
-      const signingSecret = process.env.SUPABASE_JWT_SECRET;
-      if (signingSecret) {
-        const payload = {
-          aud: "authenticated",
-          exp: Math.floor(new Date(session.expires).getTime() / 1000),
-          sub: user.id,
-          email: user.email,
-          role: "authenticated",
-        };
-        session.supabaseAccessToken = jwt.sign(payload, signingSecret);
-      }
-      return session;
-    },
+
     // This callback is called when the JWT token is created or updated
     async jwt({ token, account, profile }) {
       // Add the account info to the token if available
