@@ -1,5 +1,8 @@
 import os
 from openai import AsyncOpenAI
+import dotenv
+
+dotenv.load_dotenv()
 
 client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 

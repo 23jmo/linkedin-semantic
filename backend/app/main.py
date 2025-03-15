@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from app.api.routes import auth, profiles, search
+from app.api.routes import profiles, search
 
 app = FastAPI(
     title="LinkedIn Semantic Search API",
@@ -20,7 +20,6 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(profiles.router, prefix="/api/v1/profiles", tags=["Profiles"])
 app.include_router(search.router, prefix="/api/v1/search", tags=["Search"])
 

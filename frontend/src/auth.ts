@@ -4,7 +4,6 @@ import LinkedIn from "next-auth/providers/linkedin";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
 import jwt from "jsonwebtoken";
 import { checkUserExists, createUser } from "@/lib/api";
-import * as jose from 'jose';
 // Configure NextAuth with proper callback handling
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -40,7 +39,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
         session.supabaseAccessToken = jwt.sign(payload, signingSecret);
       }
-      
       return session;
     },
     // This callback is called after a user is successfully authenticated
@@ -54,45 +52,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       if (account?.provider === "linkedin") {
         // Check if the user already exists in the database
-        try {
-          const signingSecret = process.env.SUPABASE_JWT_SECRET;
-          if (signingSecret) {
-            const secret = new TextEncoder().encode(signingSecret);
-            const token = await new jose.SignJWT({
-              aud: "authenticated",
-              exp: Math.floor(new Date().getTime() / 1000) + 60 * 60,
-              sub: user.id,
-              email: user.email,
-              role: "authenticated",
-            })
-              .setProtectedHeader({ alg: "HS256" })
-              .sign(secret);
-
-            // Now use this token
-            const response = await fetch(
-              `${process.env.BACKEND_URL}/api/v1/profiles/check-user-exists`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  userId: user.id,
-                  linkedInOAuthProfile: profile,
-                }),
-              }
-            );
-
-            // Handle response
-            const data = await response.json();
-            console.log("User check response:", data);
-          }
-
-          return true;
-        } catch (error) {
-          console.error("Error in signIn callback:", error);
-          return true;
+        const response = await checkUserExists(user, profile);
+        // If not, create a new user
+        if (!response.user_exists) {
+          const response = await createUser(user, profile);
         }
       }
 

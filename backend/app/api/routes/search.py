@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 
 from app.schemas.search import SearchQuery, SearchResult
-from app.services.auth import get_current_user
 from app.services.search import search_profiles
 
 router = APIRouter()
@@ -10,7 +9,6 @@ router = APIRouter()
 @router.post("/", response_model=List[SearchResult])
 async def search_profiles_endpoint(
     query: SearchQuery,
-    current_user = Depends(get_current_user)
 ):
     """
     Search for LinkedIn profiles using semantic search
@@ -19,13 +17,11 @@ async def search_profiles_endpoint(
     # This would be implemented with a check against the database
     # For now, assume profiles are indexed
     
-    results = search_profiles(query.query, current_user)
+    results = search_profiles(query.query)
     return results
 
 @router.get("/suggestions", response_model=List[str])
-async def get_search_suggestions(
-    current_user = Depends(get_current_user)
-):
+async def get_search_suggestions():
     """
     Get search suggestions based on user's network
     """

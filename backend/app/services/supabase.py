@@ -4,27 +4,44 @@ from app.schemas.profiles import Profile
 import pydantic
 from app.schemas.embeddings import Embedding
 import uuid
+from app.utils.supabase_client import get_supabase_client, get_schema_client
 
-supabase_url = os.environ.get("SUPABASE_URL")
-supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-supabase = create_client(supabase_url, supabase_key)
+# Get the default client
+supabase = get_supabase_client()
 
-async def check_user_exists(user_id, bearer_token):
+def check_user_exists(user_id, schema_name="linkedin_profiles"):
     """
     Check if a user exists in the linkedin_profiles table
+    
+    Args:
+        user_id: The user's ID
+        schema_name: Optional schema name (default: " ")
     """
-    response = supabase.table("linkedin_profiles").select("*").eq("user_id", user_id).execute()
+    # Use the specified schema
+    client = get_schema_client(schema_name) if schema_name != "public" else supabase
+    
+    if not client:
+        return None
+    
+    response = client.table("profiles").select("*").eq("user_id", user_id).execute()
     
     return response.data
 
-async def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_embedding: Embedding):
+def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_embedding: Embedding, schema_name="public"):
     """
     Store a LinkedIn profile in Supabase
     Args:
         user_id: The user's ID
         linkedin_profile: Profile object containing LinkedIn profile data (validated by pydantic)
         profile_embedding: Vector embedding of the profile text
+        schema_name: Optional schema name (default: "public")
     """
+    # Use the specified schema
+    client = get_schema_client(schema_name) if schema_name != "public" else supabase
+    
+    if not client:
+        raise ValueError("Supabase client not initialized")
+        
     # Validate profile data using pydantic model
     try:
         # Profile model will validate the data
@@ -52,7 +69,7 @@ async def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, pro
         profile_data["created_at"] = profile_data["created_at"].isoformat()
         profile_data["updated_at"] = profile_data["updated_at"].isoformat()
         
-        response = supabase.table("linkedin_profiles").insert(profile_data).execute()
+        response = client.table("profiles").insert(profile_data).execute()
         
     except pydantic.ValidationError as e:
         raise ValueError(f"Invalid profile data: {str(e)}")
@@ -71,7 +88,7 @@ async def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, pro
         embedding_data["embedding"] = embedding_data["embedding"]
         embedding_data["embedding_model"] = embedding_data["embedding_model"] 
         
-        response = supabase.table("profile_embeddings").insert(embedding_data).execute()
+        response = client.table("profile_embeddings").insert(embedding_data).execute()
         
     except pydantic.ValidationError as e:
         raise ValueError(f"Invalid profile data: {str(e)}")

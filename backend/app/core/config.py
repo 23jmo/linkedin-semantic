@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSION: int = 1536  # Dimension for OpenAI embeddings
     
+    # Proxycurl settings
+    PROXYCURL_API_KEY: str = os.getenv("PROXYCURL_API_KEY", "")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

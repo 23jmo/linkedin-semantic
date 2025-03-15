@@ -4,12 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("API route: /api/auth/create-user called");
 
-    // Get the authorization header
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader) {
-      console.error("No Authorization header provided");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Get the authorization heade
 
     // Parse the request body
     const body = await request.json();
@@ -25,7 +20,6 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: authHeader,
       },
       body: JSON.stringify(body),
     });

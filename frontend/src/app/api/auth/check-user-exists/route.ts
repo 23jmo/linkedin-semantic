@@ -5,18 +5,13 @@ export async function POST(request: NextRequest) {
     console.log("API route: /api/auth/check-user-exists called");
 
     // Get the authorization header
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader) {
-      console.error("No Authorization header provided");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     // Parse the request body
     const body = await request.json();
     console.log("Request body:", body);
 
     // Forward the request to the FastAPI backend
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
     console.log(
       `Forwarding request to ${backendUrl}/api/v1/profiles/check-user-exists`
     );
@@ -27,7 +22,6 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: authHeader,
         },
         body: JSON.stringify(body),
       }

@@ -31,5 +31,5 @@ class ProfileCreateRequest(BaseModel):
     linkedin_auth: dict
 
 class ProfileCreateResponse(BaseModel):
-    user_id: str
+    userId: str
     linkedin_profile: Profile
