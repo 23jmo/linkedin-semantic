@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import OpenAI from "openai";
+import { hasGmailConnected, sendEmail } from "@/lib/server/gmail-service";
+import { storeEmailHistory } from "@/lib/server/email-credentials";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -12,12 +14,15 @@ export async function POST(request: Request) {
     // Get the authenticated user session
     const session = await auth();
 
-    if (!session || !session.user) {
+    if (!session || !session.user || !session.user.id) {
       return NextResponse.json(
         { message: "Authentication required" },
         { status: 401 }
       );
     }
+
+    const userId = session.user.id;
+    const userName = session.user.name || "Me";
 
     // Parse request body
     const body = await request.json();
@@ -37,60 +42,90 @@ export async function POST(request: Request) {
       );
     }
 
-    // For now, we'll just log the request and return a success response
-    // In a real implementation, this would:
-    // 1. Generate customized emails using OpenAI
-    // 2. Send the emails using Gmail API
-    // 3. Store the email history in the database
+    // Check if user has Gmail connected
+    const hasGmail = await hasGmailConnected(userId);
+    if (!hasGmail) {
+      return NextResponse.json(
+        {
+          message:
+            "Gmail account not connected. Please connect your Gmail account to send emails.",
+        },
+        { status: 403 }
+      );
+    }
 
-    console.log("Email request:", {
-      user: session.user,
-      profiles,
-      purpose,
-      notes,
-    });
-
-    // Mock email generation with OpenAI
-    // In a real implementation, you would use the OpenAI API to generate customized emails
+    // Generate and send emails for each profile
     const emailPromises = profiles.map(async (profile) => {
       const profileNote = notes[profile.id] || "";
 
-      // This is a placeholder for the actual OpenAI API call
-      // In a real implementation, you would use the OpenAI API to generate customized emails
-      const emailContent = `Dear ${profile.firstName} ${profile.lastName},
+      // Generate email content with OpenAI
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an expert at writing personalized cold emails that are professional, concise, and effective.",
+          },
+          {
+            role: "user",
+            content: `Write a personalized cold email to ${profile.firstName} ${
+              profile.lastName
+            } who works in ${profile.industry || "their industry"}. 
+            Their LinkedIn headline is: "${profile.headline || ""}".
+            The purpose of this email is: ${purpose}.
+            Additional notes: ${profileNote}
+            
+            The email should be from ${userName}.
+            Keep it under 200 words, professional, and with a clear call to action.
+            Format as HTML with appropriate paragraph breaks.`,
+          },
+        ],
+      });
 
-I hope this email finds you well. I came across your profile on LinkedIn and was impressed by your experience in ${
-        profile.industry || "your industry"
-      }.
+      const emailContent = completion.choices[0].message.content || "";
+      const subject = `Connecting with ${profile.firstName} ${profile.lastName}`;
 
-${purpose}
+      // Get recipient email (in a real app, you'd extract this from LinkedIn data)
+      // For now, we'll use a placeholder
+      const recipientEmail = `${profile.firstName.toLowerCase()}.${profile.lastName.toLowerCase()}@example.com`;
 
-${profileNote ? `\n${profileNote}\n` : ""}
+      // Send the email
+      await sendEmail(userId, recipientEmail, subject, emailContent);
 
-I look forward to connecting with you.
-
-Best regards,
-${session.user.name || "A LinkedIn User"}`;
+      // Store in email history
+      await storeEmailHistory(
+        userId,
+        profile.id,
+        `${profile.firstName} ${profile.lastName}`,
+        recipientEmail,
+        subject,
+        emailContent
+      );
 
       return {
-        recipient: profile,
-        emailContent,
+        recipient: {
+          name: `${profile.firstName} ${profile.lastName}`,
+          email: recipientEmail,
+        },
+        subject,
+        content: emailContent,
       };
     });
 
     const generatedEmails = await Promise.all(emailPromises);
 
-    // In a real implementation, you would send the emails using Gmail API
-    // and store the email history in the database
-
     return NextResponse.json({
-      message: "Emails generated successfully",
+      message: "Emails sent successfully",
       emails: generatedEmails,
     });
   } catch (error) {
     console.error("Error sending email:", error);
     return NextResponse.json(
-      { message: "Failed to send email" },
+      {
+        message:
+          error instanceof Error ? error.message : "Failed to send email",
+      },
       { status: 500 }
     );
   }

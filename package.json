@@ -2,6 +2,7 @@
   "dependencies": {
     "@auth/supabase-adapter": "^1.8.0",
     "@supabase/supabase-js": "^2.49.1",
+    "googleapis": "^146.0.0",
     "next-auth": "^4.24.11"
   },
   "devDependencies": {

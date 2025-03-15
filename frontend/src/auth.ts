@@ -1,15 +1,20 @@
 import NextAuth from "next-auth";
 import { Session } from "next-auth";
 import LinkedIn from "next-auth/providers/linkedin";
+import Google from "next-auth/providers/google";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
 import jwt from "jsonwebtoken";
 import { checkUserExists } from "@/lib/api";
+import { storeEmailCredentials } from "@/lib/server/email-credentials";
 
 // Extend the User type to include the exists property
 declare module "next-auth" {
   interface Session {
     exists?: boolean;
     supabaseAccessToken?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    provider?: string;
   }
 }
 
@@ -33,6 +38,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         url: "https://api.linkedin.com/v2/userinfo",
       },
     }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope:
+            "openid email profile https://www.googleapis.com/auth/gmail.send",
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    }),
   ],
   // Make sure to use the NEXTAUTH_SECRET for JWT encryption
   secret: process.env.NEXTAUTH_SECRET,
@@ -52,6 +69,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: "authenticated",
         };
         session.supabaseAccessToken = jwt.sign(payload, signingSecret);
+      }
+
+      // Add token information to the session
+      if (token) {
+        session.accessToken = token.accessToken as string;
+        session.refreshToken = token.refreshToken as string;
+        session.provider = token.provider as string;
       }
 
       // Check if user exists in our database
@@ -117,7 +141,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Add the account info to the token if available
       if (account) {
         token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
         token.provider = account.provider;
+        token.expiresAt = account.expires_at;
+
+        // Store Gmail credentials in Supabase if provider is Google
+        if (account.provider === "google" && user?.id) {
+          try {
+            await storeEmailCredentials(
+              user.id,
+              "gmail",
+              account.access_token!,
+              account.refresh_token!,
+              account.expires_at || Math.floor(Date.now() / 1000) + 3600
+            );
+          } catch (error) {
+            console.error("Error storing email credentials:", error);
+          }
+        }
       }
 
       // Add profile info to the token if available

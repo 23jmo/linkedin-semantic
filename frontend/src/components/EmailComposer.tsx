@@ -5,6 +5,9 @@ import { Profile } from "@/types/profile";
 import ProfileImage from "./ProfileImage";
 import { FaTimes } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
+import { hasGmailConnected } from "@/lib/gmail-service";
+import GmailConnector from "./GmailConnector";
+import { useSession } from "next-auth/react";
 
 interface EmailComposerProps {
   selectedProfiles: Profile[];
@@ -22,7 +25,11 @@ export default function EmailComposer({
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGmailConnected, setIsGmailConnected] = useState<boolean | null>(
+    null
+  );
   const { resolvedTheme } = useTheme();
+  const { data: session } = useSession();
 
   // Close the composer when there are no profiles selected
   useEffect(() => {
@@ -30,6 +37,28 @@ export default function EmailComposer({
       onClose();
     }
   }, [selectedProfiles, onClose]);
+
+  // Check if Gmail is connected
+  useEffect(() => {
+    async function checkGmailConnection() {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch("/api/gmail/check-connection");
+          if (response.ok) {
+            const data = await response.json();
+            setIsGmailConnected(data.isConnected);
+          } else {
+            setIsGmailConnected(false);
+          }
+        } catch (error) {
+          console.error("Error checking Gmail connection:", error);
+          setIsGmailConnected(false);
+        }
+      }
+    }
+
+    checkGmailConnection();
+  }, [session]);
 
   const handlePurposeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPurpose(e.target.value);
@@ -120,6 +149,18 @@ export default function EmailComposer({
               >
                 Done
               </button>
+            </div>
+          ) : isGmailConnected === false ? (
+            <div>
+              <p
+                className={`mb-4 ${
+                  resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
+                }`}
+              >
+                To send cold emails, you need to connect your Gmail account
+                first.
+              </p>
+              <GmailConnector />
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
