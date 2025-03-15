@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Profile } from "@/types/profile";
 import ProfileImage from "./ProfileImage";
 import { FaTimes } from "react-icons/fa";
+import { useTheme } from "@/lib/theme-context";
 
 interface EmailComposerProps {
   selectedProfiles: Profile[];
@@ -21,6 +22,14 @@ export default function EmailComposer({
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { resolvedTheme } = useTheme();
+
+  // Close the composer when there are no profiles selected
+  useEffect(() => {
+    if (selectedProfiles.length === 0) {
+      onClose();
+    }
+  }, [selectedProfiles, onClose]);
 
   const handlePurposeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPurpose(e.target.value);
@@ -68,14 +77,28 @@ export default function EmailComposer({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div
+        className={`${
+          resolvedTheme === "light" ? "bg-white" : "bg-gray-800"
+        } rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto`}
+      >
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Compose Cold Email</h2>
+            <h2
+              className={`text-xl font-bold ${
+                resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
+              }`}
+            >
+              Compose Cold Email
+            </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className={`${
+                resolvedTheme === "light"
+                  ? "text-gray-500 hover:text-gray-700"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
               aria-label="Close"
             >
               <FaTimes />
@@ -83,7 +106,13 @@ export default function EmailComposer({
           </div>
 
           {success ? (
-            <div className="bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 p-4 rounded-md mb-6">
+            <div
+              className={`${
+                resolvedTheme === "light"
+                  ? "bg-green-50 text-green-800"
+                  : "bg-green-900 text-green-100"
+              } p-4 rounded-md mb-6`}
+            >
               <p>Emails sent successfully!</p>
               <button
                 onClick={onClose}
@@ -95,14 +124,24 @@ export default function EmailComposer({
           ) : (
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  className={`block text-sm font-medium ${
+                    resolvedTheme === "light"
+                      ? "text-gray-700"
+                      : "text-gray-300"
+                  } mb-2`}
+                >
                   Selected Recipients ({selectedProfiles.length}/3)
                 </label>
                 <div className="space-y-3">
                   {selectedProfiles.map((profile) => (
                     <div
                       key={profile.id}
-                      className="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-md"
+                      className={`flex items-start p-3 border rounded-md ${
+                        resolvedTheme === "light"
+                          ? "border-gray-200"
+                          : "border-gray-700"
+                      }`}
                     >
                       <div className="flex-shrink-0 mr-3">
                         <ProfileImage
@@ -115,24 +154,46 @@ export default function EmailComposer({
                       <div className="flex-grow">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium">
+                            <h3
+                              className={`font-medium ${
+                                resolvedTheme === "light"
+                                  ? "text-gray-800"
+                                  : "text-gray-200"
+                              }`}
+                            >
                               {profile.firstName} {profile.lastName}
                             </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p
+                              className={`text-sm ${
+                                resolvedTheme === "light"
+                                  ? "text-gray-500"
+                                  : "text-gray-400"
+                              }`}
+                            >
                               {profile.headline || ""}
                             </p>
                           </div>
                           <button
                             type="button"
                             onClick={() => onRemoveProfile(profile.id)}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            className={`${
+                              resolvedTheme === "light"
+                                ? "text-gray-400 hover:text-gray-600"
+                                : "text-gray-400 hover:text-gray-200"
+                            }`}
                             aria-label={`Remove ${profile.firstName} ${profile.lastName}`}
                           >
                             <FaTimes size={16} />
                           </button>
                         </div>
                         <div className="mt-2">
-                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                          <label
+                            className={`block text-xs font-medium ${
+                              resolvedTheme === "light"
+                                ? "text-gray-500"
+                                : "text-gray-400"
+                            } mb-1`}
+                          >
                             Additional notes for {profile.firstName}
                           </label>
                           <textarea
@@ -140,7 +201,11 @@ export default function EmailComposer({
                             onChange={(e) =>
                               handleNoteChange(profile.id, e.target.value)
                             }
-                            className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md p-2 dark:bg-gray-700"
+                            className={`w-full text-sm border rounded-md p-2 ${
+                              resolvedTheme === "light"
+                                ? "border-gray-300"
+                                : "border-gray-600 bg-gray-700"
+                            }`}
                             rows={2}
                             placeholder={`Specific points for ${profile.firstName}...`}
                           />
@@ -154,7 +219,11 @@ export default function EmailComposer({
               <div className="mb-6">
                 <label
                   htmlFor="purpose"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className={`block text-sm font-medium ${
+                    resolvedTheme === "light"
+                      ? "text-gray-700"
+                      : "text-gray-300"
+                  } mb-2`}
                 >
                   What do you want to accomplish with this email?
                 </label>
@@ -162,7 +231,11 @@ export default function EmailComposer({
                   id="purpose"
                   value={purpose}
                   onChange={handlePurposeChange}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-3 dark:bg-gray-700"
+                  className={`w-full border rounded-md p-3 ${
+                    resolvedTheme === "light"
+                      ? "border-gray-300"
+                      : "border-gray-600 bg-gray-700"
+                  }`}
                   rows={4}
                   placeholder="E.g., Set up a coffee chat, ask about job opportunities, request advice..."
                   required
@@ -170,7 +243,13 @@ export default function EmailComposer({
               </div>
 
               {error && (
-                <div className="bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-100 p-4 rounded-md mb-6">
+                <div
+                  className={`${
+                    resolvedTheme === "light"
+                      ? "bg-red-50 text-red-800"
+                      : "bg-red-900 text-red-100"
+                  } p-4 rounded-md mb-6`}
+                >
                   <p>{error}</p>
                 </div>
               )}
@@ -179,7 +258,11 @@ export default function EmailComposer({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mr-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2 px-4 rounded"
+                  className={`mr-3 py-2 px-4 rounded ${
+                    resolvedTheme === "light"
+                      ? "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                      : "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                  }`}
                   disabled={isLoading}
                 >
                   Cancel

@@ -61,9 +61,9 @@ export default function ProfileCard({
     <div
       className={`${
         resolvedTheme === "light"
-          ? "bg-white border-gray-200"
-          : "bg-gray-800 border-gray-700"
-      } border rounded-lg shadow-sm overflow-hidden relative`}
+          ? "bg-white border-gray-200 hover:border-gray-300 hover:shadow-md"
+          : "bg-gray-800 border-gray-700 hover:border-gray-600 hover:shadow-lg"
+      } border rounded-lg shadow-md p-6 relative transition-all duration-200 hover:-translate-y-1`}
     >
       {/* Selection checkbox */}
       {selectable && (
@@ -87,14 +87,25 @@ export default function ProfileCard({
             size="lg"
           />
         </div>
-        <div className="flex-grow">
-          <h2
-            className={`text-xl font-bold ${
-              resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
-            }`}
-          >
-            {profile.firstName} {profile.lastName}
-          </h2>
+        <div className="flex-grow pr-12">
+          <div className="flex items-center gap-2 mb-1">
+            <h2
+              className={`text-xl font-bold ${
+                resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
+              }`}
+            >
+              {profile.firstName} {profile.lastName}
+            </h2>
+            <div
+              className={`${
+                resolvedTheme === "light"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-[#0a4a6e] text-[#4db6e8]"
+              } px-2 py-0.5 rounded-full text-xs font-medium`}
+            >
+              {Math.round(matchScore * 100)}%
+            </div>
+          </div>
           <p
             className={`text-lg ${
               resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
@@ -143,17 +154,6 @@ export default function ProfileCard({
             <FaLinkedin className="mr-1" />
             View LinkedIn Profile
           </a>
-        </div>
-        <div className="flex-shrink-0 ml-4">
-          <div
-            className={`${
-              resolvedTheme === "light"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-[#0a4a6e] text-[#4db6e8]"
-            } px-3 py-1 rounded-full text-sm font-medium`}
-          >
-            {Math.round(matchScore * 100)}% Match
-          </div>
         </div>
       </div>
 
