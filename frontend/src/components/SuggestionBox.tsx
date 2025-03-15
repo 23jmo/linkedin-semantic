@@ -1,46 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FaSearch } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
 
 interface SuggestionBoxProps {
-  title: string;
-  items: string[];
+  suggestion: string;
 }
 
-export default function SuggestionBox({ title, items }: SuggestionBoxProps) {
+export default function SuggestionBox({ suggestion }: SuggestionBoxProps) {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
 
-  const handleSuggestionClick = (suggestion: string) => {
+  const handleSuggestionClick = () => {
     router.push(`/search?q=${encodeURIComponent(suggestion)}`);
   };
 
   return (
-    <div className="mb-8">
-      <h2
-        className={`text-lg font-semibold ${
-          resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
-        } mb-4`}
-      >
-        {title}
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item, index) => (
-          <button
-            key={index}
-            onClick={() => handleSuggestionClick(item)}
-            className={`${
-              resolvedTheme === "light"
-                ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"
-            } px-4 py-2 rounded-full border transition-colors duration-200 text-sm font-medium shadow-sm hover:shadow`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-    </div>
+    <button
+      onClick={handleSuggestionClick}
+      className={`${
+        resolvedTheme === "light"
+          ? "bg-white text-gray-700 hover:bg-gray-50"
+          : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+      } px-4 py-2 rounded-full border-2 border-blue-400 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow whitespace-nowrap ${
+        resolvedTheme === "light"
+          ? "bg-gradient-to-r from-blue-100 to-blue-50"
+          : "bg-gradient-to-r from-blue-900/20 to-blue-800/20"
+      } relative overflow-hidden hover:-translate-y-1 hover:shadow-md flex-shrink-0`}
+    >
+      <span className="relative z-10">{suggestion}</span>
+      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700 ease-in-out shine-effect"></span>
+    </button>
   );
 }

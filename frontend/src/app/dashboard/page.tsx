@@ -2,13 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Layout from "@/components/Layout";
+import { useTheme } from "@/lib/theme-context";
+import { deleteUser } from "@/lib/api";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     console.log("DashboardPage - Session status:", status);
@@ -35,6 +42,31 @@ export default function DashboardPage() {
     }
   }, [status, session, router]);
 
+  const handleDeleteProfile = async () => {
+    if (!session?.user?.id) return;
+    if (!session?.user?.email) return;
+
+    if (confirmEmail !== session.user.email) {
+      setDeleteError("Email doesn't match your account email");
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      setDeleteError("");
+
+      await deleteUser(session.user.id);
+
+      // Sign out after successful deletion
+      await signOut({ callbackUrl: "/" });
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : "Failed to delete profile"
+      );
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -48,7 +80,13 @@ export default function DashboardPage() {
       <div className="max-w-4xl mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div
+          className={`${
+            resolvedTheme === "dark"
+              ? "bg-gray-800 text-white"
+              : "bg-white text-gray-900"
+          } shadow rounded-lg p-6 mb-6`}
+        >
           <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
           <div className="space-y-2">
             <p>
@@ -64,13 +102,98 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white shadow rounded-lg p-6">
+        <div
+          className={`${
+            resolvedTheme === "dark"
+              ? "bg-gray-800 text-white"
+              : "bg-white text-gray-900"
+          } shadow rounded-lg p-6 mb-6`}
+        >
           <h2 className="text-xl font-semibold mb-4">Recent Searches</h2>
-          <p className="text-gray-500">
+          <p
+            className={`${
+              resolvedTheme === "dark" ? "text-gray-300" : "text-gray-500"
+            }`}
+          >
             You haven't performed any searches yet.
           </p>
         </div>
+
+        <div
+          className={`${
+            resolvedTheme === "dark"
+              ? "bg-gray-800 text-white"
+              : "bg-white text-gray-900"
+          } shadow rounded-lg p-6`}
+        >
+          <h2 className="text-xl font-semibold mb-4">Account Management</h2>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Delete Profile
+          </button>
+          <p className="mt-2 text-sm text-gray-500">
+            This will permanently delete your profile and all associated data.
+          </p>
+        </div>
       </div>
+
+      {/* Delete Profile Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div
+            className={`${
+              resolvedTheme === "dark"
+                ? "bg-gray-800 text-white"
+                : "bg-white text-gray-900"
+            } rounded-lg p-6 max-w-md w-full`}
+          >
+            <h2 className="text-xl font-bold mb-4">Delete Profile</h2>
+            <p className="mb-4">
+              This action cannot be undone. All your profile data will be
+              permanently deleted.
+            </p>
+            <p className="mb-4">
+              To confirm, please type your email address:{" "}
+              <strong>{session?.user?.email}</strong>
+            </p>
+            <input
+              type="email"
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              placeholder="Enter your email"
+              className={`w-full p-2 mb-4 border rounded ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-700 border-gray-600"
+                  : "bg-white border-gray-300"
+              }`}
+              disabled={isDeleting}
+            />
+            {deleteError && <p className="text-red-500 mb-4">{deleteError}</p>}
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className={`px-4 py-2 rounded ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 hover:bg-gray-600"
+                    : "bg-gray-200 hover:bg-gray-300"
+                } transition-colors`}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProfile}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+                disabled={isDeleting || confirmEmail !== session?.user?.email}
+              >
+                {isDeleting ? "Deleting..." : "Delete Profile"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

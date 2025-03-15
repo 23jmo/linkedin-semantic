@@ -2,7 +2,7 @@ from supabase import create_client
 import os
 from app.schemas.profiles import Profile
 import pydantic
-from app.schemas.embeddings import Embedding
+from app.schemas.embeddings import ProfileEmbedding, QueryEmbedding
 import uuid
 from app.utils.supabase_client import get_supabase_client, get_schema_client
 from datetime import datetime
@@ -28,7 +28,7 @@ def check_user_exists(user_id, schema_name="linkedin_profiles"):
     
     return response.data
 
-def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_embedding: Embedding, schema_name="linkedin_profiles"):
+def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_embedding: ProfileEmbedding, schema_name="linkedin_profiles"):
     """
     Store a LinkedIn profile in Supabase
     Args:
@@ -76,7 +76,7 @@ def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_e
         raise ValueError(f"Invalid profile data: {str(e)}")
       
     try:
-        validated_embedding = Embedding(
+        validated_embedding = ProfileEmbedding(
             id=uuid.uuid4(),
             profile_id=validated_profile.id,
             embedding=profile_embedding,
@@ -98,4 +98,40 @@ def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_e
         
         
         
-        
+def delete_profile_from_supabase(user_id: str, schema_name="linkedin_profiles"):
+    """
+    Delete a LinkedIn profile from Supabase
+    Args:
+        user_id: The user's ID
+        schema_name: Optional schema name (default: "public")
+    """
+    client = get_schema_client(schema_name) if schema_name != "public" else supabase
+    
+    if not client:
+        raise ValueError("Supabase client not initialized")
+    
+    response = client.table("profiles").delete().eq("user_id", user_id).execute()
+    return response.data
+  
+  
+  
+def semantic_search(query_embedding: QueryEmbedding, match_count: int = 10, match_threshold: float = 0.5, schema_name="linkedin_profiles"):
+  """
+  Perform a semantic search on the linkedin_profiles table
+  Args:
+      query: The search query
+      schema_name: Optional schema name (default: "public")
+  """
+  client = get_schema_client(schema_name) if schema_name != "public" else supabase
+  
+  if not client:
+      raise ValueError("Supabase client not initialized")
+  
+  response = supabase.rpc("search_profiles_by_embedding", 
+                          {
+                           "query_embedding": query_embedding.embedding,
+                           "match_threshold": match_threshold,
+                           "match_count": match_count
+                          })
+  
+  return response.data

@@ -6,8 +6,8 @@ from app.services.search import search_profiles
 
 router = APIRouter()
 
-@router.post("/", response_model=List[SearchResult])
-async def search_profiles_endpoint(
+@router.post("/semantic-search", response_model=List[SearchResult])
+async def semantic_search_endpoint(
     query: SearchQuery,
 ):
     """
@@ -19,18 +19,3 @@ async def search_profiles_endpoint(
     
     results = search_profiles(query.query)
     return results
-
-@router.get("/suggestions", response_model=List[str])
-async def get_search_suggestions():
-    """
-    Get search suggestions based on user's network
-    """
-    # This would be implemented with a query against the database
-    # For now, return placeholder suggestions
-    return [
-        "Software Engineers with experience in AI",
-        "Product Managers in fintech",
-        "UX Designers who worked at Google",
-        "Data Scientists with Python experience",
-        "Marketing professionals in healthcare"
-    ] 

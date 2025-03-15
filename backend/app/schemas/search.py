@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from app.schemas.profiles import Profile
 
 class SearchQuery(BaseModel):
     query: str
@@ -8,15 +9,7 @@ class SearchQuery(BaseModel):
     offset: Optional[int] = 0
 
 class SearchResult(BaseModel):
-    id: str
-    linkedin_id: str
-    name: str
-    headline: Optional[str] = None
-    summary: Optional[str] = None
-    location: Optional[str] = None
-    industry: Optional[str] = None
-    profile_url: Optional[str] = None
-    profile_image_url: Optional[str] = None
+    profile: Profile
     score: float
     highlights: Optional[List[str]] = []
     

@@ -34,3 +34,6 @@ class ProfileCreateRequest(BaseModel):
 class ProfileCreateResponse(BaseModel):
     userId: str
     linkedin_profile: Profile
+
+class ProfileDeleteRequest(BaseModel):
+    user_id: str

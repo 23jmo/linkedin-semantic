@@ -11,6 +11,7 @@ import {
   FaChevronDown,
   FaSun,
   FaMoon,
+  FaChartBar,
 } from "react-icons/fa";
 import SignIn from "./sign-in";
 import { useTheme } from "@/lib/theme-context";
@@ -83,8 +84,7 @@ export default function Header() {
                 className={`ml-2 text-xl font-bold ${
                   resolvedTheme === "light" ? "text-gray-900" : "text-white"
                 } hidden md:block`}
-              >
-              </h1>
+              ></h1>
             </Link>
           </div>
 
@@ -199,6 +199,24 @@ export default function Header() {
                         {session?.user?.email}
                       </p>
                     </div>
+
+                    <button
+                      onClick={() => (window.location.href = "/dashboard")}
+                      className={`w-full text-left px-4 py-2 text-sm ${
+                        resolvedTheme === "light"
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 hover:bg-gray-700"
+                      } flex items-center`}
+                    >
+                      <FaChartBar
+                        className={`mr-2 ${
+                          resolvedTheme === "light"
+                            ? "text-gray-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                      Dashboard
+                    </button>
                     <button
                       onClick={handleSignOut}
                       className={`w-full text-left px-4 py-2 text-sm ${

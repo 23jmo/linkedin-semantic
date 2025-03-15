@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
+import SignOut from "./sign-out";
 interface LinkedInUrlFormProps {
   userId: string;
   linkedInAuthData: any;
@@ -85,6 +85,7 @@ export default function LinkedInUrlForm({
           {isLoading ? "Verifying..." : "Continue"}
         </button>
       </form>
+      <SignOut />
     </div>
   );
 }

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 
 import pydantic
-from app.schemas.profiles import ProfileExistsRequest, ProfileExistsResponse, ProfileCreateRequest, ProfileCreateResponse, Profile
+from app.schemas.profiles import ProfileExistsRequest, ProfileExistsResponse, ProfileCreateRequest, ProfileCreateResponse, Profile, ProfileDeleteRequest
 from app.services.embeddings import generate_embedding
 import app.services.supabase as supabase
 import uuid
@@ -28,6 +28,12 @@ async def create_user(
     print(f"{create_user} profile_data: {profile_data}")
     return await create_user_service(profile_data)
 
+@router.post("/delete-user", status_code=status.HTTP_200_OK)
+async def delete_user(
+    profile_data: ProfileDeleteRequest,
+):
+    print(f"{delete_user} profile_data: {profile_data}")
+    return delete_user_service(profile_data)
 
 def check_user_exists_service(profile_data: ProfileExistsRequest):
     user_exists = supabase.check_user_exists(profile_data.user_id)
@@ -147,5 +153,12 @@ def verify_profile_match(auth_data: dict, profile_data: dict):
         raise HTTPException(status_code=400, detail="LinkedIn profile name does not match authentication name")
     
     print("Profile verification passed!!!")
+
+def delete_user_service(profile_data: ProfileDeleteRequest):
+    try:
+        supabase.delete_profile_from_supabase(profile_data.user_id)
+        return {"success": True, "message": "User profile deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete user profile: {str(e)}")
 
 
