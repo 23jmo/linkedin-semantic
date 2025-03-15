@@ -14,6 +14,7 @@ export interface Profile {
       company?: string;
       title?: string;
       description?: string;
+      logo_url?: string;
       starts_at?: {
         day?: number;
         month?: number;
@@ -33,6 +34,7 @@ export interface Profile {
       school?: string;
       degree_name?: string;
       field_of_study?: string;
+      logo_url?: string;
       starts_at?: {
         year?: number;
       };

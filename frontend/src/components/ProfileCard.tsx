@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import {
   FaLinkedin,
   FaChevronDown,
@@ -14,6 +13,9 @@ import {
 } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
 import { Profile } from "@/types/profile";
+import CompanyLogo from "./CompanyLogo";
+import ProfileImage from "./ProfileImage";
+import SchoolLogo from "./SchoolLogo";
 
 interface ProfileCardProps {
   profile: Profile;
@@ -40,18 +42,6 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
     return `${month} ${dateObj.year}`;
   };
 
-  const scoreColor = () => {
-    if (matchScore >= 0.8) return "text-green-600 dark:text-green-400";
-    if (matchScore >= 0.6) return "text-blue-600 dark:text-blue-400";
-    return "text-gray-600 dark:text-gray-400";
-  };
-
-  const scoreBackground = () => {
-    if (matchScore >= 0.8) return "bg-green-100 dark:bg-green-900/30";
-    if (matchScore >= 0.6) return "bg-blue-100 dark:bg-blue-900/30";
-    return "bg-gray-100 dark:bg-gray-800";
-  };
-
   return (
     <div
       className={`${
@@ -62,26 +52,12 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
     >
       <div className="flex items-start">
         <div className="flex-shrink-0 mr-4">
-          {profile.profilePicture ? (
-            <img
-              src={profile.profilePicture}
-              alt={`${profile.firstName} ${profile.lastName}`}
-              width={80}
-              height={80}
-              className="rounded-full"
-            />
-          ) : (
-            <div
-              className={`${
-                resolvedTheme === "light"
-                  ? "bg-gray-200 text-gray-600"
-                  : "bg-gray-700 text-gray-400"
-              } w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold`}
-            >
-              {profile.firstName.charAt(0)}
-              {profile.lastName.charAt(0)}
-            </div>
-          )}
+          <ProfileImage
+            imageUrl={profile.profilePicture}
+            firstName={profile.firstName}
+            lastName={profile.lastName}
+            size="lg"
+          />
         </div>
         <div className="flex-grow">
           <h2
@@ -247,45 +223,56 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
                       key={index}
                       className="ml-2 border-l-2 pl-4 border-gray-300 dark:border-gray-600"
                     >
-                      <h4
-                        className={`font-medium ${
-                          resolvedTheme === "light"
-                            ? "text-gray-800"
-                            : "text-gray-200"
-                        }`}
-                      >
-                        {exp.title || "Role"}
-                      </h4>
-                      <p
-                        className={`${
-                          resolvedTheme === "light"
-                            ? "text-gray-700"
-                            : "text-gray-300"
-                        }`}
-                      >
-                        {exp.company || "Company"}
-                      </p>
-                      <p
-                        className={`text-sm ${
-                          resolvedTheme === "light"
-                            ? "text-gray-600"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {formatDate(exp.starts_at)} - {formatDate(exp.ends_at)}
-                        {exp.location && ` · ${exp.location}`}
-                      </p>
-                      {exp.description && (
-                        <p
-                          className={`mt-2 text-sm ${
-                            resolvedTheme === "light"
-                              ? "text-gray-600"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {exp.description}
-                        </p>
-                      )}
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 mr-3 mt-1">
+                          <CompanyLogo
+                            logoUrl={exp.logo_url}
+                            companyName={exp.company}
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <h4
+                            className={`font-medium ${
+                              resolvedTheme === "light"
+                                ? "text-gray-800"
+                                : "text-gray-200"
+                            }`}
+                          >
+                            {exp.title || "Role"}
+                          </h4>
+                          <p
+                            className={`${
+                              resolvedTheme === "light"
+                                ? "text-gray-700"
+                                : "text-gray-300"
+                            }`}
+                          >
+                            {exp.company || "Company"}
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              resolvedTheme === "light"
+                                ? "text-gray-600"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {formatDate(exp.starts_at)} -{" "}
+                            {formatDate(exp.ends_at)}
+                            {exp.location && ` · ${exp.location}`}
+                          </p>
+                          {exp.description && (
+                            <p
+                              className={`mt-2 text-sm ${
+                                resolvedTheme === "light"
+                                  ? "text-gray-600"
+                                  : "text-gray-400"
+                              }`}
+                            >
+                              {exp.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -310,35 +297,47 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
                       key={index}
                       className="ml-2 border-l-2 pl-4 border-gray-300 dark:border-gray-600"
                     >
-                      <h4
-                        className={`font-medium ${
-                          resolvedTheme === "light"
-                            ? "text-gray-800"
-                            : "text-gray-200"
-                        }`}
-                      >
-                        {edu.school || "School"}
-                      </h4>
-                      <p
-                        className={`${
-                          resolvedTheme === "light"
-                            ? "text-gray-700"
-                            : "text-gray-300"
-                        }`}
-                      >
-                        {edu.degree_name || ""}{" "}
-                        {edu.field_of_study ? `· ${edu.field_of_study}` : ""}
-                      </p>
-                      <p
-                        className={`text-sm ${
-                          resolvedTheme === "light"
-                            ? "text-gray-600"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {edu.starts_at?.year || ""} -{" "}
-                        {edu.ends_at?.year || "Present"}
-                      </p>
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 mr-3 mt-1">
+                          <SchoolLogo
+                            logoUrl={edu.logo_url}
+                            schoolName={edu.school}
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <h4
+                            className={`font-medium ${
+                              resolvedTheme === "light"
+                                ? "text-gray-800"
+                                : "text-gray-200"
+                            }`}
+                          >
+                            {edu.school || "School"}
+                          </h4>
+                          <p
+                            className={`${
+                              resolvedTheme === "light"
+                                ? "text-gray-700"
+                                : "text-gray-300"
+                            }`}
+                          >
+                            {edu.degree_name || ""}{" "}
+                            {edu.field_of_study
+                              ? `· ${edu.field_of_study}`
+                              : ""}
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              resolvedTheme === "light"
+                                ? "text-gray-600"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {edu.starts_at?.year || ""} -{" "}
+                            {edu.ends_at?.year || "Present"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
