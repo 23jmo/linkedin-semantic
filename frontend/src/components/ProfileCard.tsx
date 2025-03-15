@@ -20,14 +20,29 @@ import SchoolLogo from "./SchoolLogo";
 interface ProfileCardProps {
   profile: Profile;
   matchScore: number;
+  onSelect?: (profile: Profile, selected: boolean) => void;
+  isSelected?: boolean;
+  selectable?: boolean;
 }
 
-export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
+export default function ProfileCard({
+  profile,
+  matchScore,
+  onSelect,
+  isSelected = false,
+  selectable = false,
+}: ProfileCardProps) {
   const [expanded, setExpanded] = useState(false);
   const { resolvedTheme } = useTheme();
 
   const toggleExpanded = () => {
     setExpanded(!expanded);
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onSelect) {
+      onSelect(profile, e.target.checked);
+    }
   };
 
   const formatDate = (dateObj?: { month?: number; year?: number }) => {
@@ -48,8 +63,21 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
         resolvedTheme === "light"
           ? "bg-white border-gray-200"
           : "bg-gray-800 border-gray-700"
-      } rounded-lg shadow-md p-6 mb-4 border`}
+      } border rounded-lg shadow-sm overflow-hidden relative`}
     >
+      {/* Selection checkbox */}
+      {selectable && (
+        <div className="absolute top-4 right-4 z-10">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={handleSelectChange}
+            className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            aria-label={`Select ${profile.firstName} ${profile.lastName}`}
+          />
+        </div>
+      )}
+
       <div className="flex items-start">
         <div className="flex-shrink-0 mr-4">
           <ProfileImage
