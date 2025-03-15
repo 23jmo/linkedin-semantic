@@ -12,15 +12,21 @@ import UnauthenticatedSearchWarning from "@/components/UnauthenticatedSearchWarn
 import { semanticSearch } from "@/lib/api";
 
 interface Profile {
-  id: string;
-  linkedin_id: string;
-  name: string;
-  headline?: string;
-  summary?: string;
-  location?: string;
-  industry?: string;
-  profile_url?: string;
-  profile_image_url?: string;
+  profile: {
+    id: string;
+    linkedin_id: string;
+    full_name: string;
+    headline?: string;
+    summary?: string;
+    location?: string;
+    industry?: string;
+    profile_url?: string;
+    profile_picture_url?: string;
+    raw_profile_data?: any;
+    user_id: string;
+    created_at: string;
+    updated_at: string;
+  };
   score: number;
   highlights?: string[];
 }
@@ -166,20 +172,30 @@ export default function SearchPage() {
                       <p className="text-gray-600 dark:text-gray-400">
                         Found {results.length} results for "{query}"
                       </p>
-                      {results.map((profile) => (
+                      {results.map((result) => (
                         <ProfileCard
-                          key={profile.id}
+                          key={result.profile.id}
                           profile={{
-                            ...profile,
-                            firstName: profile.name.split(" ")[0],
-                            lastName: profile.name
-                              .split(" ")
-                              .slice(1)
-                              .join(" "),
-                            profileUrl: profile.profile_url || "",
-                            profilePicture: profile.profile_image_url,
+                            id: result.profile.id,
+                            firstName: result.profile.full_name
+                              ? result.profile.full_name.split(" ")[0]
+                              : "Unknown",
+                            lastName: result.profile.full_name
+                              ? result.profile.full_name
+                                  .split(" ")
+                                  .slice(1)
+                                  .join(" ")
+                              : "",
+                            headline: result.profile.headline,
+                            summary: result.profile.summary,
+                            location: result.profile.location,
+                            industry: result.profile.industry,
+                            profileUrl: result.profile.profile_url || "",
+                            profilePicture: result.profile.profile_picture_url,
+                            highlights: result.highlights,
+                            raw_profile_data: result.profile.raw_profile_data,
                           }}
-                          matchScore={profile.score}
+                          matchScore={result.score}
                         />
                       ))}
                     </div>

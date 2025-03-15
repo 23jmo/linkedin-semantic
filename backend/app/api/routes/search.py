@@ -17,5 +17,5 @@ async def semantic_search_endpoint(
     # This would be implemented with a check against the database
     # For now, assume profiles are indexed
     
-    results = search_profiles(query.query)
+    results = await search_profiles(query.query)
     return results

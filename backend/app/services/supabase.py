@@ -127,11 +127,14 @@ def semantic_search(query_embedding: QueryEmbedding, match_count: int = 10, matc
   if not client:
       raise ValueError("Supabase client not initialized")
   
+  # Ensure embedding is a list of floats
+  embedding_list = [float(x) for x in query_embedding.embedding]
+  
   response = supabase.rpc("search_profiles_by_embedding", 
                           {
-                           "query_embedding": query_embedding.embedding,
-                           "match_threshold": match_threshold,
-                           "match_count": match_count
-                          })
+                           "query_embedding": embedding_list,
+                           "match_threshold": float(match_threshold),
+                           "match_count": int(match_count)
+                          }).execute()
   
   return response.data

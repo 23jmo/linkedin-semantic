@@ -9,4 +9,36 @@ export interface Profile {
   profileUrl: string;
   profilePicture?: string;
   highlights?: string[];
+  raw_profile_data?: {
+    experiences?: Array<{
+      company?: string;
+      title?: string;
+      description?: string;
+      starts_at?: {
+        day?: number;
+        month?: number;
+        year?: number;
+      };
+      ends_at?: {
+        day?: number;
+        month?: number;
+        year?: number;
+      };
+      location?: string;
+    }>;
+    skills?: Array<{
+      name?: string;
+    }>;
+    education?: Array<{
+      school?: string;
+      degree_name?: string;
+      field_of_study?: string;
+      starts_at?: {
+        year?: number;
+      };
+      ends_at?: {
+        year?: number;
+      };
+    }>;
+  };
 }

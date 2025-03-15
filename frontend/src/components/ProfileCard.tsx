@@ -9,6 +9,8 @@ import {
   FaBriefcase,
   FaMapMarkerAlt,
   FaIndustry,
+  FaGraduationCap,
+  FaTools,
 } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
 import { Profile } from "@/types/profile";
@@ -24,6 +26,18 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
 
   const toggleExpanded = () => {
     setExpanded(!expanded);
+  };
+
+  const formatDate = (dateObj?: { month?: number; year?: number }) => {
+    if (!dateObj || !dateObj.year) return "Present";
+
+    const month = dateObj.month
+      ? new Date(0, dateObj.month - 1).toLocaleString("default", {
+          month: "short",
+        })
+      : "";
+
+    return `${month} ${dateObj.year}`;
   };
 
   const scoreColor = () => {
@@ -49,7 +63,7 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
       <div className="flex items-start">
         <div className="flex-shrink-0 mr-4">
           {profile.profilePicture ? (
-            <Image
+            <img
               src={profile.profilePicture}
               alt={`${profile.firstName} ${profile.lastName}`}
               width={80}
@@ -175,43 +189,193 @@ export default function ProfileCard({ profile, matchScore }: ProfileCardProps) {
           {expanded ? (
             <>
               <FaChevronUp className="mr-1" />
-              Hide Summary
+              Hide Details
             </>
           ) : (
             <>
               <FaChevronDown className="mr-1" />
-              Show Summary
+              View More
             </>
           )}
         </button>
       </div>
 
       {expanded && (
-        <div className="mt-4">
-          <h3
-            className={`text-md font-semibold ${
-              resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
-            } mb-2`}
-          >
-            Summary
-          </h3>
-          {profile.summary ? (
-            <p
-              className={
-                resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
-              }
+        <div className="mt-4 space-y-6">
+          <div>
+            <h3
+              className={`text-md font-semibold ${
+                resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
+              } mb-2`}
             >
-              {profile.summary}
-            </p>
-          ) : (
-            <p
-              className={`italic ${
-                resolvedTheme === "light" ? "text-gray-500" : "text-gray-500"
-              }`}
-            >
-              No summary available
-            </p>
-          )}
+              Summary
+            </h3>
+            {profile.summary ? (
+              <p
+                className={
+                  resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
+                }
+              >
+                {profile.summary}
+              </p>
+            ) : (
+              <p
+                className={`italic ${
+                  resolvedTheme === "light" ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                No summary available
+              </p>
+            )}
+          </div>
+
+          {profile.raw_profile_data?.experiences &&
+            profile.raw_profile_data.experiences.length > 0 && (
+              <div>
+                <h3
+                  className={`text-md font-semibold flex items-center ${
+                    resolvedTheme === "light"
+                      ? "text-gray-700"
+                      : "text-gray-300"
+                  } mb-3`}
+                >
+                  <FaBriefcase className="mr-2" /> Experience
+                </h3>
+                <div className="space-y-4">
+                  {profile.raw_profile_data.experiences.map((exp, index) => (
+                    <div
+                      key={index}
+                      className="ml-2 border-l-2 pl-4 border-gray-300 dark:border-gray-600"
+                    >
+                      <h4
+                        className={`font-medium ${
+                          resolvedTheme === "light"
+                            ? "text-gray-800"
+                            : "text-gray-200"
+                        }`}
+                      >
+                        {exp.title || "Role"}
+                      </h4>
+                      <p
+                        className={`${
+                          resolvedTheme === "light"
+                            ? "text-gray-700"
+                            : "text-gray-300"
+                        }`}
+                      >
+                        {exp.company || "Company"}
+                      </p>
+                      <p
+                        className={`text-sm ${
+                          resolvedTheme === "light"
+                            ? "text-gray-600"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {formatDate(exp.starts_at)} - {formatDate(exp.ends_at)}
+                        {exp.location && ` · ${exp.location}`}
+                      </p>
+                      {exp.description && (
+                        <p
+                          className={`mt-2 text-sm ${
+                            resolvedTheme === "light"
+                              ? "text-gray-600"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {exp.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          {profile.raw_profile_data?.education &&
+            profile.raw_profile_data.education.length > 0 && (
+              <div>
+                <h3
+                  className={`text-md font-semibold flex items-center ${
+                    resolvedTheme === "light"
+                      ? "text-gray-700"
+                      : "text-gray-300"
+                  } mb-3`}
+                >
+                  <FaGraduationCap className="mr-2" /> Education
+                </h3>
+                <div className="space-y-4">
+                  {profile.raw_profile_data.education.map((edu, index) => (
+                    <div
+                      key={index}
+                      className="ml-2 border-l-2 pl-4 border-gray-300 dark:border-gray-600"
+                    >
+                      <h4
+                        className={`font-medium ${
+                          resolvedTheme === "light"
+                            ? "text-gray-800"
+                            : "text-gray-200"
+                        }`}
+                      >
+                        {edu.school || "School"}
+                      </h4>
+                      <p
+                        className={`${
+                          resolvedTheme === "light"
+                            ? "text-gray-700"
+                            : "text-gray-300"
+                        }`}
+                      >
+                        {edu.degree_name || ""}{" "}
+                        {edu.field_of_study ? `· ${edu.field_of_study}` : ""}
+                      </p>
+                      <p
+                        className={`text-sm ${
+                          resolvedTheme === "light"
+                            ? "text-gray-600"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {edu.starts_at?.year || ""} -{" "}
+                        {edu.ends_at?.year || "Present"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          {profile.raw_profile_data?.skills &&
+            profile.raw_profile_data.skills.length > 0 && (
+              <div>
+                <h3
+                  className={`text-md font-semibold flex items-center ${
+                    resolvedTheme === "light"
+                      ? "text-gray-700"
+                      : "text-gray-300"
+                  } mb-3`}
+                >
+                  <FaTools className="mr-2" /> Skills
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.raw_profile_data.skills.map(
+                    (skill, index) =>
+                      skill.name && (
+                        <span
+                          key={index}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            resolvedTheme === "light"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-blue-900/30 text-blue-300"
+                          }`}
+                        >
+                          {skill.name}
+                        </span>
+                      )
+                  )}
+                </div>
+              </div>
+            )}
         </div>
       )}
     </div>
