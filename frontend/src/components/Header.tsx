@@ -84,7 +84,6 @@ export default function Header() {
                   resolvedTheme === "light" ? "text-gray-900" : "text-white"
                 } hidden md:block`}
               >
-                Semantic Search
               </h1>
             </Link>
           </div>

@@ -1,0 +1,4 @@
+
+Todo:
+  ☐ Fix the check_user_exists route - unnecessarily neds linkedinoauth thing
+  ☐ Actually use row level security instead of just relying on the service role key

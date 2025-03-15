@@ -16,28 +16,16 @@ export default function ProfileRedirect({
   useEffect(() => {
     // Skip redirect for these paths
     const excludedPaths = ["/complete-profile", "/api", "/_next"];
-
     const shouldSkip = excludedPaths.some((path) => pathname.startsWith(path));
+    if (shouldSkip) return;
 
-    if (shouldSkip) {
-      return;
-    }
-
-    // If the user is authenticated but doesn't exist in the database, redirect to complete-profile
+    // Simple redirect logic based only on session.exists
     if (status === "authenticated") {
-      console.log("ProfileRedirect - Session:", session);
-
-      // Check if user needs to complete their profile
-      if (session?.needsProfile === true || session?.exists === false) {
-        console.log(
-          "ProfileRedirect - User needs to complete profile, redirecting to complete-profile"
-        );
+      if (session?.exists === false) {
+        // User doesn't exist in database, redirect to complete profile
         router.replace("/complete-profile");
       } else if (pathname === "/complete-profile" && session?.exists === true) {
-        // If user is on complete-profile page but already exists, redirect to main page
-        console.log(
-          "ProfileRedirect - User already exists, redirecting to main page"
-        );
+        // User exists but is on complete-profile page, redirect to main page
         router.replace("/");
       }
     }

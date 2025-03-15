@@ -12,27 +12,14 @@ export default function CompleteProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log("CompleteProfilePage - Session status:", status);
-    console.log("CompleteProfilePage - Session data:", session);
-
     // If user is not authenticated, redirect to login
     if (status === "unauthenticated") {
-      console.log(
-        "CompleteProfilePage - User is not authenticated, redirecting to home"
-      );
       router.push("/");
     } else if (status === "authenticated") {
-      console.log("CompleteProfilePage - User is authenticated");
-      // If user exists in the database, redirect to dashboard
-      if (session?.exists === true && session?.needsProfile !== true) {
-        console.log(
-          "CompleteProfilePage - User exists and doesn't need profile, redirecting to main page"
-        );
+      // If user exists in the database, redirect to main page
+      if (session?.exists === true) {
         router.push("/");
       } else {
-        console.log(
-          "CompleteProfilePage - User needs to complete profile, showing LinkedIn URL form"
-        );
         setIsLoading(false);
       }
     }
@@ -53,11 +40,8 @@ export default function CompleteProfilePage() {
       const event = new Event("visibilitychange");
       document.dispatchEvent(event);
 
-      // Short delay to allow session to refresh
-      setTimeout(() => {
-        // Redirect to main page after successful creation
-        router.push("/");
-      }, 1000);
+      // Redirect to main page after successful creation
+      setTimeout(() => router.push("/"), 1000);
     } catch (error) {
       console.error("Error creating user:", error);
       setIsLoading(false);
@@ -85,7 +69,7 @@ export default function CompleteProfilePage() {
         {session?.user?.id && (
           <LinkedInUrlForm
             userId={session.user.id}
-            linkedInAuthData={{}} // Empty object for LinkedIn auth data
+            linkedInAuthData={{}}
             onSubmit={handleSubmitLinkedInUrl}
           />
         )}
