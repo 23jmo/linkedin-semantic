@@ -35,6 +35,16 @@ export default function HomeContent({
 
         {isAuthenticated ? (
           <div className="space-y-8 mt-8">
+            {/* For testing - direct link to complete profile page */}
+            <div className="text-center mb-4">
+              <a
+                href="/complete-profile"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                Complete your profile (for testing)
+              </a>
+            </div>
+
             {suggestions.map((group, index) => (
               <SuggestionBox
                 key={index}

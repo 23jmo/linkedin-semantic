@@ -5,6 +5,7 @@ import pydantic
 from app.schemas.embeddings import Embedding
 import uuid
 from app.utils.supabase_client import get_supabase_client, get_schema_client
+from datetime import datetime
 
 # Get the default client
 supabase = get_supabase_client()
@@ -27,7 +28,7 @@ def check_user_exists(user_id, schema_name="linkedin_profiles"):
     
     return response.data
 
-def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_embedding: Embedding, schema_name="public"):
+def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_embedding: Embedding, schema_name="linkedin_profiles"):
     """
     Store a LinkedIn profile in Supabase
     Args:
@@ -79,7 +80,8 @@ def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_e
             id=uuid.uuid4(),
             profile_id=validated_profile.id,
             embedding=profile_embedding,
-            embedding_model="openai"
+            embedding_model="openai",
+            created_at=datetime.now()
         )
        
         embedding_data = validated_embedding.model_dump()
@@ -87,6 +89,7 @@ def store_profile_in_supabase(user_id: str, linkedin_profile: Profile, profile_e
         embedding_data["profile_id"] = str(embedding_data["profile_id"])
         embedding_data["embedding"] = embedding_data["embedding"]
         embedding_data["embedding_model"] = embedding_data["embedding_model"] 
+        embedding_data["created_at"] = embedding_data["created_at"].isoformat()
         
         response = client.table("profile_embeddings").insert(embedding_data).execute()
         

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme-context";
+import AuthProvider from "../components/AuthProvider";
+import ProfileRedirect from "../components/ProfileRedirect";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,9 +25,11 @@ export default function RootLayout({
       <body
         className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen`}
       >
-        <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <ProfileRedirect>{children}</ProfileRedirect>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

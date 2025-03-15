@@ -29,6 +29,7 @@ class ProfileExistsResponse(BaseModel):
 class ProfileCreateRequest(BaseModel):
     user_id: str
     linkedin_auth: dict
+    linkedin_url: Optional[str] = None
 
 class ProfileCreateResponse(BaseModel):
     userId: str
