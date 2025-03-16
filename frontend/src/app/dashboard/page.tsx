@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import Layout from "@/components/Layout";
 import { useTheme } from "@/lib/theme-context";
 import { deleteUser } from "@/lib/api";
+import EmailHistory from "@/components/EmailHistory";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -117,6 +118,17 @@ export default function DashboardPage() {
           >
             You haven't performed any searches yet.
           </p>
+        </div>
+
+        <div
+          className={`${
+            resolvedTheme === "dark"
+              ? "bg-gray-800 text-white"
+              : "bg-white text-gray-900"
+          } shadow rounded-lg p-6 mb-6`}
+        >
+          <h2 className="text-xl font-semibold mb-4">Email History</h2>
+          <EmailHistory />
         </div>
 
         <div
