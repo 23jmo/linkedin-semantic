@@ -5,6 +5,16 @@ declare module "next-auth" {
    * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
    */
   interface Session {
+    /** JWT token for Supabase RLS */
+    supabaseAccessToken?: string;
+    /** Whether the user exists in our database */
+    exists?: boolean;
+    /** User's access token */
+    accessToken?: string;
+    /** User's refresh token */
+    refreshToken?: string;
+    /** The provider used for authentication */
+    provider?: string;
     user: {
       /** The user's name */
       name?: string | null;

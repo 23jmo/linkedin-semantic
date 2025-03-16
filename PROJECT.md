@@ -564,3 +564,230 @@ The integration of Supabase with pgvector provides a unified database solution t
 The modular architecture allows for easy extension and maintenance, while the separation of concerns between frontend and backend ensures that each part can evolve independently. The use of TypeScript and Pydantic schemas provides type safety and validation throughout the application.
 
 This project serves as a solid foundation for building more advanced features and scaling to handle larger user bases in the future.
+
+## Gmail Integration
+
+The application includes a robust Gmail integration that allows users to send personalized cold emails directly to LinkedIn connections. This feature leverages Google's OAuth 2.0 authentication and the Gmail API to securely send emails on behalf of users.
+
+### Architecture
+
+The Gmail integration follows a server-side API approach to ensure security and prevent client-side issues with Node.js modules:
+
+1. **Client-Server Separation**
+
+   - All Gmail API interactions occur on the server-side
+   - Client components only communicate with our API endpoints
+   - Server-side code handles authentication, token management, and email sending
+
+2. **Data Flow**
+   - User credentials are securely stored in Supabase
+   - Access tokens are refreshed automatically when expired
+   - Email content is generated using OpenAI's GPT-4
+   - Emails are sent via Gmail API with proper encoding
+
+### Authentication Flow
+
+1. **Google OAuth Integration**
+
+   - User clicks "Connect Gmail" in the EmailComposer component
+   - NextAuth.js initiates Google OAuth flow with Gmail-specific scopes
+   - User grants permission to the application to send emails
+   - Google returns access and refresh tokens
+   - Tokens are stored securely in Supabase for future use
+
+2. **Token Management**
+   - Access tokens typically expire after 1 hour
+   - Refresh tokens are used to obtain new access tokens
+   - The application automatically refreshes tokens when needed
+   - Users remain connected until they explicitly disconnect
+
+### Email Composition and Sending
+
+1. **User Flow**
+
+   - User selects up to 3 LinkedIn profiles from search results
+   - User opens the EmailComposer component
+   - If Gmail is not connected, user is prompted to connect
+   - User enters the purpose of the email and any additional notes
+   - User clicks "Send Email" to initiate the process
+
+2. **Email Generation**
+
+   - The application uses OpenAI's GPT-4 to generate personalized email content
+   - Email content is based on:
+     - Recipient's LinkedIn profile information (name, headline, industry)
+     - User's stated purpose for the email
+     - Any additional notes provided for specific recipients
+   - Emails are formatted as HTML with appropriate paragraph breaks
+
+3. **Email Sending Process**
+   - Frontend sends request to `/api/send-email` endpoint
+   - Backend validates the request and checks Gmail connection
+   - For each recipient:
+     - Email content is generated using OpenAI
+     - Email is encoded in base64 format as required by Gmail API
+     - Email is sent using the Gmail API
+     - Email history is stored in Supabase for future reference
+   - Success or error response is returned to the frontend
+
+### Database Schema
+
+The Gmail integration uses two main tables in Supabase:
+
+1. **Email Credentials Table**
+
+   ```sql
+   CREATE TABLE email.credentials (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+     provider TEXT NOT NULL,
+     access_token TEXT NOT NULL,
+     refresh_token TEXT NOT NULL,
+     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     UNIQUE(user_id, provider)
+   );
+   ```
+
+2. **Email History Table**
+   ```sql
+   CREATE TABLE email.history (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+     recipient_profile_id TEXT NOT NULL,
+     recipient_name TEXT NOT NULL,
+     recipient_email TEXT NOT NULL,
+     subject TEXT NOT NULL,
+     content TEXT NOT NULL,
+     sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+   );
+   ```
+
+### API Endpoints
+
+1. **Check Gmail Connection**
+
+   - `GET /api/gmail/check-connection`
+   - Checks if the current user has connected their Gmail account
+   - Returns `{ isConnected: boolean }`
+
+2. **Send Email**
+
+   - `POST /api/gmail/send-email`
+   - Sends an email using the user's Gmail account
+   - Request body: `{ to, subject, body, recipientProfileId, recipientName }`
+   - Returns `{ success: boolean }`
+
+3. **Send Cold Email**
+   - `POST /api/send-email`
+   - Generates and sends personalized cold emails to multiple recipients
+   - Request body: `{ profiles, purpose, notes }`
+   - Returns `{ message, emails }`
+
+### Security Considerations
+
+1. **Token Storage**
+
+   - Access and refresh tokens are stored securely in Supabase
+   - Row-level security policies ensure users can only access their own tokens
+   - Service role key is used for token operations to bypass RLS when needed
+
+2. **Scope Limitations**
+
+   - The application only requests the minimum required scope: `https://www.googleapis.com/auth/gmail.send`
+   - This scope allows sending emails but not reading the user's inbox
+   - Users are clearly informed about the permissions being requested
+
+3. **Error Handling**
+   - Comprehensive error handling for authentication failures
+   - Token refresh mechanism to handle expired tokens
+   - Clear user feedback for connection issues
+
+### Implementation Details
+
+1. **Server-Side Gmail Service**
+
+   - Located in `src/lib/server/gmail-service.ts`
+   - Handles all interactions with the Gmail API
+   - Manages token refresh and authentication
+   - Provides functions for sending emails and checking connection status
+
+2. **Client-Side Interface**
+
+   - Located in `src/lib/gmail-service.ts`
+   - Provides browser-safe functions that call API endpoints
+   - No direct interaction with Google APIs from the client
+
+3. **UI Components**
+   - `GmailConnector`: Allows users to connect their Gmail account
+   - `EmailComposer`: Interface for composing and sending emails
+
+### User Experience
+
+1. **Connection Status**
+
+   - Clear visual indication of Gmail connection status
+   - Simple one-click process to connect Gmail
+   - Graceful handling of connection errors
+
+2. **Email Composition**
+
+   - Intuitive interface for composing emails to multiple recipients
+   - Ability to add personalized notes for each recipient
+   - Clear purpose field to guide email generation
+
+3. **Feedback and History**
+   - Immediate feedback on email sending status
+   - Loading indicators during the sending process
+   - Error messages for failed attempts
+   - Email history for reference and tracking
+
+### Setup Requirements
+
+1. **Google Cloud Project**
+
+   - Create a project in Google Cloud Console
+   - Enable the Gmail API
+   - Configure OAuth consent screen
+   - Create OAuth credentials with appropriate redirect URIs
+
+2. **Environment Variables**
+
+   ```
+   GOOGLE_CLIENT_ID=your_client_id_here
+   GOOGLE_CLIENT_SECRET=your_client_secret_here
+   ```
+
+3. **Supabase Configuration**
+   - Run the SQL migration to create necessary tables
+   - Set up row-level security policies
+   - Configure service role key for backend operations
+
+### Future Enhancements
+
+1. **Email Templates**
+
+   - Allow users to create and save email templates
+   - Provide template suggestions based on common use cases
+
+2. **Scheduled Emails**
+
+   - Enable scheduling emails for future delivery
+   - Implement reminders for follow-up emails
+
+3. **Email Analytics**
+
+   - Track email open rates and responses
+   - Provide insights on email effectiveness
+
+4. **Additional Email Providers**
+
+   - Expand beyond Gmail to support Outlook, Yahoo, etc.
+   - Implement a provider-agnostic email sending interface
+
+5. **Advanced Personalization**
+   - Use more LinkedIn data points for better personalization
+   - Implement A/B testing for email content
+
+The Gmail integration provides a powerful tool for users to leverage their LinkedIn network for professional outreach, combining the convenience of the application's semantic search with personalized communication capabilities.

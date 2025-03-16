@@ -1,130 +1,184 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import OpenAI from "openai";
-import { hasGmailConnected, sendEmail } from "@/lib/server/gmail-service";
-import { storeEmailHistory } from "@/lib/server/email-credentials";
+import {
+  getEmailCredentials,
+  storeEmailHistory,
+} from "@/lib/server/email-credentials";
+import { google } from "googleapis";
+import { checkUserExists } from "@/lib/api";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // Get the authenticated user session
+    // Get the current session
     const session = await auth();
-
-    if (!session || !session.user || !session.user.id) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { message: "Authentication required" },
+        { error: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
-    const userName = session.user.name || "Me";
+    // Parse the request body
+    const { profiles, purpose, notes, emailContents } = await request.json();
 
-    // Parse request body
-    const body = await request.json();
-    const { profiles, purpose, notes } = body;
+    // Log the email request
+    console.log("Email Send Request:", {
+      userId: session.user.id,
+      recipientCount: profiles.length,
+      recipients: profiles.map((p: any) => ({
+        id: p.id,
+        name: `${p.firstName} ${p.lastName}`,
+      })),
+      purpose: purpose.substring(0, 100) + (purpose.length > 100 ? "..." : ""),
+    });
 
+    // Validate required fields
     if (!profiles || !Array.isArray(profiles) || profiles.length === 0) {
       return NextResponse.json(
-        { message: "At least one profile is required" },
+        { error: "At least one recipient is required" },
         { status: 400 }
       );
     }
 
-    if (!purpose) {
+    // Get Gmail credentials
+    const credentials = await getEmailCredentials(session.user.id, "gmail");
+    if (!credentials) {
       return NextResponse.json(
-        { message: "Purpose is required" },
+        { error: "Gmail credentials not found" },
         { status: 400 }
       );
     }
 
-    // Check if user has Gmail connected
-    const hasGmail = await hasGmailConnected(userId);
-    if (!hasGmail) {
-      return NextResponse.json(
-        {
-          message:
-            "Gmail account not connected. Please connect your Gmail account to send emails.",
-        },
-        { status: 403 }
-      );
-    }
+    // Set up Gmail API client
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID!,
+      process.env.GOOGLE_CLIENT_SECRET!,
+      `${process.env.NEXTAUTH_URL}/api/auth/gmail-auth/callback`
+    );
 
-    // Generate and send emails for each profile
-    const emailPromises = profiles.map(async (profile) => {
-      const profileNote = notes[profile.id] || "";
+    oauth2Client.setCredentials({
+      access_token: credentials.access_token,
+      refresh_token: credentials.refresh_token,
+    });
 
-      // Generate email content with OpenAI
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert at writing personalized cold emails that are professional, concise, and effective.",
-          },
-          {
-            role: "user",
-            content: `Write a personalized cold email to ${profile.firstName} ${
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+    // Send emails to each recipient
+    const results = await Promise.all(
+      profiles.map(async (profile) => {
+        // Get recipient email from database
+        let recipientEmail = "";
+        try {
+          const targetProfile = await checkUserExists(profile.id, {});
+          recipientEmail = targetProfile.email || "";
+          console.log(
+            `Found email for ${profile.firstName} ${
               profile.lastName
-            } who works in ${profile.industry || "their industry"}. 
-            Their LinkedIn headline is: "${profile.headline || ""}".
-            The purpose of this email is: ${purpose}.
-            Additional notes: ${profileNote}
-            
-            The email should be from ${userName}.
-            Keep it under 200 words, professional, and with a clear call to action.
-            Format as HTML with appropriate paragraph breaks.`,
-          },
-        ],
-      });
+            } from database: ${recipientEmail ? "Yes" : "No"}`
+          );
+        } catch (error) {
+          console.error("Error fetching target profile:", error);
+        }
 
-      const emailContent = completion.choices[0].message.content || "";
-      const subject = `Connecting with ${profile.firstName} ${profile.lastName}`;
+        // Fallback to profile data if database lookup failed
+        if (!recipientEmail && profile.raw_profile_data) {
+          const rawData = profile.raw_profile_data;
+          if (typeof rawData === "object" && rawData !== null) {
+            if (typeof rawData.email === "string" && rawData.email) {
+              recipientEmail = rawData.email;
+            } else if (
+              typeof rawData.emailAddress === "string" &&
+              rawData.emailAddress
+            ) {
+              recipientEmail = rawData.emailAddress;
+            } else if (
+              rawData.contact_info &&
+              typeof rawData.contact_info.email === "string"
+            ) {
+              recipientEmail = rawData.contact_info.email;
+            }
+          }
+        }
 
-      // Get recipient email (in a real app, you'd extract this from LinkedIn data)
-      // For now, we'll use a placeholder
-      const recipientEmail = `${profile.firstName.toLowerCase()}.${profile.lastName.toLowerCase()}@example.com`;
+        // Final fallback
+        if (!recipientEmail) {
+          recipientEmail = `${profile.firstName.toLowerCase()}.${profile.lastName.toLowerCase()}@example.com`;
+        }
 
-      // Send the email
-      await sendEmail(userId, recipientEmail, subject, emailContent);
+        // Get the email content for this profile
+        const emailContent = emailContents[profile.id] || {
+          subject: "",
+          body: "",
+        };
+        if (!emailContent.subject || !emailContent.body) {
+          throw new Error(
+            `Email content missing for ${profile.firstName} ${profile.lastName}`
+          );
+        }
 
-      // Store in email history
-      await storeEmailHistory(
-        userId,
-        profile.id,
-        `${profile.firstName} ${profile.lastName}`,
-        recipientEmail,
-        subject,
-        emailContent
-      );
+        // Log the email being sent
+        console.log(
+          `Sending email to ${recipientEmail} with subject ${emailContent.subject}`
+        );
 
-      return {
-        recipient: {
-          name: `${profile.firstName} ${profile.lastName}`,
-          email: recipientEmail,
-        },
-        subject,
-        content: emailContent,
-      };
-    });
+        // Create and send the email
+        const utf8Subject = `=?utf-8?B?${Buffer.from(
+          emailContent.subject
+        ).toString("base64")}?=`;
+        const messageParts = [
+          `From: ${session.user.email!}`,
+          `To: ${recipientEmail}`,
+          "Content-Type: text/html; charset=utf-8",
+          "MIME-Version: 1.0",
+          `Subject: ${utf8Subject}`,
+          "",
+          emailContent.body,
+        ];
 
-    const generatedEmails = await Promise.all(emailPromises);
+        const message = messageParts.join("\n");
+        const encodedMessage = Buffer.from(message)
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
 
-    return NextResponse.json({
-      message: "Emails sent successfully",
-      emails: generatedEmails,
-    });
+        // Send the email
+        const res = await gmail.users.messages.send({
+          userId: "me",
+          requestBody: { raw: encodedMessage },
+        });
+
+        // Store email history
+        await storeEmailHistory(
+          session.user.id as string,
+          profile.id,
+          `${profile.firstName} ${profile.lastName}`,
+          recipientEmail,
+          emailContent.subject,
+          emailContent.body
+        );
+
+        // Log successful send
+        console.log(
+          `Email sent successfully to ${profile.firstName} ${profile.lastName}, message ID: ${res.data.id}`
+        );
+
+        return {
+          profileId: profile.id,
+          success: true,
+          messageId: res.data.id,
+        };
+      })
+    );
+
+    console.log(`All emails sent successfully: ${results.length} emails`);
+    return NextResponse.json({ success: true, results });
   } catch (error) {
     console.error("Error sending email:", error);
     return NextResponse.json(
       {
-        message:
-          error instanceof Error ? error.message : "Failed to send email",
+        error: "Failed to send email",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

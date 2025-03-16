@@ -2,8 +2,11 @@
   "dependencies": {
     "@auth/supabase-adapter": "^1.8.0",
     "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
     "googleapis": "^146.0.0",
-    "next-auth": "^4.24.11"
+    "jsonwebtoken": "^9.0.2",
+    "next-auth": "^4.24.11",
+    "openai": "^4.87.3"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.9"

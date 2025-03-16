@@ -8,6 +8,7 @@ import { useTheme } from "@/lib/theme-context";
 import { hasGmailConnected } from "@/lib/gmail-service";
 import GmailConnector from "./GmailConnector";
 import { useSession } from "next-auth/react";
+import { checkUserExists } from "@/lib/api";
 
 interface EmailComposerProps {
   selectedProfiles: Profile[];
@@ -30,6 +31,14 @@ export default function EmailComposer({
   );
   const { resolvedTheme } = useTheme();
   const { data: session } = useSession();
+
+  // New state for email generation
+  const [generatedEmails, setGeneratedEmails] = useState<
+    Record<string, { subject: string; body: string }>
+  >({});
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [showGeneratedEmails, setShowGeneratedEmails] = useState(false);
 
   // Close the composer when there are no profiles selected
   useEffect(() => {
@@ -62,6 +71,10 @@ export default function EmailComposer({
 
   const handlePurposeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPurpose(e.target.value);
+    // Reset generated emails when purpose changes
+    if (showGeneratedEmails) {
+      setShowGeneratedEmails(false);
+    }
   };
 
   const handleNoteChange = (profileId: string, note: string) => {
@@ -71,12 +84,119 @@ export default function EmailComposer({
     }));
   };
 
+  const handleEmailSubjectChange = (profileId: string, subject: string) => {
+    setGeneratedEmails((prev) => ({
+      ...prev,
+      [profileId]: {
+        ...prev[profileId],
+        subject,
+      },
+    }));
+  };
+
+  const handleEmailBodyChange = (profileId: string, body: string) => {
+    setGeneratedEmails((prev) => ({
+      ...prev,
+      [profileId]: {
+        ...prev[profileId],
+        body,
+      },
+    }));
+  };
+
+  const handleGenerateEmails = async () => {
+    if (!purpose) {
+      setGenerationError("Please specify the purpose of your email");
+      return;
+    }
+
+    setGenerationError(null);
+    setIsGenerating(true);
+
+    try {
+      // Get the current user's profile data
+      let senderProfile = null;
+      if (session?.user) {
+        try {
+          // Pass the user object correctly to checkUserExists
+          senderProfile = await checkUserExists(session.user, {});
+        } catch (error) {
+          console.error("Error fetching sender profile:", error);
+        }
+      }
+
+      const emailPromises = selectedProfiles.map(async (profile) => {
+        const response = await fetch("/api/generate-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            recipientProfile: profile,
+            senderProfile,
+            purpose:
+              purpose +
+              (notes[profile.id]
+                ? `\n Additional User Notes: ${notes[profile.id]}`
+                : ""),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error ||
+              `Failed to generate email for ${profile.firstName}`
+          );
+        }
+
+        const data = await response.json();
+        return {
+          profileId: profile.id,
+          subject: data.subject,
+          body: data.body,
+        };
+      });
+
+      const results = await Promise.all(emailPromises);
+
+      const newGeneratedEmails: Record<
+        string,
+        { subject: string; body: string }
+      > = {};
+      results.forEach((result) => {
+        newGeneratedEmails[result.profileId] = {
+          subject: result.subject,
+          body: result.body,
+        };
+      });
+
+      setGeneratedEmails(newGeneratedEmails);
+      setShowGeneratedEmails(true);
+    } catch (err) {
+      setGenerationError(
+        err instanceof Error ? err.message : "Failed to generate emails"
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
+      // Use generated emails if available, otherwise use empty strings
+      const emailContents = selectedProfiles.reduce((acc, profile) => {
+        acc[profile.id] = generatedEmails[profile.id] || {
+          subject: "",
+          body: "",
+        };
+        return acc;
+      }, {} as Record<string, { subject: string; body: string }>);
+
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {
@@ -86,6 +206,7 @@ export default function EmailComposer({
           profiles: selectedProfiles,
           purpose,
           notes,
+          emailContents, // Include the generated/edited emails with subject and body
         }),
       });
 
@@ -98,6 +219,8 @@ export default function EmailComposer({
       // Reset form after success
       setPurpose("");
       setNotes({});
+      setGeneratedEmails({});
+      setShowGeneratedEmails(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -282,6 +405,169 @@ export default function EmailComposer({
                   required
                 />
               </div>
+
+              {generationError && (
+                <div
+                  className={`${
+                    resolvedTheme === "light"
+                      ? "bg-red-50 text-red-800"
+                      : "bg-red-900 text-red-100"
+                  } p-4 rounded-md mb-6`}
+                >
+                  <p>{generationError}</p>
+                </div>
+              )}
+
+              {!showGeneratedEmails && (
+                <div className="flex justify-end mb-6">
+                  <button
+                    type="button"
+                    onClick={handleGenerateEmails}
+                    disabled={isGenerating || !purpose}
+                    className={`bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded flex items-center ${
+                      isGenerating || !purpose
+                        ? "opacity-70 cursor-not-allowed"
+                        : ""
+                    }`}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Generating...
+                      </>
+                    ) : (
+                      "Generate Emails"
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {showGeneratedEmails && (
+                <div className="mb-6">
+                  <h3
+                    className={`text-lg font-medium mb-4 ${
+                      resolvedTheme === "light"
+                        ? "text-gray-800"
+                        : "text-gray-200"
+                    }`}
+                  >
+                    Generated Emails
+                  </h3>
+                  <div className="space-y-6">
+                    {selectedProfiles.map((profile) => (
+                      <div
+                        key={`email-${profile.id}`}
+                        className={`p-4 border rounded-md ${
+                          resolvedTheme === "light"
+                            ? "border-gray-200 bg-gray-50"
+                            : "border-gray-700 bg-gray-900"
+                        }`}
+                      >
+                        <div className="flex items-center mb-3">
+                          <ProfileImage
+                            imageUrl={profile.profilePicture}
+                            firstName={profile.firstName}
+                            lastName={profile.lastName}
+                            size="sm"
+                          />
+                          <div className="ml-3">
+                            <h4
+                              className={`font-medium ${
+                                resolvedTheme === "light"
+                                  ? "text-gray-800"
+                                  : "text-gray-200"
+                              }`}
+                            >
+                              {profile.firstName} {profile.lastName}
+                            </h4>
+                            <p
+                              className={`text-sm ${
+                                resolvedTheme === "light"
+                                  ? "text-gray-500"
+                                  : "text-gray-400"
+                              }`}
+                            >
+                              {profile.profileUrl || "No profile URL available"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <label
+                            className={`block text-sm font-medium ${
+                              resolvedTheme === "light"
+                                ? "text-gray-700"
+                                : "text-gray-300"
+                            } mb-1`}
+                          >
+                            Subject
+                          </label>
+                          <input
+                            type="text"
+                            value={generatedEmails[profile.id]?.subject || ""}
+                            onChange={(e) =>
+                              handleEmailSubjectChange(
+                                profile.id,
+                                e.target.value
+                              )
+                            }
+                            className={`w-full border rounded-md p-2 ${
+                              resolvedTheme === "light"
+                                ? "border-gray-300"
+                                : "border-gray-600 bg-gray-700"
+                            }`}
+                            placeholder="Email subject"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            className={`block text-sm font-medium ${
+                              resolvedTheme === "light"
+                                ? "text-gray-700"
+                                : "text-gray-300"
+                            } mb-1`}
+                          >
+                            Message
+                          </label>
+                          <textarea
+                            value={generatedEmails[profile.id]?.body || ""}
+                            onChange={(e) =>
+                              handleEmailBodyChange(profile.id, e.target.value)
+                            }
+                            className={`w-full border rounded-md p-3 ${
+                              resolvedTheme === "light"
+                                ? "border-gray-300"
+                                : "border-gray-600 bg-gray-700"
+                            }`}
+                            rows={8}
+                            placeholder="Email body"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {error && (
                 <div

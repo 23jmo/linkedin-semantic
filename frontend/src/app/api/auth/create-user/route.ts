@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("API route: /api/auth/create-user called");
-
     // Parse the request body
     const body = await request.json();
-    console.log("Request body:", body);
 
     // Validate LinkedIn URL if user doesn't exist
     if (!body.linkedin_url) {
@@ -19,9 +16,6 @@ export async function POST(request: NextRequest) {
 
     // Forward the request to the FastAPI backend
     const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
-    console.log(
-      `Forwarding request to ${backendUrl}/api/v1/profiles/create-user`
-    );
 
     const response = await fetch(`${backendUrl}/api/v1/profiles/create-user`, {
       method: "POST",
@@ -44,7 +38,6 @@ export async function POST(request: NextRequest) {
 
     // Return the response from the backend
     const data = await response.json();
-    console.log("Backend response:", data);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error in create-user API route:", error);

@@ -219,7 +219,7 @@ export async function POST(request: Request) {
 
   // Create or retrieve Stripe customer
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
