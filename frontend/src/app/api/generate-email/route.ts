@@ -55,8 +55,9 @@ export async function POST(request: NextRequest) {
           - Be friendly but professional
           - Include a clear call to action
           - Make sure the email feels authentic and not AI-generated
+          - DO NOT INLCUDE ANY FILL IN THE BLANK FIELDS - EVERYTHING SHOULD READ COMPLETELY AND BE CONCISE
           
-          Return the email as a JSON object with 'subject' and 'body' fields.`,
+          Return the email as a JSON object with 'subject' and 'body' fields. Include formatting like new lines and paragraphs.`,
         },
       ],
       max_tokens: 500,
