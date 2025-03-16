@@ -5,7 +5,7 @@ import {
   storeEmailHistory,
 } from "@/lib/server/email-credentials";
 import { google } from "googleapis";
-import { checkUserExists } from "@/lib/api";
+import { getUserEmail } from "@/lib/api";
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,16 +68,23 @@ export async function POST(request: NextRequest) {
       profiles.map(async (profile) => {
         // Get recipient email from database
         let recipientEmail = "";
+
         try {
-          const targetProfile = await checkUserExists(profile.id, {});
-          recipientEmail = targetProfile.email || "";
-          console.log(
-            `Found email for ${profile.firstName} ${
-              profile.lastName
-            } from database: ${recipientEmail ? "Yes" : "No"}`
-          );
+          // Use the getUserEmail function from api.ts
+          console.log("Fucking Profile", profile);
+          const email = await getUserEmail(profile.user_id);
+          if (email) {
+            recipientEmail = email;
+            console.log(
+              `Found email for ${profile.firstName} ${profile.lastName} from database: Yes`
+            );
+          } else {
+            console.log(
+              `No email found for ${profile.firstName} ${profile.lastName} in database`
+            );
+          }
         } catch (error) {
-          console.error("Error fetching target profile:", error);
+          console.error("Error fetching target profile email:", error);
         }
 
         // Fallback to profile data if database lookup failed

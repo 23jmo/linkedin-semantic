@@ -133,6 +133,7 @@ export default function SearchPage() {
                         // Convert SearchResult to Profile for the ProfileCard
                         const profile: Profile = {
                           id: result.profile.id,
+                          user_id: result.profile.user_id,
                           firstName: result.profile.full_name
                             ? result.profile.full_name.split(" ")[0]
                             : "Unknown",

@@ -114,15 +114,81 @@ export default function EmailComposer({
     setIsGenerating(true);
 
     try {
+      // Define a more comprehensive senderProfile type
+      type SenderProfileType = {
+        id: string | undefined;
+        name: string;
+        email: string;
+        profilePicture: string;
+        headline?: string;
+        location?: string;
+        industry?: string;
+        linkedinId?: string;
+        profileUrl?: string;
+      };
+
       // Get the current user's profile data
-      let senderProfile = null;
-      if (session?.user) {
+      let senderProfile: SenderProfileType | null = null;
+
+      if (session?.user?.id) {
         try {
           // Pass the user object correctly to checkUserExists
-          senderProfile = await checkUserExists(session.user, {});
+          const userProfile = await checkUserExists(session.user, {});
+          console.log(
+            "[EmailComposer] Raw userProfile from checkUserExists:",
+            userProfile
+          );
+
+          senderProfile = userProfile.linkedin_profile[0].raw_profile_data;
+          // Extract data from the nested structure
+          // if (
+          //   userProfile &&
+          //   userProfile.linkedin_profile &&
+          //   Array.isArray(userProfile.linkedin_profile) &&
+          //   userProfile.linkedin_profile.length > 0
+          // ) {
+          //   const profileData = userProfile.linkedin_profile[0];
+
+          //   // Create a properly structured senderProfile
+          //   senderProfile = {
+          //     id: userProfile.id || session?.user?.id,
+          //     name: profileData.full_name || session?.user?.name || "Unknown",
+          //     email: userProfile.email || session?.user?.email || "",
+          //     headline: profileData.headline || "",
+          //     profilePicture:
+          //       profileData.profile_picture_url || session?.user?.image || "",
+          //     location: profileData.location || "",
+          //     industry: profileData.industry || "",
+          //     linkedinId: profileData.linkedin_id || "",
+          //     profileUrl: profileData.profile_url || "",
+          //   };
+          // } else {
+          //   // Fallback if linkedin_profile is not available
+          //   senderProfile = {
+          //     id: userProfile.id || session?.user?.id,
+          //     name:
+          //       userProfile.name ||
+          //       userProfile.full_name ||
+          //       session?.user?.name ||
+          //       "Unknown",
+          //     email: userProfile.email || session?.user?.email || "",
+          //     profilePicture:
+          //       userProfile.profile_picture_url ||
+          //       userProfile.image ||
+          //       session?.user?.image ||
+          //       "",
+          //   };
+
+          console.log(
+            "[EmailComposer] Structured senderProfile:",
+            senderProfile
+          );
         } catch (error) {
           console.error("Error fetching sender profile:", error);
+          // Keep using the default senderProfile from session
         }
+      } else {
+        console.warn("[EmailComposer] No user ID available in session");
       }
 
       const emailPromises = selectedProfiles.map(async (profile) => {

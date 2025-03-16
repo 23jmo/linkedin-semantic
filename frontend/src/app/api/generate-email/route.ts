@@ -26,13 +26,7 @@ export async function POST(request: NextRequest) {
         headline: recipientProfile.headline,
         // Include other basic fields but not the full raw_profile_data to keep logs clean
       },
-      senderProfile: senderProfile
-        ? {
-            id: senderProfile.id,
-            name: senderProfile.name || "Unknown",
-            // Include other basic sender fields
-          }
-        : "No sender profile",
+      senderProfile: senderProfile,
       purpose: purpose,
     });
 
