@@ -8,7 +8,7 @@ This is the backend for the LinkedIn Semantic Search application. It provides AP
 - **SQLAlchemy**: SQL toolkit and Object-Relational Mapping (ORM) for Python
 - **PostgreSQL**: Relational database with pgvector extension for vector embeddings
 - **Pinecone**: Vector database for efficient semantic search
-- **OpenAI**: API for generating embeddings for semantic search
+- **cl**: API for generating embeddings for semantic search
 - **JWT**: JSON Web Tokens for authentication
 - **Pydantic**: Data validation and settings management
 - **Uvicorn**: ASGI server for running FastAPI applications

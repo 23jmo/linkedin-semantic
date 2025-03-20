@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-
+import { prompt } from "./prompt";
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -37,8 +37,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content:
-            "You are a professional email writer specializing in LinkedIn networking. Write concise, friendly, and effective emails that leverage the specific details from LinkedIn profiles to create personalized messages. Return your response as a JSON object with 'subject' and 'body' fields.",
+          content: prompt,
         },
         {
           role: "user",
@@ -48,16 +47,7 @@ export async function POST(request: NextRequest) {
           
           The purpose of the email is: ${purpose}.
           
-          Guidelines:
-          - Use specific details from both profiles to create a personalized message
-          - Reference relevant work experience, skills, education, or mutual connections
-          - Keep it concise (3-4 paragraphs maximum)
-          - Be friendly but professional
-          - Include a clear call to action
-          - Make sure the email feels authentic and not AI-generated
-          - DO NOT INLCUDE ANY FILL IN THE BLANK FIELDS - EVERYTHING SHOULD READ COMPLETELY AND BE CONCISE
-          
-          Return the email as a JSON object with 'subject' and 'body' fields. Include formatting like new lines and paragraphs.`,
+          `,
         },
       ],
       max_tokens: 500,

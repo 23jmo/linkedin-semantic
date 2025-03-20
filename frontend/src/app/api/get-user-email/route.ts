@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createClient } from "@supabase/supabase-js";
+import { Database } from "../../../../types/next-auth.types";
 
 // Create a Supabase client with service role key for admin operations
-const supabaseAdmin = createClient(
+const supabaseAdmin = createClient<Database>(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   {

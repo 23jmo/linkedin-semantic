@@ -9,6 +9,7 @@
     "openai": "^4.87.3"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.9"
+    "@types/jsonwebtoken": "^9.0.9",
+    "supabase": "^2.19.7"
   }
 }
