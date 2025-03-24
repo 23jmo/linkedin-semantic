@@ -1,50 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export async function POST(request: Request) {
   try {
-    // Get the authorization header
+    const { user_id, linkedin_auth } = await request.json()
 
-    // Parse the request body
-    const body = await request.json();
-    // console.log("Request body:", body);
-
-    // Forward the request to the FastAPI backend
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
-    // console.log(
-    //   `Forwarding request to ${backendUrl}/api/v1/profiles/check-user-exists`
-    // );
-
-    const response = await fetch(
-      `${backendUrl}/api/v1/profiles/check-user-exists`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    // Check if the response is ok
-    if (!response.ok) {
-      console.error(`Backend returned status ${response.status}`);
-      //const errorText = await response.text();
-      //console.error(`Error response: ${errorText}`);
-      return NextResponse.json(
-        { error: "Failed to check user existence" },
-        { status: response.status }
-      );
+    if (!user_id) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    // Return the response from the backend
-    const data = await response.json();
-    // console.log("Backend response:", data);
-    return NextResponse.json(data);
+    // Check if user exists in database
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user_id)
+      .single()
+
+    if (error) {
+      console.error('Error checking user:', error)
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+
+    return NextResponse.json({ exists: !!user })
   } catch (error) {
-    console.error("Error in check-user-exists API route:", error);
+    console.error('Error in check-user-exists:', error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }
