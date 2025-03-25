@@ -36,7 +36,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error }, { status: 500 });
     }
 
-    console.log("LinkedIn profile:", JSON.stringify(proxycurl_linkedin_profile).substring(0, 200) + "...");
+    console.log(
+      "LinkedIn profile:",
+      JSON.stringify(proxycurl_linkedin_profile).substring(0, 200) + "..."
+    );
 
     await verify_profile_match(linkedin_auth, proxycurl_linkedin_profile);
 
@@ -78,24 +81,13 @@ export async function POST(request: NextRequest) {
 
     const embedding = await generate_embedding(profile.raw_profile_data);
 
-    const validatedEmbedding = {
-      id: crypto.randomUUID(),
-      profile_id: profile_id,
-      embedding: embedding,
-      embedding_model: "openai",
-      created_at: now,
-    };
-    console.log("Embedding generated:", embedding);
-
-    const embedding_data = validatedEmbedding;
-
-    const profile_data = profile;
-
     try {
       // Store the profile in Supabase
-      const { data, error: insertError } = await supabase
+      const { data: profileData, error: insertError } = await supabase
         .from("profiles")
-        .insert(profile);
+        .insert(profile)
+        .select()
+        .single();
       if (insertError) {
         console.error("Error storing profile:", insertError);
         return NextResponse.json(
@@ -104,10 +96,19 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Create embedding data with the correct profile_id
+      const validatedEmbedding = {
+        id: crypto.randomUUID(),
+        profile_id: profileData.id, // Use the actual profile ID
+        embedding: embedding,
+        embedding_model: "openai",
+        created_at: now,
+      };
+
       // Store the embedding
       const { error: embeddingError } = await supabase
         .from("profile_embeddings")
-        .insert(embedding_data);
+        .insert(validatedEmbedding);
       if (embeddingError) {
         console.error("Error storing embedding:", embeddingError);
         return NextResponse.json(
