@@ -128,6 +128,19 @@ export const QueryEmbeddingSchema = z.object({
   embedding_model: z.string()
 })
 
+export const ProfileCreateRequestSchema = z.object({
+  user_id: z.string(),
+  linkedin_auth: z.object({}).optional(),
+  linkedin_url: z.string()
+})
+
+export const ProfileCreateResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string()
+})
+
+
+
 
 
 // TypeScript types derived from schemas

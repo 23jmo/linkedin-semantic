@@ -6,10 +6,12 @@
     "googleapis": "^146.0.0",
     "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.11",
-    "openai": "^4.89.0"
+    "openai": "^4.89.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/uuid": "^10.0.0",
     "supabase": "^2.19.7"
   }
 }

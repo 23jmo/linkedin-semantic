@@ -22,11 +22,13 @@ export async function POST(request: Request) {
 
     const { user_id } = result.data
 
+    console.log("Deleting user with User ID:", user_id);
+
     // Check if user exists in database
     const { data: user, error } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', user_id)
+      .eq('user_id', user_id)
 
     if (error) {
       console.error('Error checking user:', error)

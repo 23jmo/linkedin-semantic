@@ -15,6 +15,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 ).schema('next_auth')
 
+const supabase_profiles = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+).schema('linkedin_profiles')
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -31,10 +36,16 @@ export async function POST(request: Request) {
     const { user_id } = result.data
 
     // Check if user exists in database
-    const { data: user, error } = await supabase
+    const { data: user_auth, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', user_id)
+      .single()
+    
+      const {data: user_profile, error: error_profile} = await supabase_profiles
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user_id)
       .single()
 
     if (error) {
@@ -47,8 +58,8 @@ export async function POST(request: Request) {
 
     // Validate response against schema
     const response: CheckUserExistsResponse = {
-      user_exists: !!user,
-      linkedin_profile: user || undefined
+      user_exists: !!user_auth && !!user_profile,
+      linkedin_profile: user_auth || undefined
     }
 
     return NextResponse.json(response, { status: 200 })
