@@ -12,7 +12,7 @@ import {
   FaTools,
 } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
-import { Profile } from "@/types/profile";
+import { Profile } from "../types/profile";
 import CompanyLogo from "./CompanyLogo";
 import ProfileImage from "./ProfileImage";
 import SchoolLogo from "./SchoolLogo";

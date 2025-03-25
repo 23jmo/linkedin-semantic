@@ -6,7 +6,7 @@
     "googleapis": "^146.0.0",
     "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.11",
-    "openai": "^4.87.3"
+    "openai": "^4.89.0"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.9",

@@ -10,7 +10,7 @@ import Layout from "@/components/Layout";
 import UnauthenticatedSearchWarning from "@/components/UnauthenticatedSearchWarning";
 import SelectionChip from "@/components/SelectionChip";
 import EmailComposer from "@/components/EmailComposer";
-import { Profile } from "@/types/profile";
+import { Profile } from "../../types/profile";
 
 import { semanticSearch } from "@/lib/api";
 

@@ -1,4 +1,4 @@
-import { Profile } from "@/types/profile";
+import { Profile } from "../types/profile";
 import OpenAI from "openai";
 
 
