@@ -1,59 +1,61 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import {ProfileDeleteRequestSchema, ProfileDeleteResponseSchema, ErrorResponse, ProfileDeleteResponse} from '@/types/types'
+import {
+  ProfileDeleteRequestSchema,
+  ErrorResponse,
+  ProfileDeleteResponse,
+} from "@/types/types";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
-).schema('linkedin_profiles')
+).schema("linkedin_profiles");
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    
+    const body = await request.json();
+
     // Validate request body against schema
-    const result = ProfileDeleteRequestSchema.safeParse(body)
+    const result = ProfileDeleteRequestSchema.safeParse(body);
     if (!result.success) {
       const errorResponse: ErrorResponse = {
-        error: result.error.issues[0].message
-      }
-      return NextResponse.json(errorResponse, { status: 400 })
+        error: result.error.issues[0].message,
+      };
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    const { user_id } = result.data
+    const { user_id } = result.data;
 
     console.log("Deleting user with User ID:", user_id);
 
     // Check if user exists in database
     const { data: user, error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .delete()
-      .eq('user_id', user_id)
+      .eq("user_id", user_id);
 
     if (error) {
-      console.error('Error checking user:', error)
+      console.error("Error checking user:", error);
       const errorResponse: ErrorResponse = {
-        error: 'Database error'
-      }
-      return NextResponse.json(errorResponse, { status: 500 })
+        error: "Database error",
+      };
+      return NextResponse.json(errorResponse, { status: 500 });
     }
 
     // Validate response against schema
     const response: ProfileDeleteResponse = {
-      success: true
-    }
+      success: true,
+    };
 
-    return NextResponse.json(response, { status: 200 })
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error('Error in check-user-exists:', error)
+    console.error("Error in check-user-exists:", error);
     const errorResponse: ErrorResponse = {
-      error: 'Internal server error'
-    }
-    return NextResponse.json(errorResponse, { status: 500 })
+      error: "Internal server error",
+    };
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }
-
-
 
 // import { NextRequest, NextResponse } from "next/server";
 

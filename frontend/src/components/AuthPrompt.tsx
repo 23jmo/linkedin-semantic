@@ -1,7 +1,5 @@
 "use client";
 
-import { FaLinkedin } from "react-icons/fa";
-import { auth, signIn } from "@/auth";
 import SignIn from "./sign-in";
 import { useTheme } from "@/lib/theme-context";
 

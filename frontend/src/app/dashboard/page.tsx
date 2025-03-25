@@ -116,7 +116,7 @@ export default function DashboardPage() {
               resolvedTheme === "dark" ? "text-gray-300" : "text-gray-500"
             }`}
           >
-            You haven't performed any searches yet.
+            You haven&apos;t performed any searches yet.
           </p>
         </div>
 

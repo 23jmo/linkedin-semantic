@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ProfileCreateRequestSchema,
   ProfileCreateResponseSchema,
-  ErrorResponse,
 } from "@/types/types";
 import { createClient } from "@supabase/supabase-js";
 import { generate_embedding } from "@/utilities/generate-embeddings";
