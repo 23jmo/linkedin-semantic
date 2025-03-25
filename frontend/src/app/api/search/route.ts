@@ -3,14 +3,17 @@ import { NextResponse } from 'next/server'
 import { SearchQuerySchema, SearchResultsSchema, type SearchResult } from '@/types/types'
 import { generateEmbedding } from '@/lib/server/embeddings'
 import { SearchResultSchema } from './types'
+import type { Database } from '@/types/linkedin-profile.types'
+
+// Extract the return type from the Database type
+type SearchProfilesByEmbeddingResult = Database['linkedin_profiles']['Functions']['search_profiles_by_embedding']['Returns'][number]
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+).schema('linkedin_profiles')
 
 export async function POST(request: Request) {
-
   try {
     const body = await request.json()
     
@@ -36,11 +39,27 @@ export async function POST(request: Request) {
       )
     }
 
+    console.log("Data:", data)
+
     // Transform to match SearchResult type
-    const results = data?.map((profile: SearchResult) => ({
-      profile: profile.profile,
-      score: profile.score,
-      highlights: profile.highlights
+    const results = data?.map((profile: SearchProfilesByEmbeddingResult) => ({
+      profile: {
+        id: profile.id,
+        user_id: profile.user_id,
+        linkedin_id: profile.linkedin_id || '',
+        full_name: profile.full_name,
+        headline: profile.headline || '',
+        industry: profile.industry || '',
+        location: profile.location || '',
+        profile_url: profile.profile_url || '',
+        profile_picture_url: profile.profile_picture_url || '',
+        summary: profile.summary || '',
+        raw_profile_data: profile.raw_profile_data || {},
+        created_at: profile.created_at,
+        updated_at: profile.updated_at
+      },
+      score: profile.similarity,
+      highlights: [] // Add highlights if you implement them later
     })) || []
 
     console.log("Search Results:", results)
@@ -69,9 +88,14 @@ async function semantic_search(query: string, match_limit: number = 10, match_th
     match_count: Number(match_limit),
   })
   
+  console.log("Profiles:", profiles)
+
   if (error) {
     throw new Error(`Semantic search error: ${error.message}`)
   }
   
-  return profiles
+  return{
+    data: profiles,
+    error: error
+  }
 }
