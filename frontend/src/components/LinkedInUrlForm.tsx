@@ -43,8 +43,8 @@ export default function LinkedInUrlForm({
     try {
       await onSubmit(linkedInUrl);
       router.push("/dashboard"); // Redirect to dashboard after successful submission
-    } catch (err: any) {
-      setError(err.message || "Failed to verify LinkedIn profile");
+    } catch (error: any) {
+      setError(error.message || "Failed to verify LinkedIn profile");
     } finally {
       setIsLoading(false);
     }

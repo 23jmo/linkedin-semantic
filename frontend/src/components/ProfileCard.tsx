@@ -7,20 +7,19 @@ import {
   FaChevronUp,
   FaBriefcase,
   FaMapMarkerAlt,
-  FaIndustry,
   FaGraduationCap,
   FaTools,
 } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
-import { Profile } from "../types/profile";
+import { ProfileFrontend } from "../types/types";
 import CompanyLogo from "./CompanyLogo";
 import ProfileImage from "./ProfileImage";
 import SchoolLogo from "./SchoolLogo";
 
 interface ProfileCardProps {
-  profile: Profile;
+  profile: ProfileFrontend;
   matchScore: number;
-  onSelect?: (profile: Profile, selected: boolean) => void;
+  onSelect?: (profile: ProfileFrontend, selected: boolean) => void;
   isSelected?: boolean;
   selectable?: boolean;
 }

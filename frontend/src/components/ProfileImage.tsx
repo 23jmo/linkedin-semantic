@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { FaUser } from "react-icons/fa";
 
@@ -40,11 +41,13 @@ export default function ProfileImage({
   // Show image with fallback
   return (
     <div className={`${sizeClasses[size]} rounded-full overflow-hidden`}>
-      <img
+      <Image
         src={imageUrl}
         alt={`${firstName} ${lastName}`}
         className="w-full h-full object-cover"
         onError={() => setHasError(true)}
+        width={40}
+        height={40}
       />
     </div>
   );

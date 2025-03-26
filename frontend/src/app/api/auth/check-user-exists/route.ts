@@ -1,10 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { 
-  CheckUserExistsRequestSchema, 
-  CheckUserExistsResponseSchema,
-  ErrorResponseSchema,
-  type CheckUserExistsRequest,
+  CheckUserExistsRequestSchema,
   type CheckUserExistsResponse,
   type ErrorResponse 
 } from './types'
@@ -42,7 +39,7 @@ export async function POST(request: Request) {
       .eq('id', user_id)
       .single()
     
-      const {data: user_profile, error: error_profile} = await supabase_profiles
+      const {data: user_profile} = await supabase_profiles
       .from('profiles')
       .select('*')
       .eq('user_id', user_id)

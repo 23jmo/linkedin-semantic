@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
 
     // Check if the response is ok
     if (!response.ok) {
-      const errorText = await response.text();
       return NextResponse.json(
         { error: "Failed to perform semantic search" },
         { status: response.status }
@@ -30,7 +29,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error: " + error },
       { status: 500 }
     );
   }

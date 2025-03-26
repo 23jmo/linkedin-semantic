@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FaSearch, FaTimes } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
 
 interface SearchBoxProps {
@@ -50,10 +50,18 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="Search your network with natural language"
-          className={`w-full py-4 px-12 text-lg rounded-xl shadow-sm focus:outline-none focus:ring-2 ${
+          className={`w-full py-4 px-12 text-lg rounded-xl shadow-sm transition-all duration-200 ease-in-out focus:outline-none ${
             resolvedTheme === "light"
-              ? "bg-white text-gray-800 focus:ring-blue-400 border-gray-200"
-              : "bg-gray-800 text-gray-200 focus:ring-blue-600 border-gray-700"
+              ? `bg-white text-gray-800 border-gray-200 ${
+                  isFocused
+                    ? "ring-2 ring-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+                    : ""
+                }`
+              : `bg-gray-800 text-gray-200 border-gray-700 ${
+                  isFocused
+                    ? "ring-2 ring-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+                    : ""
+                }`
           } border`}
         />
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center">

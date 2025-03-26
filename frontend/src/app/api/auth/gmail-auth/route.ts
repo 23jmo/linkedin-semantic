@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
-import { storeEmailCredentials } from "@/lib/server/email-credentials";
 
 // Google OAuth2 configuration
 const oauth2Client = new google.auth.OAuth2(

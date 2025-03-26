@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ProfileCreateRequestSchema,
   ProfileCreateResponseSchema,
+  AuthData,
+  ProfileData,
 } from "@/types/types";
 import { createClient } from "@supabase/supabase-js";
 import { generate_embedding } from "@/utilities/generate-embeddings";
@@ -27,20 +29,24 @@ export async function POST(request: NextRequest) {
 
     console.log("Fetching LinkedIn profile...");
 
-    const { proxycurl_linkedin_profile, error } = await fetch_linkedin_profile(
+    const { proxycurl_linkedin_profile } = await fetch_linkedin_profile(
       linkedin_url
     );
-    if (error) {
-      console.error("Error fetching LinkedIn profile:", error);
-      return NextResponse.json({ error: error }, { status: 500 });
-    }
 
     console.log(
       "LinkedIn profile:",
       JSON.stringify(proxycurl_linkedin_profile).substring(0, 200) + "..."
     );
 
-    await verify_profile_match(linkedin_auth, proxycurl_linkedin_profile);
+    if (linkedin_auth) {
+      await verify_profile_match(linkedin_auth, proxycurl_linkedin_profile);
+    } else {
+      console.log("No LinkedIn authentication data provided");
+      return NextResponse.json(
+        { error: "No LinkedIn authentication data provided" },
+        { status: 400 }
+      );
+    }
 
     //works until here
     // Safely build the location string
@@ -160,10 +166,13 @@ async function fetch_linkedin_profile(linkedin_url: string) {
   );
 
   const data = await response.json();
-  return { proxycurl_linkedin_profile: data, error: null };
+  return { proxycurl_linkedin_profile: data };
 }
 
-async function verify_profile_match(auth_data: any, profile_data: any) {
+async function verify_profile_match(
+  auth_data: AuthData,
+  profile_data: ProfileData
+) {
   // Compare email addresses if available
   const auth_email = auth_data?.email?.toLowerCase() || "";
   const profile_email = profile_data?.email?.toLowerCase() || "";

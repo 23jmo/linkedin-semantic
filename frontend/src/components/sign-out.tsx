@@ -1,7 +1,7 @@
 "use client";
 
-import { FaLinkedin, FaSignOutAlt } from "react-icons/fa";
-import { signIn, signOut } from "next-auth/react";
+import { FaSignOutAlt } from "react-icons/fa";
+import { signOut } from "next-auth/react";
 import { useTheme } from "@/lib/theme-context";
 
 /**

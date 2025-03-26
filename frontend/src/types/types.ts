@@ -1,5 +1,4 @@
-import { z } from 'zod'
-
+import { z } from "zod";
 
 export const RawProfileDataSchema = z.object({
   // Basic info
@@ -36,7 +35,7 @@ export const RawProfileDataSchema = z.object({
   interests: z.array(z.any()),
   volunteer_work: z.array(z.any()),
   groups: z.array(z.any()),
-  
+
   // Accomplishments
   accomplishment_courses: z.array(z.any()),
   accomplishment_honors_awards: z.array(z.any()),
@@ -57,7 +56,7 @@ export const RawProfileDataSchema = z.object({
   birth_date: z.string().nullable(),
   gender: z.string().nullable(),
   extra: z.any().nullable(),
-})
+});
 
 export const ProfileSchema = z.object({
   id: z.string(),
@@ -72,86 +71,119 @@ export const ProfileSchema = z.object({
   summary: z.string().optional(),
   raw_profile_data: RawProfileDataSchema.optional(),
   created_at: z.string(),
-  updated_at: z.string()
-})
+  updated_at: z.string(),
+});
 
 // Request Schema
 export const CheckUserExistsRequestSchema = z.object({
-  user_id: z.string().min(1, 'User ID is required'),
-  linkedin_auth: z.object({}).optional()
-})
+  user_id: z.string().min(1, "User ID is required"),
+  linkedin_auth: z.object({}).optional(),
+});
 
 // Response Schema
 export const CheckUserExistsResponseSchema = z.object({
   user_exists: z.boolean(),
-  linkedin_profile: z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string().optional(),
-    email_verified: z.boolean().optional(),
-    image: z.string().optional(),
-  }).optional()
-})
+  linkedin_profile: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      email: z.string().optional(),
+      email_verified: z.boolean().optional(),
+      image: z.string().optional(),
+    })
+    .optional(),
+});
 
 export const ProfileDeleteRequestSchema = z.object({
-  user_id: z.string().min(1, 'User ID is required'),
-})
+  user_id: z.string().min(1, "User ID is required"),
+});
 
 export const ProfileDeleteResponseSchema = z.object({
-  success: z.boolean()
-})
+  success: z.boolean(),
+});
 
 // Error Response Schema
 export const ErrorResponseSchema = z.object({
-  error: z.string()
-})
+  error: z.string(),
+});
 // Request Schema
 export const SearchQuerySchema = z.object({
-  query: z.string().min(1, 'Search query is required'),
+  query: z.string().min(1, "Search query is required"),
   match_limit: z.number().optional() || 10,
-  match_threshold: z.number().optional() || 0.5
-})
+  match_threshold: z.number().optional() || 0.5,
+});
 
 // Response Schema for a single profile
 export const SearchResultSchema = z.object({
   profile: ProfileSchema,
   score: z.number(),
-  highlights: z.array(z.string()).optional()
-})
+  highlights: z.array(z.string()).optional(),
+});
 
-export const SearchResultsSchema = z.array(SearchResultSchema)
+export const SearchResultsSchema = z.array(SearchResultSchema);
 
 // Query Embedding Schema
 export const QueryEmbeddingSchema = z.object({
   query: z.string(),
   embedding: z.array(z.number()),
-  embedding_model: z.string()
-})
+  embedding_model: z.string(),
+});
+
+export const AuthDataSchema = z.object({
+  email: z.string(),
+  name: z.string(),
+  image: z.string().optional(),
+});
 
 export const ProfileCreateRequestSchema = z.object({
   user_id: z.string(),
-  linkedin_auth: z.object({}).optional(),
-  linkedin_url: z.string()
-})
+  linkedin_auth: AuthDataSchema.optional(),
+  linkedin_url: z.string(),
+});
 
 export const ProfileCreateResponseSchema = z.object({
   success: z.boolean(),
-  message: z.string()
-})
+  message: z.string(),
+});
 
+export const ProfileDataSchema = z.object({
+  id: z.string(),
+  linkedin_id: z.string(),
+  full_name: z.string(),
+  email: z.string().optional(),
+});
 
-
-
+export const ProfileFrontendSchema = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  headline: z.string().optional(),
+  summary: z.string().optional(),
+  location: z.string().optional(),
+  industry: z.string().optional(),
+  profileUrl: z.string().optional(),
+  profilePicture: z.string().optional(),
+  highlights: z.array(z.string()).optional(),
+  raw_profile_data: RawProfileDataSchema.optional(),
+});
 
 // TypeScript types derived from schemas
-export type CheckUserExistsRequest = z.infer<typeof CheckUserExistsRequestSchema>
-export type CheckUserExistsResponse = z.infer<typeof CheckUserExistsResponseSchema>
-export type ErrorResponse = z.infer<typeof ErrorResponseSchema> 
-export type QueryEmbedding = z.infer<typeof QueryEmbeddingSchema>
-export type Profile = z.infer<typeof ProfileSchema>
-export type ProfileDeleteRequest = z.infer<typeof ProfileDeleteRequestSchema>
-export type ProfileDeleteResponse = z.infer<typeof ProfileDeleteResponseSchema>
-export type SearchQuery = z.infer<typeof SearchQuerySchema>
-export type SearchResult = z.infer<typeof SearchResultSchema> 
-export type SearchResults = z.infer<typeof SearchResultsSchema> 
-
+export type CheckUserExistsRequest = z.infer<
+  typeof CheckUserExistsRequestSchema
+>;
+export type CheckUserExistsResponse = z.infer<
+  typeof CheckUserExistsResponseSchema
+>;
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+export type QueryEmbedding = z.infer<typeof QueryEmbeddingSchema>;
+export type Profile = z.infer<typeof ProfileSchema>;
+export type ProfileDeleteRequest = z.infer<typeof ProfileDeleteRequestSchema>;
+export type ProfileDeleteResponse = z.infer<typeof ProfileDeleteResponseSchema>;
+export type SearchQuery = z.infer<typeof SearchQuerySchema>;
+export type SearchResult = z.infer<typeof SearchResultSchema>;
+export type SearchResults = z.infer<typeof SearchResultsSchema>;
+export type AuthData = z.infer<typeof AuthDataSchema>;
+export type ProfileData = z.infer<typeof ProfileDataSchema>;
+export type RawProfile = z.infer<typeof RawProfileDataSchema>;
+export type ProfileFrontend = z.infer<typeof ProfileFrontendSchema>;

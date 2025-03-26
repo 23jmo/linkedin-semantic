@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Profile } from "../types/profile";
+import { RawProfile } from "../types/types";
 import ProfileImage from "./ProfileImage";
 import { FaTimes } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
-import { hasGmailConnected } from "@/lib/gmail-service";
 import GmailConnector from "./GmailConnector";
 import { useSession } from "next-auth/react";
 import { checkUserExists } from "@/lib/api";
+import { ProfileFrontend } from "../types/types";
 
 interface EmailComposerProps {
-  selectedProfiles: Profile[];
+  selectedProfiles: ProfileFrontend[];
   onClose: () => void;
   onRemoveProfile: (profileId: string) => void;
 }

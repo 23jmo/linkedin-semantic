@@ -31,11 +31,11 @@ export async function GET(request: NextRequest) {
           `[API] GET /api/auth/gmail-auth/callback - Parsed state: userId=${userId}, returnTo=${returnTo}`
         );
       }
-    } catch (e) {
+    } catch (error) {
       // Fallback if state isn't valid JSON (backward compatibility)
       userId = stateParam;
-      console.log(
-        `[API] GET /api/auth/gmail-auth/callback - Using state directly as userId: ${userId}`
+      console.error(
+        `[API] GET /api/auth/gmail-auth/callback - Error parsing state: ${error}`
       );
     }
 

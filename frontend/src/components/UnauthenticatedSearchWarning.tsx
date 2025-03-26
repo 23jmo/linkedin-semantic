@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { FaLock, FaLinkedin } from "react-icons/fa";
+import { FaLock } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
 import SignIn from "./sign-in";
 

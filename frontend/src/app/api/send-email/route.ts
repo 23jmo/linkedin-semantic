@@ -6,6 +6,7 @@ import {
 } from "@/lib/server/email-credentials";
 import { google } from "googleapis";
 import { getUserEmail } from "@/lib/api";
+import { ProfileFrontend } from "@/types/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,13 +20,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse the request body
-    const { profiles, purpose, notes, emailContents } = await request.json();
+    const { profiles, purpose, emailContents } = await request.json();
 
     // Log the email request
     console.log("Email Send Request:", {
       userId: session.user.id,
       recipientCount: profiles.length,
-      recipients: profiles.map((p: any) => ({
+      recipients: profiles.map((p: ProfileFrontend) => ({
         id: p.id,
         name: `${p.firstName} ${p.lastName}`,
       })),

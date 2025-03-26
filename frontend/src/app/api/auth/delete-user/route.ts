@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     console.log("Deleting user with User ID:", user_id);
 
     // Check if user exists in database
-    const { data: user, error } = await supabase
+    const { error } = await supabase
       .from("profiles")
       .delete()
       .eq("user_id", user_id);

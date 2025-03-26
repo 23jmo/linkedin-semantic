@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import { Session } from "next-auth";
 import LinkedIn from "next-auth/providers/linkedin";
 import jwt from "jsonwebtoken";
 import { checkUserExists } from "@/lib/api";
@@ -77,7 +76,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
 
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn({ /*user, account, profile, email, credentials */ }) {
       // Always allow sign in - we'll check if the user exists in the JWT callback
       return true;
     },
@@ -108,7 +107,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     // This callback is called when the JWT token is created or updated
-    async jwt({ token, account, profile, user }) {
+    async jwt({ token, account, profile }) {
       // Add the account info to the token if available
       if (account) {
         token.accessToken = account.access_token;

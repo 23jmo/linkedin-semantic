@@ -1,7 +1,7 @@
 import { RawProfile } from "../types/profile";
 import OpenAI from "openai";
 
-export async function generate_embedding(query: String | RawProfile) {
+export async function generate_embedding(query: string | RawProfile) {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });

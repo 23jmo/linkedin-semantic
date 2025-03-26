@@ -1,12 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import {
-  SearchQuerySchema,
-  SearchResultsSchema,
-  type SearchResult,
-} from "@/types/types";
+import { SearchQuerySchema } from "@/types/types";
 import { generateEmbedding } from "@/lib/server/embeddings";
-import { SearchResultSchema } from "./types";
 import type { Database } from "@/types/linkedin-profile.types";
 
 // Extract the return type from the Database type

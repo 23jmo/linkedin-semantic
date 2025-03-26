@@ -48,7 +48,7 @@ export default function DashboardPage() {
     if (!session?.user?.email) return;
 
     if (confirmEmail !== session.user.email) {
-      setDeleteError("Email doesn't match your account email");
+      setDeleteError("Email doesn&apos;t match your account email");
       return;
     }
 
