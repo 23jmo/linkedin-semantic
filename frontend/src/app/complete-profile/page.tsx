@@ -69,7 +69,11 @@ export default function CompleteProfilePage() {
         {session?.user?.id && (
           <LinkedInUrlForm
             userId={session.user.id}
-            linkedInAuthData={{}}
+            linkedInAuthData={{
+              email: session.user.email || "",
+              name: session.user.name || "",
+              image: session.user.image ?? undefined,
+            }}
             onSubmit={handleSubmitLinkedInUrl}
           />
         )}

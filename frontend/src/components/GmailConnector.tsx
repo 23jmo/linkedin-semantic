@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { FaGoogle, FaCheck } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
@@ -12,6 +12,23 @@ export default function GmailConnector() {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const { resolvedTheme } = useTheme();
+
+  const checkGmailConnection = useCallback(async () => {
+    if (session?.user?.id) {
+      try {
+        setIsLoading(true);
+        const connected = await hasGmailConnected();
+        setIsConnected(connected);
+      } catch (error) {
+        console.error("Error checking Gmail connection:", error);
+        setIsConnected(false);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setIsLoading(false);
+    }
+  }, [session?.user?.id]);
 
   // Check for success or error parameters in the URL
   useEffect(() => {
@@ -31,28 +48,11 @@ export default function GmailConnector() {
       // Clear the URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  }, [checkGmailConnection]);
 
   useEffect(() => {
     checkGmailConnection();
-  }, [session]);
-
-  async function checkGmailConnection() {
-    if (session?.user?.id) {
-      try {
-        setIsLoading(true);
-        const connected = await hasGmailConnected(session.user.id);
-        setIsConnected(connected);
-      } catch (error) {
-        console.error("Error checking Gmail connection:", error);
-        setIsConnected(false);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      setIsLoading(false);
-    }
-  }
+  }, [checkGmailConnection]);
 
   const handleConnect = async () => {
     if (!session?.user?.id) {

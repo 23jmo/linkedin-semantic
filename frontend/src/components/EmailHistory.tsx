@@ -82,7 +82,7 @@ export default function EmailHistory() {
           resolvedTheme === "dark" ? "text-gray-300" : "text-gray-500"
         }`}
       >
-        You haven't sent any emails yet.
+        You haven&apos;t sent any emails yet.
       </p>
     );
   }

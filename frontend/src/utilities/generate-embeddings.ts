@@ -1,4 +1,4 @@
-import { RawProfile } from "../types/profile";
+import { RawProfile } from "../types/types";
 import OpenAI from "openai";
 
 export async function generate_embedding(query: string | RawProfile) {

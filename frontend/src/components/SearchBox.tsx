@@ -20,7 +20,7 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
     if (initialQuery !== query) {
       setQuery(initialQuery);
     }
-  }, [initialQuery]);
+  }, [initialQuery, query]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -29,12 +29,12 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
     }
   };
 
-  const clearSearch = () => {
-    setQuery("");
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
+  // const clearSearch = () => {
+  //   setQuery("");
+  //   if (inputRef.current) {
+  //     inputRef.current.focus();
+  //   }
+  // };
 
   return (
     <div className="w-full max-w-3xl mx-auto">

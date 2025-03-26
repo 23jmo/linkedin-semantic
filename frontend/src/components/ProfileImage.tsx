@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { FaUser } from "react-icons/fa";
 
 interface ProfileImageProps {
   imageUrl?: string;

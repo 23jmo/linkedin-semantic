@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RawProfile } from "../types/types";
 import ProfileImage from "./ProfileImage";
 import { FaTimes } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";

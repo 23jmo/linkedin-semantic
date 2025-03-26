@@ -3,17 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SignOut from "./sign-out";
+import { AuthData } from "../types/types";
+
 interface LinkedInUrlFormProps {
   userId: string;
-  linkedInAuthData: any;
+  linkedInAuthData: AuthData;
   onSubmit: (linkedInUrl: string) => Promise<void>;
 }
 
-export default function LinkedInUrlForm({
-  userId,
-  linkedInAuthData,
-  onSubmit,
-}: LinkedInUrlFormProps) {
+export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
   const [linkedInUrl, setLinkedInUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,8 +41,12 @@ export default function LinkedInUrlForm({
     try {
       await onSubmit(linkedInUrl);
       router.push("/dashboard"); // Redirect to dashboard after successful submission
-    } catch (error: any) {
-      setError(error.message || "Failed to verify LinkedIn profile");
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Failed to verify LinkedIn profile");
+      }
     } finally {
       setIsLoading(false);
     }

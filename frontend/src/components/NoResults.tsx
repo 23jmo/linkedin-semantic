@@ -33,14 +33,14 @@ export default function NoResults({ query }: NoResultsProps) {
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
         >
-          No results found for "{query}"
+          No results found for &quot;{query}&quot;
         </h2>
         <p
           className={`${
             resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
           } mb-4`}
         >
-          We couldn't find any profiles matching your search.
+          We couldn&apos;t find any profiles matching your search.
         </p>
         <div
           className={`${

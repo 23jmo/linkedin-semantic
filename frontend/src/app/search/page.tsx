@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import SearchBox from "@/components/SearchBox";
@@ -15,6 +15,14 @@ import { SearchResult } from "../../types/types";
 import { semanticSearch } from "@/lib/api";
 
 export default function SearchPage() {
+  return (
+    <Suspense fallback={<LoadingIndicator />}>
+      <SearchPageContent />
+    </Suspense>
+  );
+}
+
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const { status } = useSession();
   const [query, setQuery] = useState<string>("");
@@ -28,27 +36,26 @@ export default function SearchPage() {
   );
   const [showEmailComposer, setShowEmailComposer] = useState(false);
 
-  const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+  const performSearch = useCallback(
+    async (searchQuery: string) => {
+      if (!searchQuery.trim()) return;
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      // Mock API call - replace with actual API call
-      console.log("Starting search with loading state:", loading);
-
-      const profiles = await semanticSearch(searchQuery);
-      console.log("Profiles:", profiles);
-
-      setResults(profiles);
-    } catch (err) {
-      console.error("Search error:", err);
-      setError("An error occurred while searching. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      try {
+        const profiles = await semanticSearch(searchQuery);
+        console.log("Profiles:", profiles);
+        setResults(profiles);
+      } catch (err) {
+        console.error("Search error:", err);
+        setError("An error occurred while searching. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError, setResults]
+  );
 
   useEffect(() => {
     const q = searchParams.get("q");
