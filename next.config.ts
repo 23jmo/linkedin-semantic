@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       "s3.us-west-000.backblazeb2.com",
       "media.licdn.com",
       "randomuser.me",
+      "linkedin-semantic.vercel.app",
     ],
     remotePatterns: [
       {

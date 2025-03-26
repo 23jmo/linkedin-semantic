@@ -76,7 +76,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
 
-    async signIn({ /*user, account, profile, email, credentials */ }) {
+    async signIn(
+      {
+        /*user, account, profile, email, credentials */
+      }
+    ) {
       // Always allow sign in - we'll check if the user exists in the JWT callback
       return true;
     },
