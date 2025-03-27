@@ -1,9 +1,8 @@
 import NextAuth from "next-auth";
 import LinkedIn from "next-auth/providers/linkedin";
 import jwt from "jsonwebtoken";
-import { checkUserExists } from "@/lib/api";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
-
+import { createClient } from "@supabase/supabase-js";
 // Extend the User type to include the exists property
 declare module "next-auth" {
   interface Session {
@@ -17,6 +16,7 @@ declare module "next-auth" {
 
 // Configure NextAuth with proper callback handling
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     LinkedIn({
       clientId: process.env.AUTH_LINKEDIN_ID!,
@@ -38,16 +38,63 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   // Make sure to use the NEXTAUTH_SECRET for JWT encryption
   secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    callbackUrl: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.callback-url"
+          : "next-auth.callback-url",
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    csrfToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Host-next-auth.csrf-token"
+          : "next-auth.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   // Add callbacks to handle redirects and session management
   callbacks: {
     async session({ session, user, token }) {
+      // Safety check for token
+      if (!token) {
+        return session;
+      }
+
       const signingSecret = process.env.SUPABASE_JWT_SECRET;
-      if (signingSecret) {
+      if (signingSecret && token.sub) {
+        // Check for token.sub instead of user.id
         const payload = {
           aud: "authenticated",
           exp: Math.floor(new Date(session.expires).getTime() / 1000),
-          sub: user.id,
-          email: user.email,
+          sub: token.sub,
+          email: token.email,
           role: "authenticated",
         };
         session.supabaseAccessToken = jwt.sign(payload, signingSecret);
@@ -60,15 +107,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.provider = token.provider as string;
       }
 
-      // Check if user exists in our database
-      if (user?.id) {
-        try {
-          const response = await checkUserExists({ id: user.id }, {});
-          session.exists = response.user_exists === true;
-        } catch (error) {
-          console.error("Error checking if user exists:", error);
-          session.exists = false;
-        }
+      // Only proceed with Supabase checks if we have a user ID from the token
+      if (token.sub) {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        const { data: userData } = await supabase
+          .schema("next_auth")
+          .from("users")
+          .select("*")
+          .eq("id", token.sub)
+          .single();
+
+        const { data: profileData } = await supabase
+          .schema("linkedin_profiles")
+          .from("profiles")
+          .select("*")
+          .eq("user_id", token.sub)
+          .single();
+
+        session.exists = !!userData && !!profileData;
       } else {
         session.exists = false;
       }
