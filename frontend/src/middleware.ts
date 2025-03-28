@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
   // Get the token from the request
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET,
   });
 
   // If the user is authenticated but doesn't exist in the database, redirect to complete-profile
