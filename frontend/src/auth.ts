@@ -26,6 +26,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         url: "https://www.linkedin.com/oauth/v2/authorization",
         params: {
           scope: "openid profile email",
+          state: process.env.AUTH_SECRET,
         },
       },
       token: {
@@ -37,7 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   // Make sure to use the NEXTAUTH_SECRET for JWT encryption
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -81,7 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   // Add callbacks to handle redirects and session management
   callbacks: {
-    async session({ session, user, token }) {
+    async session({ session, token }) {
       // Safety check for token
       if (!token) {
         return session;
