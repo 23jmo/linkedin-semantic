@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("Data:", data);
+    // console.log("Data:", data);
 
     // Transform to match SearchResult type
     const results =
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         highlights: [], // Add highlights if you implement them later
       })) || [];
 
-    console.log("Search Results:", results);
+    // console.log("Search Results:", results);
 
     return NextResponse.json(results);
   } catch (error) {

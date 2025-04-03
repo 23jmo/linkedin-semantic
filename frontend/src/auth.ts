@@ -88,6 +88,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return session;
       }
 
+      // Ensure user ID is set in the session
+      if (token.sub) {
+        session.user = {
+          ...session.user,
+          id: token.sub,
+        };
+      }
+
       const signingSecret = process.env.SUPABASE_JWT_SECRET;
       if (signingSecret && token.sub) {
         // Check for token.sub instead of user.id

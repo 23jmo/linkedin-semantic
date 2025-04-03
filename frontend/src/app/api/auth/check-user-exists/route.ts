@@ -32,6 +32,7 @@ export async function POST(request: Request) {
 
     // Validate request body against schema
     const result = CheckUserExistsRequestSchema.safeParse(body);
+    
     if (!result.success) {
       const errorResponse: ErrorResponse = {
         error: result.error.issues[0].message,

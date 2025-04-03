@@ -94,6 +94,14 @@ export const CheckUserExistsResponseSchema = z.object({
     .optional(),
 });
 
+export const GetLinkedInProfileRequestSchema = z.object({
+  user_id: z.string().min(1, "User ID is required"),
+});
+
+export const GetLinkedInProfileResponseSchema = z.object({
+  linkedin_profile: ProfileSchema,
+});
+
 export const ProfileDeleteRequestSchema = z.object({
   user_id: z.string().min(1, "User ID is required"),
 });
@@ -187,3 +195,9 @@ export type AuthData = z.infer<typeof AuthDataSchema>;
 export type ProfileData = z.infer<typeof ProfileDataSchema>;
 export type RawProfile = z.infer<typeof RawProfileDataSchema>;
 export type ProfileFrontend = z.infer<typeof ProfileFrontendSchema>;
+export type GetLinkedInProfileRequest = z.infer<
+  typeof GetLinkedInProfileRequestSchema
+>;
+export type GetLinkedInProfileResponse = z.infer<
+  typeof GetLinkedInProfileResponseSchema
+>;
