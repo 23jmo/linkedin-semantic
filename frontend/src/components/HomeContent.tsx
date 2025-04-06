@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import SearchBox from "@/components/SearchBox";
 import SuggestionBox from "@/components/SuggestionBox";
 import AuthPrompt from "@/components/AuthPrompt";
+import { useProfileCount } from "@/hooks/useProfileCount";
 
 interface HomeContentProps {
   isAuthenticated: boolean;
@@ -17,6 +18,7 @@ export default function HomeContent({
 }: HomeContentProps) {
   const { resolvedTheme } = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { count, isLoading } = useProfileCount();
 
   useEffect(() => {
     if (!scrollRef.current || !isAuthenticated) return;
@@ -67,48 +69,60 @@ export default function HomeContent({
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
         >
-          Search Your LinkedIn Network
+          Search{" "}
+          <span
+            className={`${
+              resolvedTheme === "light"
+                ? "text-blue-900 bg-blue-500/30 px-2 rounded"
+                : "text-blue-100 bg-blue-500/30 px-2 rounded"
+            }`}
+          >
+            {isLoading ? "0" : count.toLocaleString()}
+          </span>{" "}
+          Profiles
         </h1>
         <div className="mb-8">
           <SearchBox />
         </div>
 
         {isAuthenticated ? (
-          <div className="mt-8">
-            <div className="relative">
-              <div
-                className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
-                style={{
-                  background:
-                    resolvedTheme === "light"
-                      ? "linear-gradient(to right, var(--background) 0%, transparent 100%)"
-                      : "linear-gradient(to right, var(--background) 0%, transparent 100%)",
-                }}
-              ></div>
+          <>
+            <div className="mt-8">
+              <div className="relative">
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
+                  style={{
+                    background:
+                      resolvedTheme === "light"
+                        ? "linear-gradient(to right, var(--background) 0%, transparent 100%)"
+                        : "linear-gradient(to right, var(--background) 0%, transparent 100%)",
+                  }}
+                ></div>
 
-              <div
-                ref={scrollRef}
-                className="flex overflow-x-auto pb-4 gap-2 no-scrollbar relative w-full "
-              >
-                {suggestions.map((suggestion, index) => (
-                  <SuggestionBox
-                    key={index}
-                    suggestion={suggestion}
-                  />
-                ))}
+                <div
+                  ref={scrollRef}
+                  className="flex overflow-x-auto pb-4 gap-2 no-scrollbar relative w-full "
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <SuggestionBox
+                      key={index}
+                      suggestion={suggestion}
+                    />
+                  ))}
+                </div>
+
+                <div
+                  className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
+                  style={{
+                    background:
+                      resolvedTheme === "light"
+                        ? "linear-gradient(to left, var(--background) 0%, transparent 100%)"
+                        : "linear-gradient(to left, var(--background) 0%, transparent 100%)",
+                  }}
+                ></div>
               </div>
-
-              <div
-                className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
-                style={{
-                  background:
-                    resolvedTheme === "light"
-                      ? "linear-gradient(to left, var(--background) 0%, transparent 100%)"
-                      : "linear-gradient(to left, var(--background) 0%, transparent 100%)",
-                }}
-              ></div>
             </div>
-          </div>
+          </>
         ) : (
           <AuthPrompt />
         )}

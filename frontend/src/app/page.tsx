@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Layout from "@/components/Layout";
 import HomeContent from "@/components/HomeContent";
-
+import ScrollingProfiles from "@/components/ScrollingProfiles";
 export default function HomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -63,6 +63,9 @@ export default function HomePage() {
         isAuthenticated={status === "authenticated"}
         suggestions={suggestions}
       />
+      <ScrollingProfiles
+        className="fixed bottom-0 left-0 right-0 w-full"
+       />
     </Layout>
   );
 }
