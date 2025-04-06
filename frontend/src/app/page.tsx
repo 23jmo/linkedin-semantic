@@ -64,7 +64,7 @@ export default function HomePage() {
         suggestions={suggestions}
       />
       <ScrollingProfiles
-        className="fixed bottom-0 left-0 right-0 w-full"
+        className="md:block hidden fixed bottom-0 left-0 right-0 w-full"
        />
     </Layout>
   );

@@ -5,7 +5,7 @@ export function useProfileCount() {
   const [displayCount, setDisplayCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const animationRef = useRef<NodeJS.Timeout>();
+  const animationRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchCount = async () => {
