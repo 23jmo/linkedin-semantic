@@ -141,6 +141,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       } else {
         session.exists = false;
       }
+      
+      console.log("Session state:", {
+        exists: session?.exists,
+        userId: session?.user?.id,
+      });
 
       return session;
     },

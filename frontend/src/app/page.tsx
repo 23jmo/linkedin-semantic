@@ -11,6 +11,11 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("Session state:", {
+      status,
+      exists: session?.exists,
+      userId: session?.user?.id,
+    });
     // If the user is authenticated but doesn't exist in the database, redirect to complete-profile
     if (status === "authenticated") {
       console.log("Session in HomePage:", session);
@@ -27,26 +32,17 @@ export default function HomePage() {
 
   // Flat list of suggestions
   const suggestions = [
-    "Software Engineers",
-    "Product Managers",
-    "UX Designers",
-    "Data Scientists",
-    "Marketing",
-    "React.js",
-    "Machine Learning",
-    "Project Management",
+    "Google Interns in Palo Alto this Summer",
+    "Amazon Engineers in Seattle",
+    "UX Designers in San Francisco",
+    "Data Scientists in New York",
+    "Marketing in Los Angeles",
+    "Machine Learning in San Francisco",
+    "Project Management in New York",
     "Public Speaking",
-    "Leadership",
-    "Google",
-    "Microsoft",
-    "Amazon",
-    "Facebook",
-    "Apple",
-    "Startups",
-    "AI",
-    "Python",
-    "Healthcare",
-    "Fintech",
+    "Apple Interns in Cupertino",
+    "Google Engineers in Mountain View",
+    "Fintech in New York",
   ];
 
   // If we're still loading or the user doesn't exist, show a loading state

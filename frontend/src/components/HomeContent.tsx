@@ -88,7 +88,7 @@ export default function HomeContent({
 
               <div
                 ref={scrollRef}
-                className="flex overflow-x-auto pb-4 gap-2 no-scrollbar relative w-full"
+                className="flex overflow-x-auto pb-4 gap-2 no-scrollbar relative w-full "
               >
                 {suggestions.map((suggestion, index) => (
                   <SuggestionBox

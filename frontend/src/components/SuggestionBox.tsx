@@ -29,7 +29,13 @@ export default function SuggestionBox({ suggestion }: SuggestionBoxProps) {
       } relative overflow-hidden hover:-translate-y-1 hover:shadow-md flex-shrink-0`}
     >
       <span className="relative z-10">{suggestion}</span>
-      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700 ease-in-out shine-effect"></span>
+      <span
+        className={`absolute inset-0 bg-gradient-to-r ${
+          resolvedTheme === "light"
+            ? "from-transparent via-white/40 to-transparent"
+            : "from-transparent via-gray-600/30 to-transparent"
+        } -translate-x-full hover:translate-x-full transition-transform duration-700 ease-in-out shine-effect`}
+      ></span>
     </button>
   );
 }

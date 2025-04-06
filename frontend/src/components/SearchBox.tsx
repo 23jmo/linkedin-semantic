@@ -17,10 +17,8 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
-    if (initialQuery !== query) {
-      setQuery(initialQuery);
-    }
-  }, [initialQuery, query]);
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

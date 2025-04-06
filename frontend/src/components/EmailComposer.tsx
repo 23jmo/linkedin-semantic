@@ -7,7 +7,7 @@ import { useTheme } from "@/lib/theme-context";
 import GmailConnector from "./GmailConnector";
 import { useSession } from "next-auth/react";
 import { checkUserExists, getLinkedInProfile } from "@/lib/api";
-import { GetLinkedInProfileResponse, ProfileFrontend, RawProfile } from "../types/types";
+import { ProfileFrontend, RawProfile } from "../types/types";
 
 interface EmailComposerProps {
   selectedProfiles: ProfileFrontend[];
