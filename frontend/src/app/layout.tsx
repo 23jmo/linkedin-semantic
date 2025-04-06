@@ -8,7 +8,7 @@ import ProfileRedirect from "../components/ProfileRedirect";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LinkedIn Semantic Search",
+  title: "Locked IN",
   description: "Search your LinkedIn network using semantic search",
 };
 
