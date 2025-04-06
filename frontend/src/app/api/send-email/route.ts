@@ -125,6 +125,9 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Convert newlines to <br> tags for HTML email
+        const htmlBody = emailContent.body.replace(/\n/g, "<br>");
+
         // Log the email being sent
         console.log(
           `Sending email to ${recipientEmail} with subject ${emailContent.subject}`
@@ -141,7 +144,7 @@ export async function POST(request: NextRequest) {
           "MIME-Version: 1.0",
           `Subject: ${utf8Subject}`,
           "",
-          emailContent.body,
+          htmlBody, // Use the HTML-formatted body
         ];
 
         const message = messageParts.join("\n");
