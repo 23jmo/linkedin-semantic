@@ -53,9 +53,9 @@ export async function POST(request: NextRequest) {
 
   // Check if user has reached their limit
   return NextResponse.json({
-    used: usageData.emails_sent_this_month,
+    used: usageData.emails_generated_this_month,
     limit: usageData.monthly_limit,
     remaining:
-      (usageData.monthly_limit) - (usageData.emails_sent_this_month),
+      (usageData.monthly_limit) - (usageData.emails_generated_this_month),
   });
 }

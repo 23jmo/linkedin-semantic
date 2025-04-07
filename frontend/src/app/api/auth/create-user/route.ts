@@ -7,6 +7,7 @@ import {
 } from "@/types/types";
 import { createClient } from "@supabase/supabase-js";
 import { generate_embedding } from "@/utilities/generate-embeddings";
+import { chunkProfile } from "@/lib/server/profile-chunking";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,9 +30,21 @@ export async function POST(request: NextRequest) {
 
     console.log("Fetching LinkedIn profile...");
     let linkedin_url_to_fetch = linkedin_url;
-    if (!linkedin_url_to_fetch.startsWith("linkedin.com")) {
+    if (linkedin_url_to_fetch.startsWith("linkedin.com")) {
       linkedin_url_to_fetch = "https://www." + linkedin_url_to_fetch;
     }
+    
+    // Validate LinkedIn URL format
+    if (!linkedin_url_to_fetch.match(/^https:\/\/www\.linkedin\.com\/[a-zA-Z0-9\/-]+$/)) {
+      console.log("Invalid LinkedIn URL format:", linkedin_url_to_fetch);
+      return NextResponse.json(
+        { error: "Invalid LinkedIn URL format. URL must be of the form 'https://www.linkedin.com/<profile-id>'" },
+        { status: 400 }
+      );
+    }
+
+    console.log("Fetching LinkedIn profile...: ", linkedin_url_to_fetch);
+
     const { proxycurl_linkedin_profile } = await fetch_linkedin_profile(
       linkedin_url_to_fetch
     );
@@ -123,6 +136,26 @@ export async function POST(request: NextRequest) {
           { error: "Failed to store embedding data: " + embeddingError },
           { status: 500 }
         );
+      }
+
+      // Generate and store chunks
+      const chunks = await chunkProfile(profile);
+
+      const { error: chunksError } = await supabase
+        .from("profile_chunks")
+        .upsert(
+          chunks.map((chunk) => ({
+            profile_id: profile.id,
+            chunk_type: chunk.chunk_type,
+            content: chunk.content,
+            embedding: chunk.embedding,
+          })),
+          { onConflict: "profile_id,chunk_type" }
+        );
+
+      if (chunksError) {
+        console.error("Failed to store profile chunks:", chunksError);
+        // Don't throw - profile is still usable even if chunks fail
       }
 
       // Return success response
