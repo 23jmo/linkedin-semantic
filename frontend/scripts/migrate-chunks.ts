@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { chunkProfile } from "../frontend/src/lib/server/profile-chunking";
+import { chunkProfile } from "@/lib/server/profile-chunking";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

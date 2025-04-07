@@ -77,8 +77,10 @@ async function semantic_search(
 
       // Weight different chunk types differently
       const weight =
-        chunk_type === "experience"
-          ? 2
+        chunk_type === "basic_info"
+          ? 1.5
+          : chunk_type === "experience"
+          ? 1.5
           : chunk_type === "education"
           ? 1.5
           : chunk_type === "achievements"
