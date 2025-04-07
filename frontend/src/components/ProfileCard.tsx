@@ -102,7 +102,7 @@ export default function ProfileCard({
                   : "bg-[#0a4a6e] text-[#4db6e8]"
               } px-2 py-0.5 rounded-full text-xs font-medium`}
             >
-              {Math.round(matchScore * 100)}%
+              {Math.round(matchScore * 100)} pts
             </div>
           </div>
           <p
