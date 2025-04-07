@@ -33,7 +33,7 @@ export default function LoadingIndicator() {
         resolvedTheme === "light"
           ? "bg-white border-gray-200"
           : "bg-gray-800 border-gray-700"
-      } w-full max-w-3xl mx-auto p-8 rounded-lg shadow-md text-center border`}
+      } w-full mx-auto p-8 rounded-lg shadow-md text-center border`}
     >
       <div className="flex flex-col items-center justify-center">
         <FaSpinner

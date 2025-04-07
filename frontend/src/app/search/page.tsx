@@ -111,7 +111,7 @@ function SearchPageContent() {
               initialQuery={query}
               useHyde={useHyde}
             />
-            <div className="flex items-center space-x-2 mt-4">
+            <div className="flex items-center justify-center space-x-2 mt-4">
               <input
                 type="checkbox"
                 id="search-hyde-toggle"

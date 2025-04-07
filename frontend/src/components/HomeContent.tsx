@@ -82,7 +82,7 @@ export default function HomeContent({
           </span>{" "}
           Profiles
         </h1>
-        <div className="mb-8">
+        <div className="mb-8 w-full">
           <SearchBox useHyde={useHyde} />
           <div className="flex items-center justify-center space-x-2 mt-4">
             <input

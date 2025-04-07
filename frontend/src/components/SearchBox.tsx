@@ -39,7 +39,7 @@ export default function SearchBox({
   // };
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full">
       <form
         onSubmit={handleSearch}
         className="relative"
