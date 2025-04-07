@@ -74,7 +74,7 @@ export default function ScrollingProfiles({
 
   return (
     <div
-      className={`w-full overflow-hidden py-12 ${className}`}
+      className={`w-full overflow-hidden py-12 ${className} z-10`}
       style={{ perspective: "1200px" }}
     >
       <div

@@ -62,7 +62,7 @@ export default function HomeContent({
   }, [isAuthenticated]);
 
   return (
-    <div className="py-8">
+    <div className="py-8 relative z-50">
       <div className="max-w-3xl mx-auto">
         <h1
           className={`text-3xl font-bold mb-8 pt-16 pb-8 text-center ${

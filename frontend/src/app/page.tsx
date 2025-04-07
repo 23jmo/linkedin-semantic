@@ -59,13 +59,13 @@ export default function HomePage() {
 
   return (
     <Layout>
-      <HomeContent
-        isAuthenticated={status === "authenticated"}
-        suggestions={suggestions}
-      />
-      <ScrollingProfiles
-        className="md:block hidden fixed bottom-0 left-0 right-0 w-full"
-       />
+      <div className="relative">
+        <HomeContent
+          isAuthenticated={status === "authenticated"}
+          suggestions={suggestions}
+        />
+        <ScrollingProfiles className="md:block hidden fixed bottom-0 left-0 right-0 w-full" />
+      </div>
     </Layout>
   );
 }
