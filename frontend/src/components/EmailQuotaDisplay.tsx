@@ -1,8 +1,13 @@
 import { useTheme } from "@/lib/theme-context";
-import { EmailGenerationQuota } from "@/types/types";
+
+interface EmailUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+}
 
 interface EmailQuotaDisplayProps {
-  usage: EmailGenerationQuota | null;
+  usage: EmailUsage | null;
   isLoading?: boolean;
   quotaError?: string | null;
   variant?: "compact" | "dashboard";

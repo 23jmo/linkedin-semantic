@@ -2,7 +2,13 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { SearchQuerySchema } from "@/types/types";
 import { generateEmbedding } from "@/lib/server/embeddings";
+import OpenAI from "openai";
 import type { Database } from "@/types/linkedin-profile.types";
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Extract the return type from the Database type
 type SearchProfilesByEmbeddingResult =
@@ -84,8 +90,79 @@ async function semantic_search(
   match_limit: number = 10,
   match_threshold: number = 0.5
 ) {
-  // Generate embedding for the search query
-  const embedding = await generateEmbedding(query);
+  // Generate hypothetical answer using GPT
+  const completion = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content: `You are a LinkedIn profile expert. Generate a hypothetical ideal profile section of the form 
+          
+          {
+            full_name: z.string(),
+            first_name: z.string(),
+            last_name: z.string(),
+            headline: z.string(),
+            summary: z.string(),
+            profile_pic_url: z.string(),
+            background_cover_image_url: z.string(),
+            public_identifier: z.string(),
+
+            city: z.string().nullable(),
+            state: z.string().nullable(),
+            country: z.string().nullable(),
+            country_full_name: z.string().nullable(),
+
+            industry: z.string().nullable(),
+            occupation: z.string().nullable(),
+            experiences: z.array(z.any()),
+            education: z.array(z.any()),
+            certifications: z.array(z.any()),
+            skills: z.array(z.any()),
+
+            connections: z.number(),
+            follower_count: z.number(),
+            people_also_viewed: z.array(z.any()),
+
+            languages: z.array(z.any()),
+            interests: z.array(z.any()),
+            volunteer_work: z.array(z.any()),
+            groups: z.array(z.any()),
+
+            accomplishment_courses: z.array(z.any()),
+            accomplishment_honors_awards: z.array(z.any()),
+            accomplishment_patents: z.array(z.any()),
+            accomplishment_projects: z.array(z.any()),
+            accomplishment_publications: z.array(z.any()),
+            accomplishment_organisations: z.array(z.any()),
+            accomplishment_test_scores: z.array(z.any()),
+
+            articles: z.array(z.any()),
+            activities: z.array(z.any()),
+            recommendations: z.array(z.any()),
+            similarly_named_profiles: z.array(z.any()),
+            personal_emails: z.array(z.string()),
+            personal_numbers: z.array(z.string()),
+            inferred_salary: z.number().nullable(),
+            birth_date: z.string().nullable(),
+            gender: z.string().nullable(),
+            extra: z.any().nullable(),
+          }
+          
+          that would perfectly match this search query. Be brief but specific.`,
+      },
+      {
+        role: "user",
+        content: query,
+      },
+    ],
+    temperature: 0.3,
+    max_tokens: 150,
+  });
+
+  // Use the hypothetical answer for embedding
+  const hypotheticalAnswer = completion.choices[0].message.content || query;
+  const embedding = await generateEmbedding(hypotheticalAnswer);
 
   // Ensure embedding is an array of numbers
   const embedding_list = embedding.map((x) => Number(x));
