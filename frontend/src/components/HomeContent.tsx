@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/lib/theme-context";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchBox from "@/components/SearchBox";
 import SuggestionBox from "@/components/SuggestionBox";
 import AuthPrompt from "@/components/AuthPrompt";
@@ -19,6 +19,7 @@ export default function HomeContent({
   const { resolvedTheme } = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { count, isLoading } = useProfileCount();
+  const [useHyde, setUseHyde] = useState<boolean>(true);
 
   useEffect(() => {
     if (!scrollRef.current || !isAuthenticated) return;
@@ -82,7 +83,28 @@ export default function HomeContent({
           Profiles
         </h1>
         <div className="mb-8">
-          <SearchBox />
+          <SearchBox useHyde={useHyde} />
+          <div className="flex items-center justify-center space-x-2 mt-4">
+            <input
+              type="checkbox"
+              id="home-hyde-toggle"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              checked={useHyde}
+              onChange={(e) => {
+                console.log(
+                  "HyDE Checkbox Changed, new state:",
+                  e.target.checked
+                );
+                setUseHyde(e.target.checked);
+              }}
+            />
+            <label
+              htmlFor="home-hyde-toggle"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Use Enhanced Search (HyDE)
+            </label>
+          </div>
         </div>
 
         {isAuthenticated ? (

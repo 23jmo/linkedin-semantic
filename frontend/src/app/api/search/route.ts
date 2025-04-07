@@ -4,40 +4,45 @@ import { SearchQuerySchema } from "@/types/types";
 import { generateEmbedding } from "@/lib/server/embeddings";
 import { generateHydeChunks } from "@/lib/server/hyde";
 import type { Database } from "@/types/linkedin-profile.types";
+import { ProfileChunkType } from "@/types/profile-chunks";
+
+// Initialize OpenAI
+
+// Extract the return type from the Database type
+type SearchProfilesByEmbeddingResult =
+  Database["linkedin_profiles"]["Functions"]["search_profiles_by_embedding"]["Returns"][number];
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 ).schema("linkedin_profiles");
 
-type ProfileResult = {
-  id: string;
-  user_id: string;
-  linkedin_id: string;
-  full_name: string;
-  headline: string;
-  industry: string;
-  location: string;
-  profile_url: string;
-  profile_picture_url: string;
-  summary: string;
-  raw_profile_data: any;
-  created_at: string;
-  updated_at: string;
-  similarity: number;
-};
-
 async function semantic_search(
   query: string,
   match_limit: number = 10,
-  match_threshold: number = 0.5
+  match_threshold: number = 0.5,
+  useHyde: boolean = true
 ) {
-  // Generate HyDE chunks for the query
-  const hydeChunks = await generateHydeChunks(query);
+  let searchChunks: { chunk_type: ProfileChunkType; content: string }[];
+
+  if (useHyde) {
+    // Generate HyDE chunks for the query
+    searchChunks = await generateHydeChunks(query);
+  } else {
+    // Use the raw query for all relevant chunk types (you might adjust this)
+    searchChunks = [
+      "basic_info",
+      "summary",
+      "experience",
+      "skills",
+      "education",
+      "achievements",
+    ].map((type) => ({ chunk_type: type as ProfileChunkType, content: query }));
+  }
 
   // Search with each chunk and combine results
   const chunkResults = await Promise.all(
-    hydeChunks.map(async (chunk) => {
+    searchChunks.map(async (chunk) => {
       const embedding = await generateEmbedding(chunk.content);
       const embedding_list = embedding.map((x) => Number(x));
 
@@ -45,7 +50,7 @@ async function semantic_search(
         "search_profiles_by_chunk_embedding",
         {
           query_embedding: embedding_list,
-          chunk_type: chunk.chunk_type,
+          target_chunk_type: chunk.chunk_type,
           match_threshold: Number(match_threshold),
           match_count: Number(match_limit),
         }
@@ -63,7 +68,7 @@ async function semantic_search(
   >();
 
   chunkResults.forEach(({ chunk_type, profiles }) => {
-    profiles.forEach((profile: ProfileResult) => {
+    profiles.forEach((profile: SearchProfilesByEmbeddingResult) => {
       const current = profileScores.get(profile.id) || {
         profile,
         totalScore: 0,
@@ -72,7 +77,13 @@ async function semantic_search(
 
       // Weight different chunk types differently
       const weight =
-        chunk_type === "experience" ? 1.2 : chunk_type === "skills" ? 1.1 : 1.0;
+        chunk_type === "experience"
+          ? 2
+          : chunk_type === "education"
+          ? 1.5
+          : chunk_type === "achievements"
+          ? 1.2
+          : 1.0;
 
       profileScores.set(profile.id, {
         profile,
@@ -85,10 +96,13 @@ async function semantic_search(
   // Sort by average weighted scores and return top results
   const results = Array.from(profileScores.values())
     .map(({ profile, totalScore, count }) => ({
-      ...profile,
-      similarity: totalScore / count, // Use average score
+      profile: {
+        ...profile,
+      },
+      score: totalScore / count,
+      highlights: [],
     }))
-    .sort((a, b) => b.similarity - a.similarity)
+    .sort((a, b) => b.score - a.score)
     .slice(0, match_limit);
 
   return { data: results, error: null };
@@ -106,11 +120,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const { query, match_limit, match_threshold } = result.data;
+    const { query, match_limit, match_threshold, useHyde } = result.data;
     const { data, error } = await semantic_search(
       query,
       match_limit,
-      match_threshold
+      match_threshold,
+      useHyde
     );
 
     if (error) {

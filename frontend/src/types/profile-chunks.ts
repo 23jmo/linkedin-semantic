@@ -2,7 +2,6 @@ export type ProfileChunkType =
   | "basic_info" // name, headline, location
   | "summary" // profile summary
   | "experience" // work experience
-  | "skills" // skills and endorsements
   | "education" // education history
   | "achievements"; // certifications, awards, etc
 

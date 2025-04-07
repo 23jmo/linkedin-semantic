@@ -7,9 +7,13 @@ import { useTheme } from "@/lib/theme-context";
 
 interface SearchBoxProps {
   initialQuery?: string;
+  useHyde?: boolean;
 }
 
-export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
+export default function SearchBox({
+  initialQuery = "",
+  useHyde = true,
+}: SearchBoxProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [isFocused, setIsFocused] = useState(false);
@@ -20,10 +24,10 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
     setQuery(initialQuery);
   }, [initialQuery]);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(query)}&useHyde=${useHyde}`);
     }
   };
 
@@ -37,7 +41,7 @@ export default function SearchBox({ initialQuery = "" }: SearchBoxProps) {
   return (
     <div className="w-full max-w-3xl mx-auto">
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSearch}
         className="relative"
       >
         <input

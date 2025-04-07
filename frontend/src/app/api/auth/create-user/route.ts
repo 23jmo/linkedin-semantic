@@ -4,6 +4,8 @@ import {
   ProfileCreateResponseSchema,
   AuthData,
   ProfileData,
+  Profile,
+  RawProfile,
 } from "@/types/types";
 import { createClient } from "@supabase/supabase-js";
 import { generate_embedding } from "@/utilities/generate-embeddings";
@@ -81,8 +83,12 @@ export async function POST(request: NextRequest) {
     // Create timestamp for created_at and updated_at
     const now = new Date();
 
+    const raw_profile_data: RawProfile = {
+      ...proxycurl_linkedin_profile,
+    };
+
     // Prepare profile data
-    const profile = {
+    const profile: Profile = {
       id: profile_id,
       user_id: user_id,
       linkedin_id: "",
@@ -93,14 +99,14 @@ export async function POST(request: NextRequest) {
       profile_url: linkedin_url_to_fetch,
       profile_picture_url: proxycurl_linkedin_profile?.profile_pic_url || "",
       summary: proxycurl_linkedin_profile?.summary || "",
-      raw_profile_data: proxycurl_linkedin_profile,
-      created_at: now,
-      updated_at: now,
+      raw_profile_data: raw_profile_data,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
     };
 
     console.log("Generating embedding...");
 
-    const embedding = await generate_embedding(profile.raw_profile_data);
+    const embedding = await generate_embedding(raw_profile_data);
 
     try {
       // Store the profile in Supabase
@@ -157,6 +163,8 @@ export async function POST(request: NextRequest) {
         console.error("Failed to store profile chunks:", chunksError);
         // Don't throw - profile is still usable even if chunks fail
       }
+
+      console.log("Profile chunks stored successfully");
 
       // Return success response
       // Validate response against ProfileCreateResponseSchema

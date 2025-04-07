@@ -1,5 +1,52 @@
 import { z } from "zod";
 
+export const ExperienceSchema = z.object({
+  title: z.string(),
+  company: z.string(),
+  description: z.string().nullable().optional(),
+  start_at: z.object({
+    day: z.number(),
+    month: z.number(),
+    year: z.number(),
+  }),
+  ends_at: z
+    .object({
+      day: z.number(),
+      month: z.number(),
+      year: z.number(),
+    })
+    .nullable()
+    .optional(),
+  logo_url: z.string().optional().nullable(),
+  location: z.string().nullable().optional(),
+  company_facebook_profile_url: z.string().optional().nullable(),
+  company_linkedin_profile_url: z.string().optional().nullable(),
+});
+
+export const EducationSchema = z.object({
+  activities_and_societies: z.string().optional().nullable(),
+  school: z.string(),
+  grade: z.string().nullable().optional(),
+  degree_name: z.string().optional(),
+  field_of_study: z.string().optional(),
+  description: z.string().nullable().optional(),
+  starts_at: z.object({
+    day: z.number(),
+    month: z.number(),
+    year: z.number(),
+  }),
+  ends_at: z
+    .object({
+      day: z.number(),
+      month: z.number(),
+      year: z.number(),
+    })
+    .nullable()
+    .optional(),
+  logo_url: z.string().optional().nullable(),
+  school_linkedin_profile_url: z.string().optional().nullable(),
+});
+
 export const RawProfileDataSchema = z.object({
   // Basic info
   full_name: z.string(),
@@ -12,50 +59,79 @@ export const RawProfileDataSchema = z.object({
   public_identifier: z.string(),
 
   // Location info
-  city: z.string().nullable(),
-  state: z.string().nullable(),
-  country: z.string().nullable(),
-  country_full_name: z.string().nullable(),
+  city: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  country_full_name: z.string().nullable().optional(),
 
   // Professional details
-  industry: z.string().nullable(),
-  occupation: z.string().nullable(),
-  experiences: z.array(z.any()),
-  education: z.array(z.any()),
-  certifications: z.array(z.any()),
-  skills: z.array(z.any()),
+  industry: z.string().nullable().optional(),
+  occupation: z.string().nullable().optional(),
+  experiences: z.array(ExperienceSchema).optional(),
+  education: z.array(z.any()).optional(),
+  certifications: z.array(z.any()).optional(),
+  skills: z.array(z.any()).optional(),
 
   // Network info
-  connections: z.number(),
-  follower_count: z.number(),
-  people_also_viewed: z.array(z.any()),
+  connections: z.number().nullable().optional(),
+  follower_count: z.number().nullable().optional(),
+  people_also_viewed: z.array(z.any()).optional(),
 
   // Additional details
-  languages: z.array(z.any()),
-  interests: z.array(z.any()),
-  volunteer_work: z.array(z.any()),
-  groups: z.array(z.any()),
+  languages: z.array(z.string()).optional(),
+  interests: z.array(z.string()).optional(),
+  volunteer_work: z.array(z.any()).optional(),
+  groups: z.array(z.any()).optional(),
 
   // Accomplishments
-  accomplishment_courses: z.array(z.any()),
-  accomplishment_honors_awards: z.array(z.any()),
-  accomplishment_patents: z.array(z.any()),
-  accomplishment_projects: z.array(z.any()),
-  accomplishment_publications: z.array(z.any()),
-  accomplishment_organisations: z.array(z.any()),
-  accomplishment_test_scores: z.array(z.any()),
+  accomplishment_courses: z
+    .array(
+      z.object({
+        name: z.string().nullable(),
+        number: z.string().nullable().optional(),
+      })
+    )
+    .optional(),
+  accomplishment_honors_awards: z.array(z.any()).optional(),
+  accomplishment_patents: z.array(z.any()).optional(),
+  accomplishment_projects: z
+    .array(
+      z.object({
+        title: z.string().nullable(),
+        description: z.string().nullable().optional(),
+        url: z.string().nullable().optional(),
+        starts_at: z
+          .object({
+            day: z.number().optional(),
+            month: z.number().optional(),
+            year: z.number(),
+          })
+          .optional(),
+        ends_at: z
+          .object({
+            day: z.number().optional(),
+            month: z.number().optional(),
+            year: z.number(),
+          })
+          .optional(),
+      })
+    )
+    .optional(),
+  accomplishment_publications: z.array(z.any()).optional(),
+  accomplishment_organisations: z.array(z.any()).optional(),
+  accomplishment_test_scores: z.array(z.any()).optional(),
 
   // Other fields
-  articles: z.array(z.any()),
-  activities: z.array(z.any()),
-  recommendations: z.array(z.any()),
-  similarly_named_profiles: z.array(z.any()),
-  personal_emails: z.array(z.string()),
-  personal_numbers: z.array(z.string()),
-  inferred_salary: z.number().nullable(),
-  birth_date: z.string().nullable(),
-  gender: z.string().nullable(),
-  extra: z.any().nullable(),
+  articles: z.array(z.any()).optional(),
+  activities: z.array(z.any()).optional(),
+  recommendations: z.array(z.any()).optional(),
+  similarly_named_profiles: z.array(z.any()).optional(),
+  personal_emails: z.array(z.string()).optional(),
+  personal_numbers: z.array(z.string()).optional(),
+  inferred_salary: z.number().nullable().optional(),
+  birth_date: z.string().nullable().optional(),
+  gender: z.string().nullable().optional(),
+  extra: z.any().nullable().optional(),
 });
 
 export const ProfileSchema = z.object({
@@ -117,8 +193,9 @@ export const ErrorResponseSchema = z.object({
 // Request Schema
 export const SearchQuerySchema = z.object({
   query: z.string().min(1, "Search query is required"),
-  match_limit: z.number().optional() || 10,
-  match_threshold: z.number().optional() || 0.5,
+  match_limit: z.number().optional().default(10),
+  match_threshold: z.number().optional().default(0.5),
+  useHyde: z.boolean().optional().default(true),
 });
 
 // Response Schema for a single profile
@@ -187,10 +264,7 @@ export const EmailGenerationQuotaSchema = z.object({
 
 export const EmailGenerationQuotaRequestSchema = z.object({
   user_id: z.string(),
-}); 
-
-
-
+});
 
 // TypeScript types derived from schemas
 export type CheckUserExistsRequest = z.infer<

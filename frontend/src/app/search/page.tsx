@@ -35,6 +35,7 @@ function SearchPageContent() {
     []
   );
   const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [useHyde, setUseHyde] = useState<boolean>(true);
 
   const performSearch = useCallback(
     async (searchQuery: string) => {
@@ -44,7 +45,7 @@ function SearchPageContent() {
       setError(null);
 
       try {
-        const profiles = await semanticSearch(searchQuery);
+        const profiles = await semanticSearch(searchQuery, useHyde);
         console.log("Profiles:", profiles);
         setResults(profiles);
       } catch (err) {
@@ -54,7 +55,7 @@ function SearchPageContent() {
         setLoading(false);
       }
     },
-    [setLoading, setError, setResults]
+    [useHyde, setLoading, setError, setResults]
   );
 
   useEffect(() => {
@@ -66,6 +67,14 @@ function SearchPageContent() {
       }
     }
   }, [searchParams, status, performSearch]);
+
+  // Update useHyde state based on URL param
+  useEffect(() => {
+    const hydeParam = searchParams.get("useHyde");
+    if (hydeParam !== null) {
+      setUseHyde(hydeParam === "true");
+    }
+  }, [searchParams]);
 
   // Handle profile selection
   const handleProfileSelect = (profile: ProfileFrontend, selected: boolean) => {
@@ -98,7 +107,33 @@ function SearchPageContent() {
           <h1 className="text-2xl font-bold mb-6">Search Results</h1>
 
           <div className="mb-8">
-            <SearchBox initialQuery={query} />
+            <SearchBox
+              initialQuery={query}
+              useHyde={useHyde}
+            />
+            <div className="flex items-center space-x-2 mt-4">
+              <input
+                type="checkbox"
+                id="search-hyde-toggle"
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                checked={useHyde}
+                onChange={(e) => {
+                  console.log(
+                    "HyDE Checkbox Changed, new state:",
+                    e.target.checked
+                  );
+                  setUseHyde(e.target.checked);
+                  // Optional: Re-run search when toggle changes
+                  // performSearch(query);
+                }}
+              />
+              <label
+                htmlFor="search-hyde-toggle"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Use Enhanced Search (HyDE)
+              </label>
+            </div>
           </div>
 
           {status === "unauthenticated" ? (
