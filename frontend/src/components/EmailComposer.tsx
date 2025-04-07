@@ -649,8 +649,24 @@ export default function EmailComposer({
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center"
-                  disabled={isLoading || selectedProfiles.length === 0}
+                  className={`bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center ${
+                    isLoading ||
+                    selectedProfiles.length === 0 ||
+                    !showGeneratedEmails ||
+                    !Object.values(generatedEmails).every(
+                      (email) => email?.subject?.trim() && email?.body?.trim()
+                    )
+                      ? "opacity-70 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={
+                    isLoading ||
+                    selectedProfiles.length === 0 ||
+                    !showGeneratedEmails ||
+                    !Object.values(generatedEmails).every(
+                      (email) => email?.subject?.trim() && email?.body?.trim()
+                    )
+                  }
                 >
                   {isLoading ? (
                     <>
