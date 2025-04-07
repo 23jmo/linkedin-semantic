@@ -8,6 +8,8 @@ import GmailConnector from "./GmailConnector";
 import { useSession } from "next-auth/react";
 import { checkUserExists, getLinkedInProfile } from "@/lib/api";
 import { ProfileFrontend, RawProfile } from "../types/types";
+import { useEmailLimits } from "@/hooks/useEmailLimits";
+import EmailQuotaDisplay from "./EmailQuotaDisplay";
 
 interface EmailComposerProps {
   selectedProfiles: ProfileFrontend[];
@@ -38,6 +40,9 @@ export default function EmailComposer({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [showGeneratedEmails, setShowGeneratedEmails] = useState(false);
+
+  const { checkCanGenerateEmail, isChecking, usage, quotaError } =
+    useEmailLimits();
 
   // Close the composer when there are no profiles selected
   useEffect(() => {
@@ -104,6 +109,13 @@ export default function EmailComposer({
   };
 
   const handleGenerateEmails = async () => {
+    const canGenerate = await checkCanGenerateEmail();
+
+    if (!canGenerate) {
+      setGenerationError("You have reached your email generation limit");
+      return;
+    }
+
     if (!purpose) {
       setGenerationError("Please specify the purpose of your email");
       return;
@@ -128,7 +140,8 @@ export default function EmailComposer({
 
           const linkedinProfile = await getLinkedInProfile(session.user.id);
 
-          senderProfile = linkedinProfile.linkedin_profile.raw_profile_data ?? null;
+          senderProfile =
+            linkedinProfile.linkedin_profile.raw_profile_data ?? null;
 
           console.log("[EmailComposer] Sender profile:", senderProfile);
 
@@ -192,6 +205,9 @@ export default function EmailComposer({
 
       setGeneratedEmails(newGeneratedEmails);
       setShowGeneratedEmails(true);
+
+      // Refresh the quota after successful generation
+      await checkCanGenerateEmail();
     } catch (err) {
       setGenerationError(
         err instanceof Error ? err.message : "Failed to generate emails"
@@ -200,6 +216,16 @@ export default function EmailComposer({
       setIsGenerating(false);
     }
   };
+
+  useEffect(() => {
+    const fetchQuota = async () => {
+      if (session?.user?.id) {
+        await checkCanGenerateEmail();
+      }
+    };
+
+    fetchQuota();
+  }, [session?.user?.id, checkCanGenerateEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -425,7 +451,15 @@ export default function EmailComposer({
                 />
               </div>
 
-              {generationError && (
+              {/* Email Quota Display */}
+              <EmailQuotaDisplay
+                usage={usage}
+                isLoading={isChecking}
+                quotaError={quotaError}
+                variant="compact"
+              />
+
+              {(generationError || quotaError) && (
                 <div
                   className={`${
                     resolvedTheme === "light"
@@ -433,7 +467,7 @@ export default function EmailComposer({
                       : "bg-red-900 text-red-100"
                   } p-4 rounded-md mb-6`}
                 >
-                  <p>{generationError}</p>
+                  <p>{generationError || quotaError}</p>
                 </div>
               )}
 

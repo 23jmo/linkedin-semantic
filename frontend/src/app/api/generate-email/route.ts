@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { prompt } from "./prompt";
+import { createClient } from "@supabase/supabase-js";
+import { auth } from "@/auth";
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -64,7 +66,12 @@ export async function POST(request: NextRequest) {
     });
 
     try {
+      const session = await auth();
+      if (!session?.user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       const emailData = JSON.parse(content);
+      await incrementEmailCount(session.user.id);
       return NextResponse.json({
         subject: emailData.subject || "No subject generated",
         body: emailData.body || "No body generated",
@@ -82,5 +89,73 @@ export async function POST(request: NextRequest) {
       { error: "Failed to generate email" },
       { status: 500 }
     );
+  }
+}
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+).schema("usage_tracking");
+
+// After sending an email successfully, increment the count
+async function incrementEmailCount(userId: string | undefined): Promise<void> {
+  if (!userId) {
+    console.error("[Generate-Email] User ID is undefined");
+    return;
+  }
+  console.log("[Generate-Email] Incrementing email count for user:", userId);
+
+  try {
+    // First check if the record exists
+    const { data: existingRecord, error: queryError } = await supabase
+      .from("email_generation_limits")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (queryError && queryError.code !== "PGRST116") {
+      // PGRST116 means no rows returned
+      console.error("[Generate-Email] Error checking record:", queryError);
+      return;
+    }
+
+    if (!existingRecord) {
+      // Create initial record
+      const { error: insertError } = await supabase
+        .from("email_generation_limits")
+        .insert({
+          user_id: userId,
+          emails_generated_this_month: 1,
+          monthly_limit: 50, // Default limit
+          updated_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        console.error(
+          "[Generate-Email] Error creating initial record:",
+          insertError
+        );
+      }
+      return;
+    }
+
+    // Update existing record
+    const { error: updateError } = await supabase
+      .from("email_generation_limits")
+      .update({
+        emails_generated_this_month:
+          existingRecord.emails_generated_this_month + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error(
+        "[Generate-Email] Error incrementing email count:",
+        updateError
+      );
+    }
+  } catch (error) {
+    console.error("[Generate-Email] Unexpected error:", error);
   }
 }

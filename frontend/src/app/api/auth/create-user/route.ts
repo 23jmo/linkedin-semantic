@@ -28,9 +28,12 @@ export async function POST(request: NextRequest) {
     const { user_id, linkedin_auth, linkedin_url } = result.data;
 
     console.log("Fetching LinkedIn profile...");
-
+    let linkedin_url_to_fetch = linkedin_url;
+    if (!linkedin_url_to_fetch.startsWith("linkedin.com")) {
+      linkedin_url_to_fetch = "https://www." + linkedin_url_to_fetch;
+    }
     const { proxycurl_linkedin_profile } = await fetch_linkedin_profile(
-      linkedin_url
+      linkedin_url_to_fetch
     );
 
     console.log(
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
       headline: proxycurl_linkedin_profile?.headline || "",
       industry: proxycurl_linkedin_profile?.industry || "",
       location: location,
-      profile_url: linkedin_url,
+      profile_url: linkedin_url_to_fetch,
       profile_picture_url: proxycurl_linkedin_profile?.profile_pic_url || "",
       summary: proxycurl_linkedin_profile?.summary || "",
       raw_profile_data: proxycurl_linkedin_profile,

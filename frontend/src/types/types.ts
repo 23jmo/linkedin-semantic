@@ -176,6 +176,22 @@ export const ProfileFrontendSchema = z.object({
   raw_profile_data: RawProfileDataSchema.optional(),
 });
 
+export const EmailGenerationQuotaSchema = z.object({
+  user_id: z.string(),
+  emails_generated_this_month: z.number(),
+  monthly_limit: z.number(),
+  last_reset_date: z.string(),
+  updated_at: z.string(),
+  created_at: z.string(),
+});
+
+export const EmailGenerationQuotaRequestSchema = z.object({
+  user_id: z.string(),
+}); 
+
+
+
+
 // TypeScript types derived from schemas
 export type CheckUserExistsRequest = z.infer<
   typeof CheckUserExistsRequestSchema
@@ -201,3 +217,4 @@ export type GetLinkedInProfileRequest = z.infer<
 export type GetLinkedInProfileResponse = z.infer<
   typeof GetLinkedInProfileResponseSchema
 >;
+export type EmailGenerationQuota = z.infer<typeof EmailGenerationQuotaSchema>;

@@ -7,6 +7,8 @@ import Layout from "@/components/Layout";
 import { useTheme } from "@/lib/theme-context";
 import { deleteUser } from "@/lib/api";
 import EmailHistory from "@/components/EmailHistory";
+import { useEmailLimits } from "@/hooks/useEmailLimits";
+import EmailQuotaDisplay from "@/components/EmailQuotaDisplay";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -17,6 +19,8 @@ export default function DashboardPage() {
   const [confirmEmail, setConfirmEmail] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const { checkCanGenerateEmail, isChecking, usage, quotaError } =
+    useEmailLimits();
 
   useEffect(() => {
     console.log("DashboardPage - Session status:", status);
@@ -42,6 +46,17 @@ export default function DashboardPage() {
       }
     }
   }, [status, session, router]);
+
+  // New useEffect for checking email quota
+  useEffect(() => {
+    const fetchQuota = async () => {
+      if (status === "authenticated" && !isLoading) {
+        await checkCanGenerateEmail();
+      }
+    };
+
+    fetchQuota();
+  }, [status, isLoading, checkCanGenerateEmail]);
 
   const handleDeleteProfile = async () => {
     if (!session?.user?.id) return;
@@ -80,6 +95,14 @@ export default function DashboardPage() {
     <Layout>
       <div className="max-w-4xl mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+
+        {/* Email Generation Quota Card */}
+        <EmailQuotaDisplay
+          usage={usage}
+          isLoading={isChecking}
+          quotaError={quotaError}
+          variant="dashboard"
+        />
 
         <div
           className={`${
