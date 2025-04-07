@@ -47,6 +47,39 @@ export const EducationSchema = z.object({
   school_linkedin_profile_url: z.string().optional().nullable(),
 });
 
+// Define Certification Schema
+export const CertificationSchema = z.object({
+  name: z.string().nullable(),
+  // Add other fields if needed based on actual data, e.g., authority, url
+});
+
+// Define Course Schema
+export const CourseSchema = z.object({
+  name: z.string().nullable(),
+  number: z.string().nullable().optional(),
+});
+
+// Define Project Schema
+export const ProjectSchema = z.object({
+  title: z.string().nullable(),
+  description: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  starts_at: z
+    .object({
+      day: z.number().optional(),
+      month: z.number().optional(),
+      year: z.number(),
+    })
+    .optional(),
+  ends_at: z
+    .object({
+      day: z.number().optional(),
+      month: z.number().optional(),
+      year: z.number(),
+    })
+    .optional(),
+});
+
 export const RawProfileDataSchema = z.object({
   // Basic info
   full_name: z.string(),
@@ -68,9 +101,9 @@ export const RawProfileDataSchema = z.object({
   industry: z.string().nullable().optional(),
   occupation: z.string().nullable().optional(),
   experiences: z.array(ExperienceSchema).optional(),
-  education: z.array(z.any()).optional(),
-  certifications: z.array(z.any()).optional(),
-  skills: z.array(z.any()).optional(),
+  education: z.array(EducationSchema).optional(),
+  certifications: z.array(CertificationSchema).optional(),
+  skills: z.array(z.string()).optional(),
 
   // Network info
   connections: z.number().nullable().optional(),
@@ -84,39 +117,10 @@ export const RawProfileDataSchema = z.object({
   groups: z.array(z.any()).optional(),
 
   // Accomplishments
-  accomplishment_courses: z
-    .array(
-      z.object({
-        name: z.string().nullable(),
-        number: z.string().nullable().optional(),
-      })
-    )
-    .optional(),
+  accomplishment_courses: z.array(CourseSchema).optional(),
   accomplishment_honors_awards: z.array(z.any()).optional(),
   accomplishment_patents: z.array(z.any()).optional(),
-  accomplishment_projects: z
-    .array(
-      z.object({
-        title: z.string().nullable(),
-        description: z.string().nullable().optional(),
-        url: z.string().nullable().optional(),
-        starts_at: z
-          .object({
-            day: z.number().optional(),
-            month: z.number().optional(),
-            year: z.number(),
-          })
-          .optional(),
-        ends_at: z
-          .object({
-            day: z.number().optional(),
-            month: z.number().optional(),
-            year: z.number(),
-          })
-          .optional(),
-      })
-    )
-    .optional(),
+  accomplishment_projects: z.array(ProjectSchema).optional(),
   accomplishment_publications: z.array(z.any()).optional(),
   accomplishment_organisations: z.array(z.any()).optional(),
   accomplishment_test_scores: z.array(z.any()).optional(),
@@ -292,3 +296,10 @@ export type GetLinkedInProfileResponse = z.infer<
   typeof GetLinkedInProfileResponseSchema
 >;
 export type EmailGenerationQuota = z.infer<typeof EmailGenerationQuotaSchema>;
+
+// Export new types
+export type Experience = z.infer<typeof ExperienceSchema>;
+export type Education = z.infer<typeof EducationSchema>;
+export type Certification = z.infer<typeof CertificationSchema>;
+export type Course = z.infer<typeof CourseSchema>;
+export type Project = z.infer<typeof ProjectSchema>;

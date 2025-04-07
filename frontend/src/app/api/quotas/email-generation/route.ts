@@ -1,13 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { auth } from "@/auth";
 import { EmailGenerationQuotaRequestSchema, EmailGenerationQuotaSchema } from "@/types/types";
-import { z } from "zod";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_ANON_KEY!
 ).schema("usage_tracking");
 
 // Before sending any email, check the limit

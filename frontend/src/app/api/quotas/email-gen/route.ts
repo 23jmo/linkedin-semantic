@@ -1,12 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import {  NextResponse } from "next/server";
 import { auth } from "@/auth";
 import {
-  EmailGenerationQuotaRequestSchema,
   EmailGenerationQuotaSchema,
 } from "@/types/types";
-import { z } from "zod";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +11,7 @@ const supabase = createClient(
 ).schema("usage_tracking");
 
 // Before sending any email, check the limit
-export async function GET(request: NextRequest) {
+export async function GET() {
   console.log("[email-gen] Starting GET request");
 
   const session = await auth();

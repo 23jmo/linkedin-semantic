@@ -253,7 +253,7 @@ export default function ProfileCard({
                       <div className="flex items-start">
                         <div className="flex-shrink-0 mr-3 mt-1">
                           <CompanyLogo
-                            logoUrl={exp.logo_url}
+                            logoUrl={exp.logo_url ?? undefined}
                             companyName={exp.company}
                           />
                         </div>
@@ -283,8 +283,8 @@ export default function ProfileCard({
                                 : "text-gray-400"
                             }`}
                           >
-                            {formatDate(exp.starts_at)} -{" "}
-                            {formatDate(exp.ends_at)}
+                            {formatDate(exp.start_at)} -{" "}
+                            {formatDate(exp.ends_at ?? undefined)}
                             {exp.location && ` · ${exp.location}`}
                           </p>
                           {exp.description && (
@@ -327,7 +327,7 @@ export default function ProfileCard({
                       <div className="flex items-start">
                         <div className="flex-shrink-0 mr-3 mt-1">
                           <SchoolLogo
-                            logoUrl={edu.logo_url}
+                            logoUrl={edu.logo_url ?? undefined}
                             schoolName={edu.school}
                           />
                         </div>
@@ -386,7 +386,7 @@ export default function ProfileCard({
                 <div className="flex flex-wrap gap-2">
                   {profile.raw_profile_data.skills.map(
                     (skill, index) =>
-                      skill.name && (
+                      skill && (
                         <span
                           key={index}
                           className={`px-3 py-1 rounded-full text-sm ${
@@ -395,7 +395,7 @@ export default function ProfileCard({
                               : "bg-blue-900/30 text-blue-300"
                           }`}
                         >
-                          {skill.name}
+                          {skill}
                         </span>
                       )
                   )}

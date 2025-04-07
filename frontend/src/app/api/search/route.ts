@@ -5,6 +5,7 @@ import { generateEmbedding } from "@/lib/server/embeddings";
 import { generateHydeChunks } from "@/lib/server/hyde";
 import type { Database } from "@/types/linkedin-profile.types";
 import { ProfileChunkType } from "@/types/profile-chunks";
+import { RawProfileDataSchema } from "@/types/types";
 
 // Initialize OpenAI
 
@@ -54,6 +55,13 @@ function fuzzyCheck(
 // Extract the return type from the Database type
 type SearchProfilesByEmbeddingResult =
   Database["linkedin_profiles"]["Functions"]["search_profiles_by_embedding"]["Returns"][number];
+
+// Define the structure for profile scores map value
+interface ProfileScoreInfo {
+  profile: SearchProfilesByEmbeddingResult;
+  totalScore: number;
+  count: number;
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -105,10 +113,7 @@ async function semantic_search(
   );
 
   // Combine and deduplicate results
-  const profileScores = new Map<
-    string,
-    { profile: any; totalScore: number; count: number }
-  >();
+  const profileScores = new Map<string, ProfileScoreInfo>();
 
   // Extract keywords once before the loop
   const queryKeywords = query
@@ -118,7 +123,8 @@ async function semantic_search(
 
   chunkResults.forEach(({ chunk_type, profiles }) => {
     profiles.forEach((profile: SearchProfilesByEmbeddingResult) => {
-      const current = profileScores.get(profile.id) || {
+      // Explicitly type current based on the map value type
+      const current: ProfileScoreInfo = profileScores.get(profile.id) || {
         profile,
         totalScore: 0,
         count: 0,
@@ -144,6 +150,12 @@ async function semantic_search(
       // Get the relevant text based on chunk_type (adjust field names as needed)
       let profileText = "";
       try {
+        // Validate and parse raw_profile_data
+        const parseResult = RawProfileDataSchema.safeParse(
+          profile.raw_profile_data
+        );
+        const rawData = parseResult.success ? parseResult.data : null;
+
         switch (chunk_type) {
           case "basic_info":
             profileText = `${profile.full_name || ""} ${
@@ -151,33 +163,31 @@ async function semantic_search(
             } ${profile.location || ""}`; // Combine relevant basic info fields
             break;
           case "summary":
-            profileText =
-              profile.summary_text || JSON.stringify(profile.summary) || ""; // Assuming summary text is available
+            profileText = profile.summary || ""; // Assuming summary text is available
             break;
           case "experience":
-            // Combine title, company, description from all experiences if possible
-            // This assumes experience_details is an array or object structure you can stringify. Adjust as needed.
-            profileText = JSON.stringify(
-              profile.experience_details || profile.experience || ""
-            );
-            break;
-          case "skills":
-            profileText =
-              profile.skills_list_text || JSON.stringify(profile.skills) || ""; // Assuming skills text is available
+            // Safely access experiences from parsed data
+            profileText = JSON.stringify(rawData?.experiences || "");
             break;
           case "education":
-            profileText = JSON.stringify(
-              profile.education_details || profile.education || ""
-            ); // Assuming education data structure
+            // Safely access education from parsed data
+            profileText = JSON.stringify(rawData?.education || "");
             break;
           case "achievements":
-            profileText = JSON.stringify(
-              profile.achievement_details || profile.achievements || ""
-            ); // Assuming achievement data structure
+            // Combine relevant accomplishment fields from parsed data
+            const achievementsData = rawData
+              ? {
+                  courses: rawData.accomplishment_courses,
+                  awards: rawData.accomplishment_honors_awards,
+                  projects: rawData.accomplishment_projects,
+                  publications: rawData.accomplishment_publications,
+                  organizations: rawData.accomplishment_organisations,
+                  test_scores: rawData.accomplishment_test_scores,
+                }
+              : {};
+            profileText = JSON.stringify(achievementsData);
             break;
           default:
-            // Fallback: try to stringify the whole profile? Risky, might be too broad.
-            // Or simply don't boost for unknown/unmapped chunk types.
             console.warn(`Unmapped chunk_type for boosting: ${chunk_type}`);
             profileText = "";
         }
@@ -231,7 +241,7 @@ async function semantic_search(
 
   // Sort by average weighted scores and return top results
   const results = Array.from(profileScores.values())
-    .map(({ profile, totalScore, count }) => ({
+    .map(({ profile, totalScore }) => ({
       profile: {
         ...profile,
       },

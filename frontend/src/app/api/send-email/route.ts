@@ -7,7 +7,7 @@ import {
 import { google } from "googleapis";
 import { getUserEmail } from "@/lib/api";
 import { ProfileFrontend } from "@/types/types";
-import { createClient } from "@supabase/supabase-js";
+
 
 export async function POST(request: NextRequest) {
   try {
