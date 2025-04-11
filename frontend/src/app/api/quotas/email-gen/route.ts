@@ -41,7 +41,7 @@ export async function GET() {
         .insert({
           user_id: session.user.id,
           emails_generated_this_month: 0,
-          monthly_limit: 50,
+          monthly_limit: 10,
         })
         .select()
         .single();
