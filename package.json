@@ -4,6 +4,7 @@
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-toast": "^1.2.7",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.9",
     "@types/uuid": "^10.0.0",
-    "supabase": "^2.19.7"
+    "supabase": "^2.19.7",
+    "tsconfig": "^7.0.0"
   }
 }

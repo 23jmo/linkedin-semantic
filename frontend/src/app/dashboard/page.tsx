@@ -9,6 +9,9 @@ import { deleteUser } from "@/lib/api";
 import EmailHistory from "@/components/EmailHistory";
 import { useEmailLimits } from "@/hooks/useEmailLimits";
 import EmailQuotaDisplay from "@/components/EmailQuotaDisplay";
+import { useToast } from "@/components/ui/use-toast";
+import { Card } from "@/components/ui/card";
+import { ToastWrapper } from "@/components/providers/ToastWrapper";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -21,6 +24,9 @@ export default function DashboardPage() {
   const [deleteError, setDeleteError] = useState("");
   const { checkCanGenerateEmail, isChecking, usage, quotaError } =
     useEmailLimits();
+  const { toast } = useToast();
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [isLoadingCode, setIsLoadingCode] = useState(true);
 
   useEffect(() => {
     console.log("DashboardPage - Session status:", status);
@@ -58,6 +64,24 @@ export default function DashboardPage() {
     fetchQuota();
   }, [status, isLoading, checkCanGenerateEmail]);
 
+  useEffect(() => {
+    const fetchReferralCode = async () => {
+      try {
+        const response = await fetch("/api/referrals/get");
+        const data = await response.json();
+        if (response.ok) {
+          setReferralCode(data.referralCode);
+        }
+      } catch (error) {
+        console.error("Failed to fetch referral code:", error);
+      } finally {
+        setIsLoadingCode(false);
+      }
+    };
+
+    fetchReferralCode();
+  }, []);
+
   const handleDeleteProfile = async () => {
     if (!session?.user?.id) return;
     if (!session?.user?.email) return;
@@ -83,6 +107,19 @@ export default function DashboardPage() {
     }
   };
 
+  const copyReferralLink = async () => {
+    if (!referralCode) return;
+
+    const link = `${window.location.origin}/signup?ref=${referralCode}`;
+    await navigator.clipboard.writeText(link);
+
+    toast({
+      title: "Link Copied!",
+      description: "Referral link copied to clipboard",
+      duration: 2000,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -92,143 +129,192 @@ export default function DashboardPage() {
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <Layout>
+        <ToastWrapper>
+          <div className="max-w-4xl mx-auto py-8 px-4">
+            <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
-        {/* Email Generation Quota Card */}
-        <EmailQuotaDisplay
-          usage={usage}
-          isLoading={isChecking}
-          quotaError={quotaError}
-          variant="dashboard"
-        />
+            {/* Referral Section */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Refer Friends</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                Share your referral link and get +10 monthly emails for each
+                friend who signs up!
+              </p>
 
-        <div
-          className={`${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 text-white"
-              : "bg-white text-gray-900"
-          } shadow rounded-lg p-6 mb-6`}
-        >
-          <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
-          <div className="space-y-2">
-            <p>
-              <strong>Name:</strong> {session?.user?.name || "Not available"}
-            </p>
-            <p>
-              <strong>Email:</strong> {session?.user?.email || "Not available"}
-            </p>
-            <p>
-              <strong>Profile Status:</strong>{" "}
-              {session?.exists ? "Complete" : "Incomplete"}
-            </p>
-          </div>
-        </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex-1 p-3 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  {isLoadingCode ? (
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  ) : (
+                    <code className="text-sm">
+                      {window.location.origin}/signup?ref={referralCode}
+                    </code>
+                  )}
+                </div>
 
-        <div
-          className={`${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 text-white"
-              : "bg-white text-gray-900"
-          } shadow rounded-lg p-6 mb-6`}
-        >
-          <h2 className="text-xl font-semibold mb-4">Recent Searches</h2>
-          <p
-            className={`${
-              resolvedTheme === "dark" ? "text-gray-300" : "text-gray-500"
-            }`}
-          >
-            You haven&apos;t performed any searches yet.
-          </p>
-        </div>
+                <button
+                  onClick={copyReferralLink}
+                  disabled={isLoadingCode || !referralCode}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isLoadingCode || !referralCode
+                      ? "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
+                >
+                  Copy Link
+                </button>
+              </div>
+            </Card>
 
-        <div
-          className={`${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 text-white"
-              : "bg-white text-gray-900"
-          } shadow rounded-lg p-6 mb-6`}
-        >
-          <h2 className="text-xl font-semibold mb-4">Email History</h2>
-          <EmailHistory />
-        </div>
-
-        <div
-          className={`${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 text-white"
-              : "bg-white text-gray-900"
-          } shadow rounded-lg p-6`}
-        >
-          <h2 className="text-xl font-semibold mb-4">Account Management</h2>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          >
-            Delete Profile
-          </button>
-          <p className="mt-2 text-sm text-gray-500">
-            This will permanently delete your profile and all associated data.
-          </p>
-        </div>
-      </div>
-
-      {/* Delete Profile Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div
-            className={`${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-white text-gray-900"
-            } rounded-lg p-6 max-w-md w-full`}
-          >
-            <h2 className="text-xl font-bold mb-4">Delete Profile</h2>
-            <p className="mb-4">
-              This action cannot be undone. All your profile data will be
-              permanently deleted.
-            </p>
-            <p className="mb-4">
-              To confirm, please type your email address:{" "}
-              <strong>{session?.user?.email}</strong>
-            </p>
-            <input
-              type="email"
-              value={confirmEmail}
-              onChange={(e) => setConfirmEmail(e.target.value)}
-              placeholder="Enter your email"
-              className={`w-full p-2 mb-4 border rounded ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-700 border-gray-600"
-                  : "bg-white border-gray-300"
-              }`}
-              disabled={isDeleting}
+            {/* Email Generation Quota Card */}
+            <EmailQuotaDisplay
+              usage={usage}
+              isLoading={isChecking}
+              quotaError={quotaError}
+              variant="dashboard"
             />
-            {deleteError && <p className="text-red-500 mb-4">{deleteError}</p>}
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className={`px-4 py-2 rounded ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 hover:bg-gray-600"
-                    : "bg-gray-200 hover:bg-gray-300"
-                } transition-colors`}
-                disabled={isDeleting}
+
+            <div
+              className={`${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-900"
+              } shadow rounded-lg p-6 mb-6`}
+            >
+              <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
+              <div className="space-y-2">
+                <p>
+                  <strong>Name:</strong>{" "}
+                  {session?.user?.name || "Not available"}
+                </p>
+                <p>
+                  <strong>Email:</strong>{" "}
+                  {session?.user?.email || "Not available"}
+                </p>
+                <p>
+                  <strong>Profile Status:</strong>{" "}
+                  {session?.exists ? "Complete" : "Incomplete"}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className={`${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-900"
+              } shadow rounded-lg p-6 mb-6`}
+            >
+              <h2 className="text-xl font-semibold mb-4">Recent Searches</h2>
+              <p
+                className={`${
+                  resolvedTheme === "dark" ? "text-gray-300" : "text-gray-500"
+                }`}
               >
-                Cancel
-              </button>
+                You haven&apos;t performed any searches yet.
+              </p>
+            </div>
+
+            <div
+              className={`${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-900"
+              } shadow rounded-lg p-6 mb-6`}
+            >
+              <h2 className="text-xl font-semibold mb-4">Email History</h2>
+              <EmailHistory />
+            </div>
+
+            <div
+              className={`${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-900"
+              } shadow rounded-lg p-6`}
+            >
+              <h2 className="text-xl font-semibold mb-4">Account Management</h2>
               <button
-                onClick={handleDeleteProfile}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
-                disabled={isDeleting || confirmEmail !== session?.user?.email}
+                onClick={() => setShowDeleteModal(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
-                {isDeleting ? "Deleting..." : "Delete Profile"}
+                Delete Profile
               </button>
+              <p className="mt-2 text-sm text-gray-500">
+                This will permanently delete your profile and all associated
+                data.
+              </p>
             </div>
           </div>
-        </div>
-      )}
-    </Layout>
+
+          {/* Delete Profile Modal */}
+          {showDeleteModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div
+                className={`${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 text-white"
+                    : "bg-white text-gray-900"
+                } rounded-lg p-6 max-w-md w-full`}
+              >
+                <h2 className="text-xl font-bold mb-4">Delete Profile</h2>
+                <p className="mb-4">
+                  This action cannot be undone. All your profile data will be
+                  permanently deleted.
+                </p>
+                <p className="mb-4">
+                  To confirm, please type your email address:{" "}
+                  <strong>{session?.user?.email}</strong>
+                </p>
+                <input
+                  type="email"
+                  value={confirmEmail}
+                  onChange={(e) => setConfirmEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className={`w-full p-2 mb-4 border rounded ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600"
+                      : "bg-white border-gray-300"
+                  }`}
+                  disabled={isDeleting}
+                />
+                {deleteError && (
+                  <p className="text-red-500 mb-4">{deleteError}</p>
+                )}
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className={`px-4 py-2 rounded ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-700 hover:bg-gray-600"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    } transition-colors`}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteProfile}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+                    disabled={
+                      isDeleting || confirmEmail !== session?.user?.email
+                    }
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Profile"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </ToastWrapper>
+      </Layout>
+
   );
 }
