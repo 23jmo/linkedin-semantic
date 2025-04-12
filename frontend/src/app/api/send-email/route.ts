@@ -134,40 +134,28 @@ export async function POST(request: NextRequest) {
         );
 
         // Create and send the email
-        const utf8Subject = `=?utf-8?B?${Buffer.from(
-          emailContent.subject
-        ).toString("base64")}?=`;
-        const messageParts = [
-          `From: ${session.user.email!}`,
-          `To: ${recipientEmail}`,
-          "Content-Type: text/html; charset=utf-8",
-          "MIME-Version: 1.0",
-          `Subject: ${utf8Subject}`,
-          "",
-          htmlBody, // Use the HTML-formatted body
-        ];
-
-        const message = messageParts.join("\n");
-        const encodedMessage = Buffer.from(message)
-          .toString("base64")
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_")
-          .replace(/=+$/, "");
+        const message = {
+          raw: Buffer.from(
+            `To: ${recipientEmail}\r\n` +
+              `Subject: ${emailContent.subject}\r\n\r\n` +
+              `${htmlBody}`
+          ).toString("base64url"),
+        };
 
         // Send the email
         try {
-          const res = await gmail.users.messages.send({
+          await gmail.users.messages.send({
             userId: "me",
-            requestBody: { raw: encodedMessage },
+            requestBody: message,
           });
-        } catch (error: any) {
-          if (error.message?.includes("invalid_grant")) {
+        } catch (error) {
+          console.error("Error sending email:", error);
+          if (
+            error instanceof Error &&
+            error.message.includes("invalid_grant")
+          ) {
             return NextResponse.json(
-              {
-                error:
-                  "Gmail token expired. Please reconnect your Gmail account.",
-                code: "TOKEN_EXPIRED",
-              },
+              { error: "Gmail token expired", code: "TOKEN_EXPIRED" },
               { status: 401 }
             );
           }
@@ -185,14 +173,10 @@ export async function POST(request: NextRequest) {
         );
 
         // Log successful send
-        console.log(
-          `Email sent successfully to ${profile.firstName} ${profile.lastName}, message ID: ${res.data.id}`
-        );
 
         return {
           profileId: profile.id,
           success: true,
-          messageId: res.data.id,
         };
       })
     );

@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import {
   GetLinkedInProfileRequestSchema,
   GetLinkedInProfileResponseSchema,
+  Experience,
+  Education,
 } from "@/types/types";
 import { createClient } from "@supabase/supabase-js";
 
@@ -72,13 +74,13 @@ export async function POST(request: NextRequest) {
         raw_profile_data: {
           ...data.raw_profile_data,
           experiences:
-            data.raw_profile_data?.experiences?.map((exp: any) => ({
+            data.raw_profile_data?.experiences?.map((exp: Experience) => ({
               ...exp,
               start_at: exp.start_at || { year: new Date().getFullYear() },
               ends_at: exp.ends_at || null,
             })) || [],
           education:
-            data.raw_profile_data?.education?.map((edu: any) => ({
+            data.raw_profile_data?.education?.map((edu: Education) => ({
               ...edu,
               degree_name: edu.degree_name || null,
               field_of_study: edu.field_of_study || null,
