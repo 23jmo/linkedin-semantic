@@ -199,7 +199,7 @@ LIMIT 100`;
     // });
 
     const result = await supabase.rpc("search_and_rank", {
-      query_text: test_query.trim(),
+      query_text: sql_query.trim(),
       key_phrases: key_phrases,
     });
 
@@ -532,6 +532,10 @@ async function generate_sql_query(
       {
         role: "system",
         content: `You are a SQL query generator for LinkedIn profile search. Generate a SQL query that searches through the raw_profile_data JSONB column.
+
+        Only query on properties that need more exact matching.
+
+        For example: location, education, or name, but not necessarily skills or experiences.
         
         The profile data structure follows this schema:
         ${jsonTemplate}
@@ -610,187 +614,26 @@ async function semantic_search(
   match_threshold: number = 0.5,
   useHyde: boolean = true
 ) {
-  const result = await advanced_search(query);
-  console.log("Result:", result);
+  try {
+    // Get results from advanced_search
+    const results = await advanced_search(query);
 
-  let searchChunks: { chunk_type: ProfileChunkType; content: string }[];
-
-  if (useHyde) {
-    // Generate HyDE chunks for the query
-    searchChunks = await generateHydeChunks(query);
-  } else {
-    // Use the raw query for all relevant chunk types (you might adjust this)
-    searchChunks = [
-      "basic_info",
-      "summary",
-      "experience",
-      "skills",
-      "education",
-      "achievements",
-    ].map((type) => ({ chunk_type: type as ProfileChunkType, content: query }));
+    // Return the results with the same structure as before
+    return {
+      data: results.map((profile) => ({
+        profile,
+        score: profile.similarity || 0,
+        highlights: [],
+      })),
+      error: null,
+    };
+  } catch (error) {
+    console.error("Error in semantic search:", error);
+    return {
+      data: [],
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
-
-  // Search with each chunk and combine results
-  const chunkResults = await Promise.all(
-    searchChunks.map(async (chunk) => {
-      const embedding = await generateEmbedding(chunk.content);
-      const embedding_list = embedding.map((x) => Number(x));
-
-      const { data: profiles, error } = await supabase.rpc(
-        "search_profiles_by_chunk_embedding",
-        {
-          query_embedding: embedding_list,
-          target_chunk_type: chunk.chunk_type,
-          match_threshold: Number(match_threshold),
-          match_count: Number(match_limit),
-        }
-      );
-
-      if (error) throw new Error(`Semantic search error: ${error.message}`);
-      return { chunk_type: chunk.chunk_type, profiles };
-    })
-  );
-
-  // Combine and deduplicate results
-  const profileScores = new Map<string, ProfileScoreInfo>();
-
-  // Extract keywords once before the loop
-  const queryKeywords = query
-    .toLowerCase()
-    .split(/\\s+/)
-    .filter((kw) => kw.length > 0); // Filter out empty strings
-
-  chunkResults.forEach(({ chunk_type, profiles }) => {
-    profiles.forEach((profile: SearchProfilesByEmbeddingResult) => {
-      // Explicitly type current based on the map value type
-      const current: ProfileScoreInfo = profileScores.get(profile.id) || {
-        profile,
-        totalScore: 0,
-        count: 0,
-      };
-
-      // Weight different chunk types differently
-      const weight =
-        chunk_type === "basic_info"
-          ? 3
-          : chunk_type === "experience"
-          ? 1.5
-          : chunk_type === "education"
-          ? 1.5
-          : chunk_type === "achievements"
-          ? 1.2
-          : 0.5;
-
-      // --- Fuzzy Keyword Boosting Logic (Applied to ALL chunks) ---
-      let keywordBoost = 1.0; // Default: no boost
-      const FUZZY_THRESHOLD = 2; // Max Levenshtein distance for a match
-      const BOOST_FACTOR = 1.2; // Slight boost factor
-
-      // Get the relevant text based on chunk_type (adjust field names as needed)
-      let profileText = "";
-      try {
-        // Validate and parse raw_profile_data
-        const parseResult = RawProfileDataSchema.safeParse(
-          profile.raw_profile_data
-        );
-        const rawData = parseResult.success ? parseResult.data : null;
-
-        switch (chunk_type) {
-          case "basic_info":
-            profileText = `${profile.full_name || ""} ${
-              profile.headline || ""
-            } ${profile.location || ""}`; // Combine relevant basic info fields
-            break;
-          case "summary":
-            profileText = profile.summary || ""; // Assuming summary text is available
-            break;
-          case "experience":
-            // Safely access experiences from parsed data
-            profileText = JSON.stringify(rawData?.experiences || "");
-            break;
-          case "education":
-            // Safely access education from parsed data
-            profileText = JSON.stringify(rawData?.education || "");
-            break;
-          case "achievements":
-            // Combine relevant accomplishment fields from parsed data
-            const achievementsData = rawData
-              ? {
-                  courses: rawData.accomplishment_courses,
-                  awards: rawData.accomplishment_honors_awards,
-                  projects: rawData.accomplishment_projects,
-                  publications: rawData.accomplishment_publications,
-                  organizations: rawData.accomplishment_organisations,
-                  test_scores: rawData.accomplishment_test_scores,
-                }
-              : {};
-            profileText = JSON.stringify(achievementsData);
-            break;
-          default:
-            console.warn(`Unmapped chunk_type for boosting: ${chunk_type}`);
-            profileText = "";
-        }
-      } catch (e) {
-        console.error(
-          `Error accessing profile text for chunk ${chunk_type}, profile ${profile.id}:`,
-          e
-        );
-        profileText = ""; // Ensure profileText is a string
-      }
-
-      if (profileText && queryKeywords.length > 0) {
-        // Check if *all* query keywords have a fuzzy match in the profile text for this chunk
-        const allKeywordsFoundFuzzily = queryKeywords.every((kw) =>
-          fuzzyCheck(profileText, kw, FUZZY_THRESHOLD)
-        );
-
-        if (allKeywordsFoundFuzzily) {
-          keywordBoost = BOOST_FACTOR; // Apply slight boost
-          // console.log(`Fuzzy keyword boost (${BOOST_FACTOR}x) applied to profile ${profile.id} for chunk ${chunk_type}`);
-        }
-      }
-      // --- End Fuzzy Keyword Boosting Logic ---
-
-      // --- Score Calculation & Logging ---
-      const chunkScoreContribution = profile.similarity * weight * keywordBoost;
-
-      // Log the profile name (or ID if name is missing) along with score details
-      const profileIdentifier =
-        profile.full_name || `ID: ${profile.id.substring(0, 8)}`;
-      console.log(
-        `[Search Score] Profile: ${profileIdentifier.padEnd(
-          25
-        )} | Chunk: ${chunk_type.padEnd(
-          12
-        )} | Sim: ${profile.similarity.toFixed(3)} | Weight: ${weight.toFixed(
-          1
-        )} | Boost: ${keywordBoost.toFixed(
-          1
-        )} | Score: ${chunkScoreContribution.toFixed(3)}`
-      );
-
-      profileScores.set(profile.id, {
-        profile,
-        // Apply the keyword boost to the similarity score before adding to total
-        totalScore: current.totalScore + chunkScoreContribution, // Add the calculated contribution
-        count: current.count + 1, // Still increment count normally
-      });
-    });
-  });
-
-  // Sort by average weighted scores and return top results
-  const results = Array.from(profileScores.values())
-    .map(({ profile, totalScore }) => ({
-      profile: {
-        ...profile,
-      },
-      score: totalScore,
-      highlights: [],
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, match_limit);
-
-  return { data: results, error: null };
 }
 
 export async function POST(request: Request) {
