@@ -66,14 +66,36 @@ export async function POST(request: NextRequest) {
 
     // Validate response data
     try {
+      // Transform the data to match the schema
+      const transformedData = {
+        ...data,
+        raw_profile_data: {
+          ...data.raw_profile_data,
+          experiences:
+            data.raw_profile_data?.experiences?.map((exp: any) => ({
+              ...exp,
+              start_at: exp.start_at || { year: new Date().getFullYear() },
+              ends_at: exp.ends_at || null,
+            })) || [],
+          education:
+            data.raw_profile_data?.education?.map((edu: any) => ({
+              ...edu,
+              degree_name: edu.degree_name || null,
+              field_of_study: edu.field_of_study || null,
+              starts_at: edu.starts_at || { year: new Date().getFullYear() },
+              ends_at: edu.ends_at || null,
+            })) || [],
+        },
+      };
+
       const res = GetLinkedInProfileResponseSchema.parse({
-        linkedin_profile: data,
+        linkedin_profile: transformedData,
       });
       return NextResponse.json(res);
     } catch (e) {
       console.error("Response validation error:", e);
       return NextResponse.json(
-        { error: "Invalid profile data format" },
+        { error: "Invalid profile data format", details: e },
         { status: 500 }
       );
     }

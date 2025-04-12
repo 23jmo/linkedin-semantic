@@ -4,15 +4,17 @@ export const ExperienceSchema = z.object({
   title: z.string(),
   company: z.string(),
   description: z.string().nullable().optional(),
-  start_at: z.object({
-    day: z.number(),
-    month: z.number(),
-    year: z.number(),
-  }),
+  start_at: z
+    .object({
+      day: z.number().optional(),
+      month: z.number().optional(),
+      year: z.number(),
+    })
+    .optional(),
   ends_at: z
     .object({
-      day: z.number(),
-      month: z.number(),
+      day: z.number().optional(),
+      month: z.number().optional(),
       year: z.number(),
     })
     .nullable()
@@ -27,18 +29,20 @@ export const EducationSchema = z.object({
   activities_and_societies: z.string().optional().nullable(),
   school: z.string(),
   grade: z.string().nullable().optional(),
-  degree_name: z.string().optional(),
-  field_of_study: z.string().optional(),
+  degree_name: z.string().optional().nullable(),
+  field_of_study: z.string().optional().nullable(),
   description: z.string().nullable().optional(),
-  starts_at: z.object({
-    day: z.number(),
-    month: z.number(),
-    year: z.number(),
-  }),
+  starts_at: z
+    .object({
+      day: z.number().optional(),
+      month: z.number().optional(),
+      year: z.number(),
+    })
+    .optional(),
   ends_at: z
     .object({
-      day: z.number(),
-      month: z.number(),
+      day: z.number().optional(),
+      month: z.number().optional(),
       year: z.number(),
     })
     .nullable()

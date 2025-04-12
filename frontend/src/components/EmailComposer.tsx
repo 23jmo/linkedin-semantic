@@ -257,6 +257,13 @@ export default function EmailComposer({
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (errorData.code === "TOKEN_EXPIRED") {
+          setIsGmailConnected(false);
+          setError(
+            "Your Gmail connection has expired. Please reconnect your Gmail account to continue."
+          );
+          return;
+        }
         throw new Error(errorData.message || "Failed to send email");
       }
 

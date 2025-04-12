@@ -8,7 +8,6 @@ import { google } from "googleapis";
 import { getUserEmail } from "@/lib/api";
 import { ProfileFrontend } from "@/types/types";
 
-
 export async function POST(request: NextRequest) {
   try {
     // Get the current session
@@ -156,10 +155,24 @@ export async function POST(request: NextRequest) {
           .replace(/=+$/, "");
 
         // Send the email
-        const res = await gmail.users.messages.send({
-          userId: "me",
-          requestBody: { raw: encodedMessage },
-        });
+        try {
+          const res = await gmail.users.messages.send({
+            userId: "me",
+            requestBody: { raw: encodedMessage },
+          });
+        } catch (error: any) {
+          if (error.message?.includes("invalid_grant")) {
+            return NextResponse.json(
+              {
+                error:
+                  "Gmail token expired. Please reconnect your Gmail account.",
+                code: "TOKEN_EXPIRED",
+              },
+              { status: 401 }
+            );
+          }
+          throw error;
+        }
 
         // Store email history
         await storeEmailHistory(
