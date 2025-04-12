@@ -4,6 +4,7 @@ import { useState } from "react";
 //import { useRouter } from "next/navigation";
 import SignOut from "./sign-out";
 import { AuthData } from "../types/types";
+import { useTheme } from "@/lib/theme-context";
 
 interface LinkedInUrlFormProps {
   userId: string;
@@ -16,6 +17,7 @@ export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   //const router = useRouter();
+  const { resolvedTheme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +54,22 @@ export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
     }
   };
 
+  const isDark = resolvedTheme === "dark";
+
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Complete Your Profile</h2>
-      <p className="mb-4">
+    <div
+      className={`max-w-md mx-auto p-6 rounded-lg shadow-md ${
+        isDark ? "bg-gray-800" : "bg-white"
+      }`}
+    >
+      <h2
+        className={`text-2xl font-bold mb-4 ${
+          isDark ? "text-gray-200" : "text-gray-800"
+        }`}
+      >
+        Complete Your Profile
+      </h2>
+      <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
         Please enter your LinkedIn profile URL to complete your registration.
       </p>
 
@@ -66,7 +80,9 @@ export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
         <div>
           <label
             htmlFor="linkedInUrl"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className={`block text-sm font-medium mb-1 ${
+              isDark ? "text-gray-300" : "text-gray-700"
+            }`}
           >
             LinkedIn Profile URL
           </label>
@@ -76,7 +92,11 @@ export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
             value={linkedInUrl}
             onChange={(e) => setLinkedInUrl(e.target.value)}
             placeholder="https://www.linkedin.com/in/username"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+              isDark
+                ? "bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400"
+                : "border-gray-300"
+            }`}
             disabled={isLoading}
             aria-describedby={error ? "url-error" : undefined}
           />
@@ -94,7 +114,11 @@ export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            isDark
+              ? "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
+              : "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
+          }`}
         >
           {isLoading ? (
             <span className="flex items-center justify-center">
