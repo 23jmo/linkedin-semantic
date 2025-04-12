@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import AuthProvider from "../components/AuthProvider";
 import ProfileRedirect from "../components/ProfileRedirect";
-import { ToastWrapper } from "@/components/providers/ToastWrapper";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,9 +28,8 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider>
-            <ToastWrapper>
-              <ProfileRedirect>{children}</ProfileRedirect>
-            </ToastWrapper>
+            <ProfileRedirect>{children}</ProfileRedirect>
+            <Toaster />
           </ThemeProvider>
         </AuthProvider>
       </body>

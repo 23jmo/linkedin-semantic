@@ -10,7 +10,8 @@ import {
 import { createClient } from "@supabase/supabase-js";
 import { generate_embedding } from "@/utilities/generate-embeddings";
 import { chunkProfile } from "@/lib/server/profile-chunking";
-
+import { cookies } from "next/headers";
+import { isValidReferralCode } from "@/lib/referral";
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -35,12 +36,19 @@ export async function POST(request: NextRequest) {
     if (linkedin_url_to_fetch.startsWith("linkedin.com")) {
       linkedin_url_to_fetch = "https://www." + linkedin_url_to_fetch;
     }
-    
+
     // Validate LinkedIn URL format
-    if (!linkedin_url_to_fetch.match(/^https:\/\/www\.linkedin\.com\/[a-zA-Z0-9\/-]+$/)) {
+    if (
+      !linkedin_url_to_fetch.match(
+        /^https:\/\/www\.linkedin\.com\/[a-zA-Z0-9\/-]+$/
+      )
+    ) {
       console.log("Invalid LinkedIn URL format:", linkedin_url_to_fetch);
       return NextResponse.json(
-        { error: "Invalid LinkedIn URL format. URL must be of the form 'https://www.linkedin.com/<profile-id>'" },
+        {
+          error:
+            "Invalid LinkedIn URL format. URL must be of the form 'https://www.linkedin.com/<profile-id>'",
+        },
         { status: 400 }
       );
     }
@@ -175,6 +183,49 @@ export async function POST(request: NextRequest) {
 
       // Ensure response matches the schema
       const validatedResponse = ProfileCreateResponseSchema.parse(response);
+
+      //check for referral code
+      const cookieStore = await cookies();
+      const referralCode = cookieStore.get("referral_code")?.value;
+
+      if (referralCode) {
+        console.log("Referral code:", referralCode);
+        // reward the user
+
+        if (isValidReferralCode(referralCode)) {
+          console.log("Valid referral code:", referralCode);
+          // reward the user
+          const { data: referrerData, error: referrerError } = await supabase
+            .from("referrals")
+            .select("referrer_id")
+            .eq("referral_code", referralCode)
+            .single();
+
+          if (referrerError) {
+            console.error("Error fetching referrer:", referrerError);
+          }
+
+          const { data: referralData, error: referralError } = await supabase
+            .from("referred")
+            .insert({
+              referred_id: user_id,
+              referrer_id: referrerData?.referrer_id || "",
+              referral_code: referralCode,
+              created_at: now,
+              completed_at: now,
+            });
+
+          if (referralError) {
+            console.error(
+              "Error storing referral:",
+              referralError + " " + referralData
+            );
+          }
+          console.log("Referral stored successfully");
+        } else {
+          console.log("Invalid referral code:", referralCode);
+        }
+      }
 
       return NextResponse.json(validatedResponse, { status: 200 });
     } catch (error) {

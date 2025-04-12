@@ -4,9 +4,6 @@ import { getToken } from "next-auth/jwt";
 
 // This middleware will run on all routes
 export async function middleware(request: NextRequest) {
-  // For now, we'll use the client-side redirect instead of middleware
-  // to avoid potential conflicts and issues with the JWT token
-
   // Skip for API routes and auth routes
   if (
     request.nextUrl.pathname.startsWith("/api") ||
@@ -31,10 +28,36 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/complete-profile", request.url));
   }
 
+  // Check for referral code in URL
+  const ref =
+    request.nextUrl.searchParams.get("ref") ||
+    request.nextUrl.pathname.split("=")[1]; // Handle /ref=CODE format
+
+  if (ref) {
+    const response = NextResponse.redirect(new URL("/", request.url));
+    response.cookies.set("referral_code", ref, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 10, // 10 minutes
+      path: "/",
+    });
+    return response;
+  }
+
   return NextResponse.next();
 }
 
-// Empty matcher to disable the middleware
+// Run middleware on all paths except excluded ones
 export const config = {
-  matcher: [],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };
