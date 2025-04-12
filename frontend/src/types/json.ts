@@ -1,4 +1,5 @@
-{
+
+const jsonTemplate = {
   "city": "Ballwin",
   "extra": null,
   "state": "Missouri",
@@ -259,3 +260,5 @@
   "accomplishment_honors_awards": [],
   "accomplishment_organisations": []
 }
+
+export default jsonTemplate;
