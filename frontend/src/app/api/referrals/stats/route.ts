@@ -14,6 +14,9 @@ export async function GET() {
   ).schema("linkedin_profiles");
 
   // Get referral code and count of successful referrals
+
+  // check if user in the referrals list - if not then create
+
   const { data: referralData, error: referralError } = await supabase
     .from("referrals")
     .select("referral_code")
@@ -21,7 +24,21 @@ export async function GET() {
     .single();
 
   if (referralError) {
-    console.error("Error fetching referral data:", referralError);
+    if (referralError.code === "PGRST106") {
+      // user not in the referrals list
+      // create user in the referrals list
+      const { error: referralError } = await supabase
+        .from("referrals")
+        .insert({ referrer_id: session.user.id });
+      if (referralError) {
+        console.error("Error creating referral:", referralError);
+        return NextResponse.json({ error: "Error creating referral" }, { status: 500 });
+      }
+    }
+    else{
+      console.error("Error fetching referral data:", referralError);
+      return NextResponse.json({ error: "Error fetching referral data" }, { status: 500 });
+    }
   }
 
   const { data: referredCount, error: referredCountError } = await supabase
