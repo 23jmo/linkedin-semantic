@@ -261,6 +261,16 @@ async function fetch_linkedin_profile(linkedin_url: string) {
     }
   );
 
+  if (!response.ok) {
+    if (response.status === 403) {
+      console.error("Error fetching LinkedIn profile:", response.statusText);
+      throw new Error("Failed to fetch LinkedIn profile");
+    } else {
+      console.error("Error fetching LinkedIn profile:", response.statusText);
+      throw new Error("Failed to fetch LinkedIn profile");
+    }
+  }
+
   const data = await response.json();
   return { proxycurl_linkedin_profile: data };
 }
