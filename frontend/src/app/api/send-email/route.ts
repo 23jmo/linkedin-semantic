@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     // Get the current session
     const session = await auth();
-    console.log("Session", session);
+    // console.log("Session", session);
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
         try {
           // Use the getUserEmail function from api.ts
-          console.log("Fucking Profile", profile);
+          // console.log("Fucking Profile", profile);
           const email = await getUserEmail(profile.user_id);
           if (email) {
             recipientEmail = email;

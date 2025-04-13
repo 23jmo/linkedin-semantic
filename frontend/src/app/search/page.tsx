@@ -46,7 +46,7 @@ function SearchPageContent() {
 
       try {
         const profiles = await semanticSearch(searchQuery, useHyde);
-        console.log("Profiles:", profiles);
+        // console.log("Profiles:", profiles);
         setResults(profiles);
       } catch (err) {
         console.error("Search error:", err);

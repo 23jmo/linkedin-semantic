@@ -6,13 +6,19 @@ import SignOut from "./sign-out";
 import { AuthData } from "../types/types";
 import { useTheme } from "@/lib/theme-context";
 
+interface WaitlistFormProps {
+  userId: string;
+  linkedInAuthData: AuthData;
+  onSubmit: (email: string) => Promise<void>;
+}
+
 interface LinkedInUrlFormProps {
   userId: string;
   linkedInAuthData: AuthData;
   onSubmit: (linkedInUrl: string) => Promise<void>;
 }
 
-export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
+export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
   const [linkedInUrl, setLinkedInUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -146,6 +152,148 @@ export default function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
             </span>
           ) : (
             "Continue"
+          )}
+        </button>
+      </form>
+      <div className="mt-4">
+        <SignOut />
+      </div>
+    </div>
+  );
+}
+
+export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  //const router = useRouter();
+  const { resolvedTheme } = useTheme();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // Basic validation
+    if (!email) {
+      setError("Email is required");
+      return;
+    }
+
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await onSubmit(email);
+    } catch (error) {
+      console.error("Waitlist submission error:", error);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Failed to join waitlist. Please try again.");
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <div
+      className={`max-w-md mx-auto p-6 rounded-lg shadow-md ${
+        isDark ? "bg-gray-800" : "bg-white"
+      }`}
+    >
+      <h2
+        className={`text-2xl font-bold mb-4 ${
+          isDark ? "text-gray-200" : "text-gray-800"
+        }`}
+      >
+        Join Our Waitlist
+      </h2>
+      <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+        Sorry, but we&apos;re at capacity right now. Sign up for our waitlist to
+        be notified when we open up more spots!
+      </p>
+
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+      >
+        <div>
+          <label
+            htmlFor="email"
+            className={`block text-sm font-medium mb-1 ${
+              isDark ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            Email Address
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+              isDark
+                ? "bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400"
+                : "border-gray-300"
+            }`}
+            disabled={isLoading}
+            aria-describedby={error ? "email-error" : undefined}
+          />
+          {error && (
+            <p
+              id="email-error"
+              className="mt-1 text-sm text-red-600"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={`w-full py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            isDark
+              ? "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
+              : "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
+          }`}
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center">
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Joining Waitlist...
+            </span>
+          ) : (
+            "Join Waitlist"
           )}
         </button>
       </form>

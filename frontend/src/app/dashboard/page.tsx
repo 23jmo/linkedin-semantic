@@ -28,8 +28,8 @@ export default function DashboardPage() {
   const [referralLink, setReferralLink] = useState("");
 
   useEffect(() => {
-    console.log("DashboardPage - Session status:", status);
-    console.log("DashboardPage - Session data:", session);
+    // console.log("DashboardPage - Session status:", status);
+    // console.log("DashboardPage - Session data:", session);
 
     // If user is not authenticated, redirect to login
     if (status === "unauthenticated") {
