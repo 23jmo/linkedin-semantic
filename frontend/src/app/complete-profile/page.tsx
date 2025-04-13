@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import LinkedInUrlForm from "@/components/LinkedInUrlForm";
+import { LinkedInUrlForm } from "@/components/LinkedInUrlForm";
 import { createUser } from "@/lib/api";
 
 export default function CompleteProfilePage() {
