@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { LinkedInUrlForm } from "@/components/LinkedInUrlForm";
+import { LinkedInUrlForm, WaitlistForm } from "@/components/LinkedInUrlForm";
 import { createUser } from "@/lib/api";
+import { addToWaitlist } from "@/lib/server/waitlist";
 
 export default function CompleteProfilePage() {
   const { data: session, status } = useSession();
@@ -24,6 +25,15 @@ export default function CompleteProfilePage() {
       }
     }
   }, [status, session, router]);
+
+  const handleSubmitWaitlist = async (email: string) => {
+    try {
+      await addToWaitlist(email);
+      console.log("Added to waitlist");
+    } catch (error) {
+      console.error("Error adding to waitlist:", error);
+    }
+  };
 
   const handleSubmitLinkedInUrl = async (linkedInUrl: string) => {
     if (!session?.user?.id) {
@@ -67,14 +77,23 @@ export default function CompleteProfilePage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         {session?.user?.id && (
-          <LinkedInUrlForm
+          // <LinkedInUrlForm
+          //   userId={session.user.id}
+          //   linkedInAuthData={{
+          //     email: session.user.email || "",
+          //     name: session.user.name || "",
+          //     image: session.user.image ?? undefined,
+          //   }}
+          //   onSubmit={handleSubmitLinkedInUrl}
+          // />
+          <WaitlistForm
             userId={session.user.id}
             linkedInAuthData={{
               email: session.user.email || "",
               name: session.user.name || "",
               image: session.user.image ?? undefined,
             }}
-            onSubmit={handleSubmitLinkedInUrl}
+            onSubmit={handleSubmitWaitlist}
           />
         )}
       </div>
