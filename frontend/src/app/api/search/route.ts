@@ -18,7 +18,112 @@ interface Filter {
 }
 
 // Import the JSON template
-const jsonTemplate = JSON.stringify(RawProfileDataSchema);
+// const jsonTemplate = JSON.stringify(RawProfileDataSchema);
+const jsonTemplate = `
+  CREATE TABLE linkedin_profiles.profiles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    linkedin_id TEXT,
+    full_name TEXT,
+    headline TEXT,
+    industry TEXT,
+    location TEXT,
+    profile_url TEXT,
+    profile_picture_url TEXT,
+    summary TEXT,
+    raw_profile_data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  );
+
+-- Create education table
+CREATE TABLE linkedin_profiles.education (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
+    activities_and_societies TEXT,
+    school TEXT NOT NULL,
+    grade TEXT,
+    degree_name TEXT,
+    field_of_study TEXT,
+    description TEXT,
+    starts_at_day INTEGER,
+    starts_at_month INTEGER,
+    starts_at_year INTEGER,
+    ends_at_day INTEGER,
+    ends_at_month INTEGER,
+    ends_at_year INTEGER,
+    logo_url TEXT,
+    school_linkedin_profile_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create experience table
+CREATE TABLE linkedin_profiles.experience (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    company TEXT NOT NULL,
+    description TEXT,
+    starts_at_day INTEGER,
+    starts_at_month INTEGER,
+    starts_at_year INTEGER,
+    ends_at_day INTEGER,
+    ends_at_month INTEGER,
+    ends_at_year INTEGER,
+    logo_url TEXT,
+    location TEXT,
+    company_facebook_profile_url TEXT,
+    company_linkedin_profile_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create certifications table
+CREATE TABLE linkedin_profiles.certifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
+    name TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create courses table
+CREATE TABLE linkedin_profiles.courses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
+    name TEXT,
+    number TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create projects table
+CREATE TABLE linkedin_profiles.projects (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
+    title TEXT,
+    description TEXT,
+    url TEXT,
+    starts_at_day INTEGER,
+    starts_at_month INTEGER,
+    starts_at_year INTEGER,
+    ends_at_day INTEGER,
+    ends_at_month INTEGER,
+    ends_at_year INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create skills table
+CREATE TABLE linkedin_profiles.skills (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
+    skill TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+`;
 
 // Initialize OpenAI
 const openai = new OpenAI({
@@ -531,40 +636,71 @@ async function generate_sql_query(
     messages: [
       {
         role: "system",
-        content: `You are a SQL query generator for LinkedIn profile search. Generate a SQL query that searches through the raw_profile_data JSONB column.
+        content: `You are a SQL query generator for LinkedIn profile search. 
+
+        Generate a SQL query that searches across normalized LinkedIn profile tables:
+        - profiles (main table)
+        - education (school, degree, field)
+        - experience (title, company)
+        - skills
+        - certifications
+        - projects
 
         Only query on properties that need more exact matching.
 
         For example: location, education, or name, but not necessarily skills or experiences.
         
-        The profile data structure follows this schema:
+        The schema follows this format:
         ${jsonTemplate}
         
         Return a JSON object with:
         - query: The SQL query string
         - reasoning: Brief explanation of the query structure
         
-        Rules:
-        1. Use JSONB operators to search within the raw_profile_data
-        2. For text searches, use ILIKE for case-insensitive matching
-        3. For exact matches, use = 
-        4. For array fields, use @> operator
-        5. Combine conditions with AND/OR as appropriate
-        6. Use proper JSONB path syntax (->, ->>, #>>)
-        7. Include relevant sections from the key phrases
-        8. Handle nested arrays properly (e.g., education, experiences)
-        9. Use proper type casting for numeric fields
-        10. ALWAYS use the table name 'linkedin_profiles.profiles'
-        11. ALWAYS double escape single quotes in text values (e.g., 'O''Reilly' instead of 'O'Reilly')
-        12. DO NOT have a semicolon at the end of the query
+        Rules for Broad Maching:
+        1. For text searches, use ILIKE for case-insensitive matching
+        2. Use ILIKE with wildcards liberally (e.g., '%keyword%')
+        4. Break down search terms into individual words
+        5. For array fields, use @> operator
+        6. Combine conditions with AND/OR as appropriate
+        7. Use proper JSONB path syntax (->, ->>, #>>)
+        8. Include relevant sections from the key phrases
+        9. Handle nested arrays properly (e.g., education, experiences)
+        10. Use proper type casting for numeric fields
+        11. ALWAYS use the table name 'linkedin_profiles.profiles'
+        12. ALWAYS double escape single quotes in text values (e.g., 'O''Reilly' instead of 'O'Reilly')
+        13. DO NOT have a semicolon at the end of the query
         
         Example query structure:
-        SELECT * FROM linkedin_profiles.profiles 
-WHERE (
-  raw_profile_data->'education' @> '[{"school": "Columbia University"}]' OR
-  raw_profile_data->'education' @> '[{"degree": "Bachelor''s degree from Columbia"}]'
-)
-LIMIT 100
+        SELECT DISTINCT p.* FROM linkedin_profiles.profiles p
+        LEFT JOIN linkedin_profiles.education e ON e.profile_id = p.id
+        LEFT JOIN linkedin_profiles.experience exp ON exp.profile_id = p.id
+        LEFT JOIN linkedin_profiles.skills s ON s.profile_id = p.id
+        WHERE (
+          -- Basic info matches (very broad)
+          p.full_name ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
+          p.headline ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
+          p.summary ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
+          
+          -- Education matches (broad)
+          e.school ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
+          e.field_of_study ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
+          
+          -- Experience matches (broad)
+          exp.title ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
+          exp.company ILIKE ANY(array['%keyword1%', '%keyword2%'])
+        )
+        LIMIT 100
+
+
+        Important:
+        - Break down complex terms into simpler keywords
+        - Use ILIKE with wildcards for all text matching
+        - Minimize AND conditions unless necessary
+        - Include both exact and partial matches
+        - Consider all common variations of terms,
+        - ALWAYS use OR conditions over arrays
+        - ALWAYS break down search terms into individual words when possible
 `,
       },
       {
