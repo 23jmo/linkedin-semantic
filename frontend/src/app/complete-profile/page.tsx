@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { LinkedInUrlForm, WaitlistForm } from "@/components/LinkedInUrlForm";
-import { createUser } from "@/lib/api";
+import { WaitlistForm } from "@/components/LinkedInUrlForm";
+// import { createUser } from "@/lib/api";
 import { addToWaitlist } from "@/lib/server/waitlist";
 
 export default function CompleteProfilePage() {
@@ -35,29 +35,29 @@ export default function CompleteProfilePage() {
     }
   };
 
-  const handleSubmitLinkedInUrl = async (linkedInUrl: string) => {
-    if (!session?.user?.id) {
-      throw new Error("User ID not found");
-    }
+  // const handleSubmitLinkedInUrl = async (linkedInUrl: string) => {
+  //   if (!session?.user?.id) {
+  //     throw new Error("User ID not found");
+  //   }
 
-    try {
-      setIsLoading(true);
+  //   try {
+  //     setIsLoading(true);
 
-      // Call the API to create the user with the provided LinkedIn URL
-      await createUser(session.user, session.user, linkedInUrl);
+  //     // Call the API to create the user with the provided LinkedIn URL
+  //     await createUser(session.user, session.user, linkedInUrl);
 
-      // Force a session refresh to update the exists flag
-      const event = new Event("visibilitychange");
-      document.dispatchEvent(event);
+  //     // Force a session refresh to update the exists flag
+  //     const event = new Event("visibilitychange");
+  //     document.dispatchEvent(event);
 
-      // Redirect to main page after successful creation
-      setTimeout(() => router.push("/"), 1000);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      setIsLoading(false);
-      throw error;
-    }
-  };
+  //     // Redirect to main page after successful creation
+  //     setTimeout(() => router.push("/"), 1000);
+  //   } catch (error) {
+  //     console.error("Error creating user:", error);
+  //     setIsLoading(false);
+  //     throw error;
+  //   }
+  // };
 
   if (isLoading) {
     return (

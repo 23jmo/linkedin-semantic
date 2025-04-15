@@ -239,7 +239,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                 clipRule="evenodd"
               />
             </svg>
-            Thanks for joining! We'll notify you when spots open up.
+            Thanks for joining! We&apos;ll notify you when spots open up.
           </p>
         </div>
       ) : (
