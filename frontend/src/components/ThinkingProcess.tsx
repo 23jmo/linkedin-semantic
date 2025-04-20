@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "../app/search/shimmer.module.css";
 
@@ -14,12 +14,90 @@ interface ThinkingProcessProps {
   initialShowThinking?: boolean;
 }
 
+// Use Framer Motion for AnimatedSection
+const sectionVariants = {
+  hidden: { opacity: 0, height: 0, y: -10 },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    height: "auto",
+    y: 0,
+    transition: {
+      delay: delay * 0.001, // Convert ms delay to seconds
+      duration: 0.4,
+      ease: [0.25, 0.1, 0.25, 1.0],
+    },
+  }),
+  exit: {
+    opacity: 0,
+    height: 0,
+    y: -10,
+    transition: {
+      duration: 0.3,
+      ease: [0.25, 0.1, 0.25, 1.0],
+    },
+  },
+};
+
+const AnimatedSection = ({
+  isVisible,
+  children,
+  delay = 0,
+}: {
+  isVisible: boolean;
+  children: React.ReactNode;
+  delay?: number;
+}) => {
+  // We don't need useTransition or useSpring anymore
+  return (
+    <AnimatePresence initial={false}>
+      {isVisible && (
+        <motion.div
+          key="content" // Add key for AnimatePresence
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          custom={delay} // Pass delay to variants
+          style={{ overflow: "hidden" }}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 export default function ThinkingProcess({
   thinkingSteps,
   initialShowThinking = true,
 }: ThinkingProcessProps) {
   const [showThinking, setShowThinking] =
     useState<boolean>(initialShowThinking);
+  const [progressPercentage, setProgressPercentage] = useState<number>(0);
+
+  // Calculate the progress based on completed steps
+  useEffect(() => {
+    if (thinkingSteps.length === 0) {
+      setProgressPercentage(0);
+      return;
+    }
+
+    // Define the total number of possible steps
+    const totalSteps = 5; // relevant_sections, traits, key_phrases, sql_query, search_execution
+
+    // Count completed steps
+    const completedSteps = thinkingSteps.filter(
+      (step) => step.status === "completed"
+    ).length;
+
+    // Calculate progress percentage - include partial credit for started steps
+    const startedSteps = thinkingSteps.filter(
+      (step) => step.status === "started"
+    ).length;
+    const progress = ((completedSteps + startedSteps * 0.5) / totalSteps) * 100;
+
+    setProgressPercentage(progress);
+  }, [thinkingSteps]);
 
   // Get completed steps data
   const relevantSections =
@@ -107,7 +185,7 @@ export default function ThinkingProcess({
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6 text-sm">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6 text-sm relative">
       {/* Header with toggle - entire header is now clickable */}
       <button
         onClick={() => setShowThinking(!showThinking)}
@@ -130,7 +208,11 @@ export default function ThinkingProcess({
           </svg>
           <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
             {activeLoadingStep ? (
-              <span className={styles["shimmer-text"]}>{getLoadingText()}</span>
+              <span
+                className={styles["shimmer-text"] + "animate-pulse font-light"}
+              >
+                {getLoadingText()}
+              </span>
             ) : showThinking ? (
               "Thinking process"
             ) : (
@@ -180,311 +262,341 @@ export default function ThinkingProcess({
               opacity: { duration: 0.25 },
               height: { duration: 0.4 },
             }}
-            className="overflow-hidden"
+            className="overflow-hidden relative"
           >
-            {/* Filters Section - with skeleton loading */}
-            {/* Only render Filters section if it's loading or complete */}
-            {hasRelevantSectionsStarted && (
-              <div className="mb-4">
-                <div className="flex items-center mb-2">
-                  <svg
-                    className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                    />
-                  </svg>
-                  <h3 className="font-medium text-gray-700 dark:text-gray-200">
-                    Filters
-                  </h3>
-                  {isRelevantSectionsLoading && (
-                    <div className="ml-2 animate-pulse">
-                      <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <div className="pl-6 space-y-2">
-                  {isRelevantSectionsLoading ? (
-                    // Skeleton loading
-                    <>
-                      <div className="flex items-center space-x-2 animate-pulse">
-                        <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
-                        <div className="h-3 w-16 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                        <div className="h-3 w-32 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                      </div>
-                      <div className="flex items-center space-x-2 animate-pulse">
-                        <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
-                        <div className="h-3 w-20 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                        <div className="h-3 w-40 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                      </div>
-                    </>
-                  ) : (
-                    relevantSections.length > 0 && (
-                      <>
-                        <div className="flex items-center space-x-2">
-                          <svg
-                            className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Location
-                          </span>
-                          <span className="text-gray-800 dark:text-gray-200">
-                            Bay Area, California
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <svg
-                            className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                            />
-                          </svg>
-                          <span className="text-gray-600 dark:text-gray-400">
-                            Education
-                          </span>
-                          <span className="text-gray-800 dark:text-gray-200">
-                            Including education experience
-                          </span>
-                        </div>
-                      </>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
+            {/* Animated Progress Bar - now with spring */}
+            <motion.div
+              className="absolute ml-2 top-0 bottom-0 w-1 bg-blue-400 rounded-l-lg opacity-70"
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              exit={{ scaleY: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 200, // Adjust for desired springiness
+                damping: 25, // Adjust for desired damping
+                // duration is automatically calculated by the spring physics
+              }}
+              style={{ transformOrigin: "top" }}
+            />
 
-            {/* Traits Section - with skeleton loading */}
-            {hasTraitsStarted && (
-              <div className="mb-4">
-                <div className="flex items-center mb-2">
-                  <svg
-                    className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                  <h3 className="font-medium text-gray-700 dark:text-gray-200">
-                    Traits
-                  </h3>
-                  {isTraitsLoading && (
-                    <div className="ml-2 animate-pulse">
-                      <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <div className="pl-6">
-                  <div className="flex flex-wrap">
-                    {isTraitsLoading ? (
-                      // Skeleton loading for traits
+            {/* Add padding to content to make room for progress bar */}
+            <div className="pl-6">
+              {/* Filters Section - Use AnimatedSection */}
+              <AnimatedSection
+                isVisible={hasRelevantSectionsStarted}
+                delay={100}
+              >
+                <div className="mb-4">
+                  <div className="flex mb-2">
+                    <svg
+                      className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                      />
+                    </svg>
+                    <h3 className="font-medium text-gray-700 dark:text-gray-200">
+                      Filters
+                    </h3>
+                    {isRelevantSectionsLoading && (
+                      <div className="ml-2 items-center animate-pulse">
+                        <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="pl-6 space-y-2">
+                    {isRelevantSectionsLoading ? (
+                      // Skeleton loading
                       <>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-16 rounded mr-2 mb-2 animate-pulse"></div>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-24 rounded mr-2 mb-2 animate-pulse"></div>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-20 rounded mr-2 mb-2 animate-pulse"></div>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-28 rounded mr-2 mb-2 animate-pulse"></div>
+                        <div className="flex items-center space-x-2 animate-pulse">
+                          <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
+                          <div className="h-3 w-16 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          <div className="h-3 w-32 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                        </div>
+                        <div className="flex items-center space-x-2 animate-pulse">
+                          <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
+                          <div className="h-3 w-20 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          <div className="h-3 w-40 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                        </div>
                       </>
                     ) : (
-                      traits.map((trait: string) => (
-                        <span
-                          key={trait}
-                          className="inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded mr-2 mb-2"
-                        >
-                          {trait}
-                        </span>
-                      ))
+                      relevantSections.length > 0 && (
+                        <>
+                          <div className="flex items-center space-x-2">
+                            <svg
+                              className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Location
+                            </span>
+                            <span className="text-gray-800 dark:text-gray-200">
+                              Bay Area, California
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <svg
+                              className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                              />
+                            </svg>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Education
+                            </span>
+                            <span className="text-gray-800 dark:text-gray-200">
+                              Including education experience
+                            </span>
+                          </div>
+                        </>
+                      )
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+              </AnimatedSection>
 
-            {/* Key Phrases Section - with skeleton loading */}
-            {hasKeyPhrasesStarted && (
-              <div className="mb-4">
-                <div className="flex items-center mb-2">
-                  <svg
-                    className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                  <h3 className="font-medium text-gray-700 dark:text-gray-200">
-                    Key phrases
-                  </h3>
-                  {isKeyPhrasesLoading && (
-                    <div className="ml-2 animate-pulse">
-                      <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                <div className="pl-6">
-                  <div className="flex flex-wrap">
-                    {isKeyPhrasesLoading ? (
-                      // Skeleton loading for key phrases
-                      <>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-32 rounded mr-2 mb-2 animate-pulse"></div>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-40 rounded mr-2 mb-2 animate-pulse"></div>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-36 rounded mr-2 mb-2 animate-pulse"></div>
-                        <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-28 rounded mr-2 mb-2 animate-pulse"></div>
-                      </>
-                    ) : (
-                      keyPhrases.map(
-                        (phrase: {
-                          key_phrase: string;
-                          relevant_section: string;
-                        }) => (
+              {/* Traits Section - Use AnimatedSection */}
+              <AnimatedSection
+                isVisible={hasTraitsStarted}
+                delay={150}
+              >
+                <div className="mb-4">
+                  <div className="flex mb-2">
+                    <svg
+                      className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
+                    </svg>
+                    <h3 className="font-medium text-gray-700 dark:text-gray-200">
+                      Traits
+                    </h3>
+                    {isTraitsLoading && (
+                      <div className="ml-2 items-center animate-pulse">
+                        <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="pl-6">
+                    <div className="flex flex-wrap">
+                      {isTraitsLoading ? (
+                        // Skeleton loading for traits
+                        <>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-16 rounded mr-2 mb-2 animate-pulse"></div>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-24 rounded mr-2 mb-2 animate-pulse"></div>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-20 rounded mr-2 mb-2 animate-pulse"></div>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-28 rounded mr-2 mb-2 animate-pulse"></div>
+                        </>
+                      ) : (
+                        traits.map((trait: string) => (
                           <span
-                            key={phrase.key_phrase}
+                            key={trait}
                             className="inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded mr-2 mb-2"
                           >
-                            {phrase.key_phrase}
+                            {trait}
                           </span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </AnimatedSection>
+
+              {/* Key Phrases Section - Use AnimatedSection */}
+              <AnimatedSection
+                isVisible={hasKeyPhrasesStarted}
+                delay={200}
+              >
+                <div className="mb-4">
+                  <div className="flex mb-2">
+                    <svg
+                      className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    <h3 className="font-medium text-gray-700 dark:text-gray-200">
+                      Key phrases
+                    </h3>
+                    {isKeyPhrasesLoading && (
+                      <div className="ml-2 items-center animate-pulse">
+                        <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="pl-6">
+                    <div className="flex flex-wrap">
+                      {isKeyPhrasesLoading ? (
+                        // Skeleton loading for key phrases
+                        <>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-32 rounded mr-2 mb-2 animate-pulse"></div>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-40 rounded mr-2 mb-2 animate-pulse"></div>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-36 rounded mr-2 mb-2 animate-pulse"></div>
+                          <div className="inline-block bg-gray-300 dark:bg-gray-600 h-6 w-28 rounded mr-2 mb-2 animate-pulse"></div>
+                        </>
+                      ) : (
+                        keyPhrases.map(
+                          (phrase: {
+                            key_phrase: string;
+                            relevant_section: string;
+                          }) => (
+                            <span
+                              key={phrase.key_phrase}
+                              className="inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded mr-2 mb-2"
+                            >
+                              {phrase.key_phrase}
+                            </span>
+                          )
                         )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </AnimatedSection>
+
+              {/* SQL Query Section - Use AnimatedSection */}
+              <AnimatedSection
+                isVisible={hasSqlQueryStarted}
+                delay={250}
+              >
+                <div className="mb-4">
+                  <div className="flex mb-2">
+                    <svg
+                      className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+                      />
+                    </svg>
+                    <h3 className="font-medium text-gray-700 dark:text-gray-200">
+                      SQL query
+                    </h3>
+                    {isSqlQueryLoading && (
+                      <div className="ml-2 items-center animate-pulse">
+                        <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="pl-6">
+                    {isSqlQueryLoading ? (
+                      // Skeleton loading for SQL query
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-full mb-2"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6 mb-2"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-11/12 mb-2"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-4/5 mb-2"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-2/3"></div>
+                      </div>
+                    ) : (
+                      sqlQuery && (
+                        <pre className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-2 rounded text-xs overflow-x-auto whitespace-pre-wrap">
+                          {sqlQuery}
+                        </pre>
                       )
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+              </AnimatedSection>
 
-            {/* SQL Query Section - with skeleton loading */}
-            {hasSqlQueryStarted && (
-              <div className="mb-4">
-                <div className="flex items-center mb-2">
-                  <svg
-                    className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
+              {/* Active loading step indicator */}
+              {activeLoadingStep && (
+                <div className="mt-4 py-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                    <div className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent mr-2"></div>
+                    <span>
+                      Processing:{" "}
+                      {activeLoadingStep.name
+                        .split("_")
+                        .map(
+                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                        )
+                        .join(" ")}
+                      ...
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Search execution result - appears after search is done */}
+              {thinkingSteps.some(
+                (step) =>
+                  step.name === "search_execution" &&
+                  step.status === "completed"
+              ) && (
+                <div className="mt-4 py-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                    <svg
+                      className="h-4 w-4 text-green-500 mr-2 flex-shrink-0"
+                      fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-                    />
-                  </svg>
-                  <h3 className="font-medium text-gray-700 dark:text-gray-200">
-                    SQL query
-                  </h3>
-                  {isSqlQueryLoading && (
-                    <div className="ml-2 animate-pulse">
-                      <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
-                    </div>
-                  )}
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>
+                      Found{" "}
+                      {thinkingSteps.find(
+                        (step) =>
+                          step.name === "search_execution" &&
+                          step.status === "completed"
+                      )?.data?.count || 0}{" "}
+                      results
+                    </span>
+                  </div>
                 </div>
-                <div className="pl-6">
-                  {isSqlQueryLoading ? (
-                    // Skeleton loading for SQL query
-                    <div className="animate-pulse">
-                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-full mb-2"></div>
-                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6 mb-2"></div>
-                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-11/12 mb-2"></div>
-                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-4/5 mb-2"></div>
-                      <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-2/3"></div>
-                    </div>
-                  ) : (
-                    sqlQuery && (
-                      <pre className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-2 rounded text-xs overflow-x-auto whitespace-pre-wrap">
-                        {sqlQuery}
-                      </pre>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Active loading step indicator */}
-            {activeLoadingStep && (
-              <div className="mt-4 py-2 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent mr-2"></div>
-                  <span>
-                    Processing:{" "}
-                    {activeLoadingStep.name
-                      .split("_")
-                      .map(
-                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
-                      )
-                      .join(" ")}
-                    ...
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Search execution result - appears after search is done */}
-            {thinkingSteps.some(
-              (step) =>
-                step.name === "search_execution" && step.status === "completed"
-            ) && (
-              <div className="mt-4 py-2 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                  <svg
-                    className="h-4 w-4 text-green-500 mr-2 flex-shrink-0"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span>
-                    Found{" "}
-                    {thinkingSteps.find(
-                      (step) =>
-                        step.name === "search_execution" &&
-                        step.status === "completed"
-                    )?.data?.count || 0}{" "}
-                    results
-                  </span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

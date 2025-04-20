@@ -70,15 +70,12 @@ export default function Header() {
               href="/"
               className="flex items-center justify-center"
             >
-              <p
-                className={`h-8 w-8 flex items-center justify-center font-bold text-xl ${
-                  resolvedTheme === "dark"
-                    ? "text-[#0077b5]/90"
-                    : "text-[#0077b5]"
-                }`}
-              >
-                LSS
-              </p>
+              <Image
+                src="/LogoBlack.png"
+                alt="LockedIn"
+                width={48}
+                height={48}
+              />
               <h1
                 className={`ml-2 text-xl font-bold ${
                   resolvedTheme === "light" ? "text-gray-900" : "text-white"
