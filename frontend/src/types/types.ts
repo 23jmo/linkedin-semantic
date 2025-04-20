@@ -203,7 +203,6 @@ export const SearchQuerySchema = z.object({
   query: z.string().min(1, "Search query is required"),
   match_limit: z.number().optional().default(10),
   match_threshold: z.number().optional().default(0.5),
-  useHyde: z.boolean().optional().default(true),
 });
 
 // Response Schema for a single profile

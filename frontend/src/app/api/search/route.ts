@@ -170,18 +170,20 @@ function releaseSlot(): void {
 // Streaming search function
 async function advanced_search(
   query: string,
-  writer: WritableStreamDefaultWriter<Uint8Array>
+  writer?: WritableStreamDefaultWriter<Uint8Array>
 ): Promise<SearchProfilesByEmbeddingResult[]> {
   await waitForSlot();
 
   try {
     // Helper function to write event to the stream
     const writeEvent = async (event: string, data: any) => {
-      await writer.write(
-        new TextEncoder().encode(
-          `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
-        )
-      );
+      if (writer) {
+        await writer.write(
+          new TextEncoder().encode(
+            `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
+          )
+        );
+      }
     };
 
     // Step 1: Relevant sections
@@ -289,13 +291,15 @@ async function advanced_search(
     return results;
   } catch (error) {
     console.error("Error in advanced search:", error);
-    await writer.write(
-      new TextEncoder().encode(
-        `event: error\ndata: ${JSON.stringify({
-          message: error instanceof Error ? error.message : "Unknown error",
-        })}\n\n`
-      )
-    );
+    if (writer) {
+      await writer.write(
+        new TextEncoder().encode(
+          `event: error\ndata: ${JSON.stringify({
+            message: error instanceof Error ? error.message : "Unknown error",
+          })}\n\n`
+        )
+      );
+    }
     throw error;
   } finally {
     releaseSlot();
@@ -579,11 +583,10 @@ async function generate_sql_query(
 async function semantic_search(
   query: string,
   match_limit: number = 10,
-  match_threshold: number = 0.5,
-  useHyde: boolean = true
+  match_threshold: number = 0.5
 ) {
   try {
-    // Get results from advanced_search
+    // Get results from advanced_search without a writer
     const results = await advanced_search(query);
 
     // Return the results with the same structure as before
@@ -619,7 +622,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { query, match_limit, match_threshold, useHyde } = result.data;
+    const { query, match_limit, match_threshold } = result.data;
 
     // Create a streaming response
     const stream = new TransformStream();

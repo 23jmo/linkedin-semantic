@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
+import styles from "@/app/search/shimmer.module.css";
 
 const loadingMessages = [
   "Searching your professional network...",
@@ -44,7 +45,7 @@ export default function LoadingIndicator() {
         <h2
           className={`text-xl font-bold mb-2 ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
-          }`}
+          } ${styles["shimmer-text"]}`}
         >
           {loadingMessages[messageIndex]}
         </h2>

@@ -7,12 +7,10 @@ import { useTheme } from "@/lib/theme-context";
 
 interface SearchBoxProps {
   initialQuery?: string;
-  useHyde?: boolean;
 }
 
 export default function SearchBox({
   initialQuery = "",
-  useHyde = true,
 }: SearchBoxProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
@@ -27,7 +25,7 @@ export default function SearchBox({
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}&useHyde=${useHyde}`);
+      router.push(`/search?q=${encodeURIComponent(query)}`);
     }
   };
 
