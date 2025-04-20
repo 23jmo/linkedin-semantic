@@ -1,11 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { SearchQuerySchema } from "@/types/types";
+import {
+  SearchQuerySchema,
+  SearchAndRankResultSchema,
+  TransformedSearchResultsSchema,
+  SearchAndRankResult,
+  SearchAndRankResultRow,
+  TransformedSearchResult,
+  ScoredSearchResults,
+  ScoredSearchResultsSchema,
+  TraitScore,
+} from "@/types/types";
 import { generateEmbedding } from "@/lib/server/embeddings";
 import { generateHydeChunks } from "@/lib/server/hyde";
 import type { Database } from "@/types/linkedin-profile.types";
 import { ProfileChunkType } from "@/types/profile-chunks";
 import { RawProfileDataSchema } from "@/types/types";
+import { z } from "zod";
 
 import OpenAI from "openai";
 
@@ -15,6 +26,7 @@ import { relevant_sections_prompt } from "./relevant_sections_prompt";
 import { traits_prompt } from "./traits_prompt";
 import { filters_prompt } from "./filters_prompt";
 import { key_phrases_prompt } from "./key_phrases_prompt";
+import { score_results_prompt } from "./score_results_prompt";
 
 // Define the filter type
 interface Filter {
@@ -119,27 +131,6 @@ interface SQLQueryResponse {
   reasoning: string;
 }
 
-interface FilterResponse {
-  filters: Filter[];
-  reasoning: string;
-}
-
-interface SQLResult {
-  id: string;
-  raw_profile_data: any;
-  similarity?: number;
-}
-
-interface RankedResult {
-  id: string;
-  raw_profile_data: any;
-  similarity_score: number;
-  match_details: {
-    phrase: string;
-    similarity: number;
-  }[];
-}
-
 // Add a semaphore to limit concurrent requests
 const MAX_CONCURRENT_REQUESTS = 10;
 let activeRequests = 0;
@@ -234,40 +225,93 @@ async function advanced_search(
     });
 
     if (result.error) {
-      console.error("Search error:", result.error);
+      console.error("Supabase RPC error:", result.error);
       await writeEvent("error", {
         message: `Search failed: ${result.error.message}`,
       });
       throw new Error(`Search failed: ${result.error.message}`);
     }
 
-    // Validate and transform results
-    if (!Array.isArray(result.data)) {
-      await writeEvent("error", { message: "Invalid response format" });
-      throw new Error("Invalid response format");
+    // Validate the raw data from Supabase RPC using Zod
+    const validatedRawData = SearchAndRankResultSchema.safeParse(result.data);
+
+    console.log("validatedRawData:", validatedRawData);
+
+    if (!validatedRawData.success) {
+      console.error(
+        "Zod validation error (raw data):",
+        validatedRawData.error.issues
+      );
+      await writeEvent("error", {
+        message: "Invalid response format from database",
+        details: validatedRawData.error.issues, // Optionally include details
+      });
+      throw new Error("Invalid response format from database");
     }
 
+    // Now use validatedRawData.data for transformation
+    const rawResults = validatedRawData.data;
+
+    console.log("rawResults:", rawResults);
+
     // Transform results to match SearchProfilesByEmbeddingResult type
-    const results: SearchProfilesByEmbeddingResult[] = result.data.map(
-      (row: any) => ({
-        id: row.id,
-        user_id: row.raw_profile_data?.user_id || "",
-        linkedin_id: row.raw_profile_data?.linkedin_id || "",
-        full_name: row.raw_profile_data?.full_name || "",
-        headline: row.raw_profile_data?.headline || "",
-        industry: row.raw_profile_data?.industry || "",
-        location: row.raw_profile_data?.location || "",
-        profile_url: row.raw_profile_data?.profile_url || "",
-        profile_picture_url: row.raw_profile_data?.profile_picture_url || "",
-        summary: row.raw_profile_data?.summary || "",
-        raw_profile_data: row.raw_profile_data,
-        created_at:
-          row.raw_profile_data?.created_at || new Date().toISOString(),
-        updated_at:
-          row.raw_profile_data?.updated_at || new Date().toISOString(),
-        similarity: row.similarity_score,
+    const transformedResultsData = rawResults.map(
+      (row: SearchAndRankResultRow) => ({
+        id: row.id, // id should be guaranteed by SQL and schema
+        user_id: row.user_id ?? "", // Use nullish coalescing for potential nulls
+        linkedin_id: row.linkedin_id ?? "", // Use nullish coalescing
+        full_name: row.full_name ?? "", // Use nullish coalescing
+        headline: row.headline ?? "", // Use nullish coalescing
+        industry: row.industry ?? "", // Use nullish coalescing
+        location: row.location ?? "", // Use nullish coalescing
+        profile_url: row.profile_url ?? "", // Use nullish coalescing
+        profile_picture_url: row.profile_picture_url ?? "", // Use nullish coalescing
+        summary: row.summary ?? "", // Use nullish coalescing
+        raw_profile_data: row.raw_profile_data, // Keep raw data
+        created_at: row.created_at ?? new Date().toISOString(), // Fallback if null
+        updated_at: row.updated_at ?? new Date().toISOString(), // Fallback if null
+        similarity: row.similarity, // Corrected from similarity_score
       })
     );
+
+    console.log("transformedResultsData:", transformedResultsData);
+
+    // Validate the transformed data using Zod
+    // Note: We still return the original Supabase-derived type SearchProfilesByEmbeddingResult[]
+    // but validate its structure matches our expectations.
+    const validatedTransformedData = TransformedSearchResultsSchema.safeParse(
+      transformedResultsData
+    );
+
+    console.log("validatedTransformedData:", validatedTransformedData);
+
+    if (!validatedTransformedData.success) {
+      console.error(
+        "Zod validation error (transformed data):",
+        validatedTransformedData.error.issues
+      );
+      // Decide how to handle this - maybe log and continue, or throw
+      await writeEvent("error", {
+        message: "Internal error during data transformation",
+        details: validatedTransformedData.error.issues,
+      });
+      throw new Error("Internal error during data transformation");
+    }
+
+    // SCORE all results (using gpt)
+
+    const scored_results = await score_results(
+      validatedTransformedData.data,
+      relevant_sections,
+      traits
+    );
+
+    console.log("scored_results:", scored_results);
+
+    // Use the validated transformed data for the final steps
+    // Assert the type back to the Supabase-generated type after Zod validation
+    const results: SearchProfilesByEmbeddingResult[] =
+      scored_results as unknown as SearchProfilesByEmbeddingResult[];
 
     await writeEvent("step", {
       name: "search_execution",
@@ -275,12 +319,17 @@ async function advanced_search(
       data: { count: results.length },
     });
 
-    // Send final results
+    // Send final results with trait scores included
     await writeEvent(
       "results",
-      results.map((profile) => ({
-        profile,
+      scored_results.map((profile) => ({
+        profile: {
+          ...profile,
+          // Remove trait_scores from the profile as it's not part of the original type
+          trait_scores: undefined,
+        },
         score: profile.similarity || 0,
+        trait_scores: profile.trait_scores, // Add trait scores at the top level
         highlights: [],
       }))
     );
@@ -410,57 +459,6 @@ async function get_traits(query: string): Promise<string[]> {
   }
 }
 
-async function get_filters(query: string): Promise<Filter[]> {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    response_format: { type: "json_object" },
-    messages: [
-      {
-        role: "system",
-        content: filters_prompt,
-      },
-      {
-        role: "user",
-        content: `Extract filters from this search query: "${query}"`,
-      },
-    ],
-    temperature: 0.2,
-  });
-
-  try {
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error("No content in response");
-    }
-
-    const parsedResponse = JSON.parse(content) as FilterResponse;
-
-    // Validate the response structure
-    if (!Array.isArray(parsedResponse.filters)) {
-      throw new Error("Invalid response format: filters must be an array");
-    }
-
-    // Validate each filter
-    parsedResponse.filters.forEach((filter, index) => {
-      if (!filter.field || !filter.value || !filter.operator) {
-        throw new Error(
-          `Invalid filter at index ${index}: missing required fields`
-        );
-      }
-      if (!["=", "ILIKE", "@>"].includes(filter.operator)) {
-        throw new Error(
-          `Invalid operator "${filter.operator}" at index ${index}`
-        );
-      }
-    });
-
-    return parsedResponse.filters;
-  } catch (error) {
-    console.error("Error parsing filters:", error);
-    return []; // Return empty array if parsing fails
-  }
-}
-
 async function get_key_phrases(
   traits: string[],
   relevant_sections: string[]
@@ -580,30 +578,175 @@ async function generate_sql_query(
   }
 }
 
-async function semantic_search(
-  query: string,
-  match_limit: number = 10,
-  match_threshold: number = 0.5
-) {
-  try {
-    // Get results from advanced_search without a writer
-    const results = await advanced_search(query);
+async function score_results(
+  profiles: TransformedSearchResult[],
+  relevant_sections: string[],
+  traits: string[]
+): Promise<ScoredSearchResults> {
+  // Skip scoring if there are no traits or profiles
+  if (traits.length === 0 || profiles.length === 0) {
+    return profiles.map((profile) => ({
+      ...profile,
+      trait_scores: [],
+    }));
+  }
 
-    // Return the results with the same structure as before
-    return {
-      data: results.map((profile) => ({
-        profile,
-        score: profile.similarity || 0,
-        highlights: [],
-      })),
-      error: null,
+  try {
+    // Extract relevant info from profiles for scoring
+    const profilesForScoring = profiles.map((profile) => {
+      // Create object with only relevant data
+      const profileData: Record<string, any> = {
+        id: profile.id,
+      };
+
+      // Always include basic info regardless of relevant sections
+      profileData.basic_info = {
+        id: profile.id,
+        full_name: profile.full_name,
+        headline: profile.headline || "",
+        summary: profile.summary || "",
+        location: profile.location || "",
+        industry: profile.industry || "",
+      };
+
+      // Only include sections specified in relevant_sections
+      if (relevant_sections.includes("experiences")) {
+        profileData.experiences =
+          profile.raw_profile_data?.experiences?.map((exp) => ({
+            title: exp.title || "",
+            company: exp.company || "",
+            description: exp.description || "",
+            location: exp.location || "",
+            start_at: exp.start_at ? `${exp.start_at.year}` : "",
+            ends_at: exp.ends_at ? `${exp.ends_at.year}` : "Present",
+          })) || [];
+      }
+
+      if (relevant_sections.includes("education")) {
+        profileData.education =
+          profile.raw_profile_data?.education?.map((edu) => ({
+            school: edu.school || "",
+            degree: edu.degree_name || "",
+            field: edu.field_of_study || "",
+            starts_at: edu.starts_at ? `${edu.starts_at.year}` : "",
+            ends_at: edu.ends_at ? `${edu.ends_at.year}` : "Present",
+          })) || [];
+      }
+
+      if (
+        relevant_sections.includes("projects") ||
+        relevant_sections.includes("achievements")
+      ) {
+        profileData.projects =
+          profile.raw_profile_data?.accomplishment_projects?.map((proj) => ({
+            title: proj.title || "",
+            description: proj.description || "",
+          })) || [];
+      }
+
+      if (relevant_sections.includes("skills")) {
+        profileData.skills = profile.raw_profile_data?.skills || [];
+      }
+
+      return profileData;
+    });
+
+    console.log("profilesForScoring:", profilesForScoring);
+
+    // Create the prompt for GPT
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: score_results_prompt,
+        },
+        {
+          role: "user",
+          content: `Score ${
+            profiles.length
+          } LinkedIn profiles against these traits: ${JSON.stringify(traits)}
+          and these relevant sections: ${JSON.stringify(relevant_sections)}
+          Here are the profiles to evaluate:
+          ${JSON.stringify(profilesForScoring)}
+          
+          Return only the scores and evidence for each trait against each profile.`,
+        },
+      ],
+      temperature: 0.2,
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content in GPT response");
+    }
+
+    // Parse the response
+    const parsedResponse = JSON.parse(content) as {
+      scored_profiles: Array<{ id: string; trait_scores: TraitScore[] }>;
     };
+
+    // Validate the response has the expected structure
+    if (
+      !parsedResponse.scored_profiles ||
+      !Array.isArray(parsedResponse.scored_profiles)
+    ) {
+      throw new Error(
+        "Invalid GPT response format: missing scored_profiles array"
+      );
+    }
+
+    // Merge scores back with the original profiles
+    const scoredResults: ScoredSearchResults = profiles.map((profile) => {
+      const scoreData = parsedResponse.scored_profiles.find(
+        (p) => p.id === profile.id
+      );
+
+      if (!scoreData) {
+        // If scoring data not found for this profile, return with empty scores
+        return {
+          ...profile,
+          trait_scores: traits.map((trait) => ({
+            trait,
+            score: "No" as const,
+            evidence: "No scoring data available",
+          })),
+        };
+      }
+
+      return {
+        ...profile,
+        trait_scores: scoreData.trait_scores,
+      };
+    });
+
+    // Validate with Zod to ensure expected output format
+    const validatedScoredResults =
+      ScoredSearchResultsSchema.safeParse(scoredResults);
+
+    if (!validatedScoredResults.success) {
+      console.error(
+        "Zod validation error (scored results):",
+        validatedScoredResults.error.issues
+      );
+      throw new Error("Invalid scored results format");
+    }
+
+    return validatedScoredResults.data;
   } catch (error) {
-    console.error("Error in semantic search:", error);
-    return {
-      data: [],
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
+    console.error("Error in score_results:", error);
+    // Fall back to returning profiles with empty scores
+    return profiles.map((profile) => ({
+      ...profile,
+      trait_scores: traits.map((trait) => ({
+        trait,
+        score: "No" as const,
+        evidence:
+          "Scoring failed: " +
+          (error instanceof Error ? error.message : "Unknown error"),
+      })),
+    }));
   }
 }
 

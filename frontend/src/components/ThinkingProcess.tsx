@@ -302,7 +302,7 @@ export default function ThinkingProcess({
                       />
                     </svg>
                     <h3 className="font-medium text-gray-700 dark:text-gray-200">
-                      Filters
+                      Identified Relevant Sections
                     </h3>
                     {isRelevantSectionsLoading && (
                       <div className="ml-2 items-center animate-pulse">
@@ -312,72 +312,54 @@ export default function ThinkingProcess({
                   </div>
                   <div className="pl-6 space-y-2">
                     {isRelevantSectionsLoading ? (
-                      // Skeleton loading
+                      // Skeleton loading for dynamic sections
                       <>
+                        <div className="flex items-center space-x-2 animate-pulse mb-1">
+                          <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded flex-shrink-0"></div>
+                          <div className="h-3 w-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                        </div>
                         <div className="flex items-center space-x-2 animate-pulse">
-                          <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
-                          <div className="h-3 w-16 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded flex-shrink-0"></div>
                           <div className="h-3 w-32 bg-gray-300 dark:bg-gray-600 rounded"></div>
                         </div>
-                        <div className="flex items-center space-x-2 animate-pulse">
-                          <div className="h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
-                          <div className="h-3 w-20 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                          <div className="h-3 w-40 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                        </div>
                       </>
+                    ) : // Display the dynamic sections
+                    relevantSections.length > 0 ? (
+                      relevantSections.map((section: string) => (
+                        <div
+                          key={section}
+                          className="flex items-center space-x-2"
+                        >
+                          {/* Generic icon, can be enhanced later */}
+                          <svg
+                            className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" // Checkmark circle icon
+                            />
+                          </svg>
+                          <span className="text-gray-800 dark:text-gray-200">
+                            {/* Format section name */}
+                            {section
+                              .split("_")
+                              .map(
+                                (word) =>
+                                  word.charAt(0).toUpperCase() + word.slice(1)
+                              )
+                              .join(" ")}
+                          </span>
+                        </div>
+                      ))
                     ) : (
-                      relevantSections.length > 0 && (
-                        <>
-                          <div className="flex items-center space-x-2">
-                            <svg
-                              className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Location
-                            </span>
-                            <span className="text-gray-800 dark:text-gray-200">
-                              Bay Area, California
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <svg
-                              className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                              />
-                            </svg>
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Education
-                            </span>
-                            <span className="text-gray-800 dark:text-gray-200">
-                              Including education experience
-                            </span>
-                          </div>
-                        </>
-                      )
+                      <div className="text-gray-500 dark:text-gray-400 italic">
+                        No specific sections identified based on query.
+                      </div>
                     )}
                   </div>
                 </div>
