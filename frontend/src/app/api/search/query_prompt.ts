@@ -197,6 +197,7 @@ Remember:
 - Be inclusive rather than restrictive with matching
 - When in doubt, err on the side of showing more results
 - Avoid strict date/month ranges for seasonal positions
+- Always format SQL queries with new lines to look pretty
 
 GOOD Query Pattern Examples:
 
