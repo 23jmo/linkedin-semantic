@@ -274,7 +274,7 @@ async function advanced_search(
       })
     );
 
-    console.log("transformedResultsData:", transformedResultsData);
+    // console.log("transformedResultsData:", transformedResultsData);
 
     // Validate the transformed data using Zod
     // Note: We still return the original Supabase-derived type SearchProfilesByEmbeddingResult[]
@@ -283,7 +283,7 @@ async function advanced_search(
       transformedResultsData
     );
 
-    console.log("validatedTransformedData:", validatedTransformedData);
+    // console.log("validatedTransformedData:", validatedTransformedData);
 
     if (!validatedTransformedData.success) {
       console.error(
@@ -306,7 +306,7 @@ async function advanced_search(
       traits
     );
 
-    console.log("scored_results:", scored_results);
+    // console.log("scored_results:", scored_results);
 
     // Use the validated transformed data for the final steps
     // Assert the type back to the Supabase-generated type after Zod validation

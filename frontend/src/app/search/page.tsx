@@ -39,112 +39,109 @@ function SearchPageContent() {
   // Thinking step states
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
 
-  const performSearch = useCallback(
-    async (searchQuery: string) => {
-      if (!searchQuery.trim()) return;
+  const performSearch = useCallback(async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
 
-      setLoading(true);
-      setError(null);
-      setResults([]);
-      setThinkingSteps([]);
+    setLoading(true);
+    setError(null);
+    setResults([]);
+    setThinkingSteps([]);
 
-      try {
-        // Create a new AbortController for this search
-        const controller = new AbortController();
-        const signal = controller.signal;
+    try {
+      // Create a new AbortController for this search
+      const controller = new AbortController();
+      const signal = controller.signal;
 
-        // Make the fetch request with streaming
-        const response = await fetch("/api/search", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query: searchQuery,
-          }),
-          signal,
-        });
+      // Make the fetch request with streaming
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+        }),
+        signal,
+      });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-        // Create a reader from the response body stream
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error("Failed to get stream reader");
-        }
+      // Create a reader from the response body stream
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Failed to get stream reader");
+      }
 
-        // Create a TextDecoder to decode the chunks
-        const decoder = new TextDecoder();
-        let buffer = "";
+      // Create a TextDecoder to decode the chunks
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-        // Process the stream
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+      // Process the stream
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-          // Decode the chunk and add it to the buffer
-          buffer += decoder.decode(value, { stream: true });
+        // Decode the chunk and add it to the buffer
+        buffer += decoder.decode(value, { stream: true });
 
-          // Process complete events from the buffer
-          const lines = buffer.split("\n\n");
-          buffer = lines.pop() || ""; // Keep the last incomplete chunk in buffer
+        // Process complete events from the buffer
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || ""; // Keep the last incomplete chunk in buffer
 
-          for (const line of lines) {
-            if (!line.trim()) continue;
+        for (const line of lines) {
+          if (!line.trim()) continue;
 
-            // Parse the event and data
-            const eventMatch = line.match(/^event: (.+)$/m);
-            const dataMatch = line.match(/^data: (.+)$/m);
+          // Parse the event and data
+          const eventMatch = line.match(/^event: (.+)$/m);
+          const dataMatch = line.match(/^data: (.+)$/m);
 
-            if (!eventMatch || !dataMatch) continue;
+          if (!eventMatch || !dataMatch) continue;
 
-            const event = eventMatch[1];
-            const data = JSON.parse(dataMatch[1]);
+          const event = eventMatch[1];
+          const data = JSON.parse(dataMatch[1]);
 
-            // Process the event
-            switch (event) {
-              case "step":
-                if (data.name && data.status) {
-                  setThinkingSteps((prev) => {
-                    // Check if this step already exists
-                    const existingIndex = prev.findIndex(
-                      (step) => step.name === data.name
-                    );
+          // Process the event
+          switch (event) {
+            case "step":
+              if (data.name && data.status) {
+                setThinkingSteps((prev) => {
+                  // Check if this step already exists
+                  const existingIndex = prev.findIndex(
+                    (step) => step.name === data.name
+                  );
 
-                    if (existingIndex >= 0) {
-                      // Update existing step
-                      const newSteps = [...prev];
-                      newSteps[existingIndex] = data;
-                      return newSteps;
-                    } else {
-                      // Add new step
-                      return [...prev, data];
-                    }
-                  });
-                }
-                break;
-              case "results":
-                setResults(data);
-                break;
-              case "error":
-                setError(data.message);
-                break;
-              case "done":
-                setLoading(false);
-                break;
-            }
+                  if (existingIndex >= 0) {
+                    // Update existing step
+                    const newSteps = [...prev];
+                    newSteps[existingIndex] = data;
+                    return newSteps;
+                  } else {
+                    // Add new step
+                    return [...prev, data];
+                  }
+                });
+              }
+              break;
+            case "results":
+              setResults(data);
+              break;
+            case "error":
+              setError(data.message);
+              break;
+            case "done":
+              setLoading(false);
+              break;
           }
         }
-      } catch (err) {
-        console.error("Search error:", err);
-        setError("An error occurred while searching. Please try again.");
-        setLoading(false);
       }
-    },
-    []
-  );
+    } catch (err) {
+      console.error("Search error:", err);
+      setError("An error occurred while searching. Please try again.");
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const q = searchParams.get("q");
@@ -186,9 +183,7 @@ function SearchPageContent() {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Search Results</h1>
 
-          <SearchControls
-            initialQuery={query}
-          />
+          <SearchControls initialQuery={query} />
 
           {status === "unauthenticated" ? (
             <UnauthenticatedSearchWarning />

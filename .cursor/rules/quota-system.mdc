@@ -1,0 +1,27 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Quota System Implementation
+
+This document outlines the structure used for implementing usage quotas (e.g., email generation, searches).
+
+## General Pattern
+
+The system follows a consistent pattern:
+
+1.  **Database Table:** A dedicated table in the `usage_tracking` Supabase schema stores user-specific quota information (e.g., `usage_tracking.email_generation_limits`). See schema definitions in [frontend/src/types/types.ts](mdc:frontend/src/types/types.ts).
+2.  **Check API Endpoint:** An API route (e.g., [`frontend/src/app/api/quotas/email-gen/route.ts`](mdc:frontend/src/app/api/quotas/email-gen/route.ts)) verifies if the user is within their limit *before* performing the action. It reads from the database table.
+3.  **Increment Logic:** After the action is *successfully* completed, the relevant API endpoint (e.g., [`frontend/src/app/api/generate-email/route.ts`](mdc:frontend/src/app/api/generate-email/route.ts) for emails) increments the usage count in the database table.
+4.  **Reset Mechanism:** A scheduled SQL function (e.g., [`supabase/migrations/reset_monthly_quotas.sql`](mdc:supabase/migrations/reset_monthly_quotas.sql)) resets the usage counters periodically (e.g., monthly).
+5.  **Frontend Hook:** A React hook (e.g., [`frontend/src/hooks/useEmailLimits.ts`](mdc:frontend/src/hooks/useEmailLimits.ts)) encapsulates the logic for checking the quota from the frontend.
+6.  **Frontend Display:** A component (e.g., [`frontend/src/components/EmailQuotaDisplay.tsx`](mdc:frontend/src/components/EmailQuotaDisplay.tsx)) visualizes the user's current quota status.
+
+## Current Implementations
+
+*   **Email Generation:** Uses the pattern described above with the files linked as examples.
+
+## Future Implementations
+
+*   **Searches:** The plan is to implement search quotas following the same pattern, creating analogous tables, API endpoints, hooks, and components.
