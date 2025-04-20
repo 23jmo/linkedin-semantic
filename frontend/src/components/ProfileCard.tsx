@@ -18,20 +18,20 @@ import SchoolLogo from "./SchoolLogo";
 
 interface ProfileCardProps {
   profile: ProfileFrontend;
-  matchScore: number;
   onSelect?: (profile: ProfileFrontend, selected: boolean) => void;
   isSelected?: boolean;
   selectable?: boolean;
+  initialExpanded?: boolean;
 }
 
 export default function ProfileCard({
   profile,
-  matchScore,
   onSelect,
   isSelected = false,
   selectable = false,
+  initialExpanded = false,
 }: ProfileCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initialExpanded);
   const { resolvedTheme } = useTheme();
 
   const toggleExpanded = () => {
@@ -62,7 +62,7 @@ export default function ProfileCard({
         resolvedTheme === "light"
           ? "bg-white border-gray-200 hover:border-gray-300 hover:shadow-md"
           : "bg-gray-800 border-gray-700 hover:border-gray-600 hover:shadow-lg"
-      } border rounded-lg shadow-md p-6 relative transition-all duration-200 hover:-translate-y-1`}
+      } border rounded-lg shadow-md p-6 relative transition-all duration-200 hover:-translate-y-1 overflow-hidden`}
     >
       {/* Selection checkbox */}
       {selectable && (
@@ -95,23 +95,14 @@ export default function ProfileCard({
             >
               {profile.firstName} {profile.lastName}
             </h2>
-            <div
-              className={`${
-                resolvedTheme === "light"
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-[#0a4a6e] text-[#4db6e8]"
-              } px-2 py-0.5 rounded-full text-xs font-medium`}
+            <p
+              className={`text-lg ${
+                resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
+              } mb-1`}
             >
-              {Math.round(matchScore * 100)} pts
-            </div>
+              {profile.headline || "LinkedIn Member"}
+            </p>
           </div>
-          <p
-            className={`text-lg ${
-              resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
-            } mb-1`}
-          >
-            {profile.headline || "LinkedIn Member"}
-          </p>
           {profile.location && (
             <p
               className={`flex items-center ${
@@ -254,7 +245,7 @@ export default function ProfileCard({
                         <div className="flex-shrink-0 mr-3 mt-1">
                           <CompanyLogo
                             logoUrl={exp.logo_url ?? undefined}
-                            companyName={exp.company}
+                            companyName={exp.company ?? undefined}
                           />
                         </div>
                         <div className="flex-grow">
@@ -283,7 +274,7 @@ export default function ProfileCard({
                                 : "text-gray-400"
                             }`}
                           >
-                            {formatDate(exp.start_at)} -{" "}
+                            {formatDate(exp.start_at ?? undefined)} -{" "}
                             {formatDate(exp.ends_at ?? undefined)}
                             {exp.location && ` · ${exp.location}`}
                           </p>

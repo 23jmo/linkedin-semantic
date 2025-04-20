@@ -1,0 +1,33 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# API Search Logic
+
+This rule describes the main backend logic for handling search requests.
+
+## Endpoint
+
+The primary endpoint for search is defined in [`frontend/src/app/api/search/route.ts`](mdc:frontend/src/app/api/search/route.ts).
+
+## Process
+
+1.  Receives a POST request with a search query (validated by [`SearchQuerySchema`](mdc:frontend/src/types/types.ts)).
+2.  Uses OpenAI (`gpt-4o`) to break down the query into:
+    *   Relevant profile sections (`relevant_sections_prompt.ts`)
+    *   Key traits (`traits_prompt.ts`)
+    *   Key phrases based on traits and sections (`key_phrases_prompt.ts`)
+    *   Filters (currently unused in SQL generation) (`filters_prompt.ts`)
+3.  Generates a SQL query using OpenAI based on traits and key phrases (`query_prompt.ts`).
+4.  Executes the generated SQL and performs ranking using the Supabase RPC function [`search_and_rank`](mdc:supabase/functions/search_and_rank.sql).
+5.  Validates the raw results from Supabase using [`SearchAndRankResultSchema`](mdc:frontend/src/types/types.ts).
+6.  Transforms the results and validates them again using [`TransformedSearchResultsSchema`](mdc:frontend/src/types/types.ts).
+7.  Streams the progress steps and final results back to the client using Server-Sent Events (SSE).
+
+## Key Files
+
+*   [`frontend/src/app/api/search/route.ts`](mdc:frontend/src/app/api/search/route.ts): Main API route handler.
+*   [`supabase/functions/search_and_rank.sql`](mdc:supabase/functions/search_and_rank.sql): Supabase function for executing the query and ranking.
+*   [`frontend/src/types/types.ts`](mdc:frontend/src/types/types.ts): Contains Zod schemas for validation (`SearchQuerySchema`, `SearchAndRankResultSchema`, `TransformedSearchResultsSchema`).
+*   Prompt files (e.g., `relevant_sections_prompt.ts`, `traits_prompt.ts`, etc.) located in the same directory as the route file.

@@ -3,16 +3,16 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import SearchBox from "@/components/SearchBox";
-import ProfileCard from "@/components/ProfileCard";
-import LoadingIndicator from "@/components/LoadingIndicator";
 import Layout from "@/components/Layout";
 import UnauthenticatedSearchWarning from "@/components/UnauthenticatedSearchWarning";
 import SelectionChip from "@/components/SelectionChip";
 import EmailComposer from "@/components/EmailComposer";
+import LoadingIndicator from "@/components/LoadingIndicator";
+import ThinkingProcess, { ThinkingStep } from "@/components/ThinkingProcess";
+import SearchControls from "@/components/SearchControls";
+import SearchResults from "@/components/SearchResults";
 import { ProfileFrontend } from "../../types/types";
 import { SearchResult } from "../../types/types";
-import { semanticSearch } from "@/lib/api";
 
 export default function SearchPage() {
   return (
@@ -35,7 +35,9 @@ function SearchPageContent() {
     []
   );
   const [showEmailComposer, setShowEmailComposer] = useState(false);
-  const [useHyde, setUseHyde] = useState<boolean>(true);
+
+  // Thinking step states
+  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
 
   const performSearch = useCallback(
     async (searchQuery: string) => {
@@ -43,19 +45,105 @@ function SearchPageContent() {
 
       setLoading(true);
       setError(null);
+      setResults([]);
+      setThinkingSteps([]);
 
       try {
-        const profiles = await semanticSearch(searchQuery, useHyde);
-        // console.log("Profiles:", profiles);
-        setResults(profiles);
+        // Create a new AbortController for this search
+        const controller = new AbortController();
+        const signal = controller.signal;
+
+        // Make the fetch request with streaming
+        const response = await fetch("/api/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+          }),
+          signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Create a reader from the response body stream
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("Failed to get stream reader");
+        }
+
+        // Create a TextDecoder to decode the chunks
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        // Process the stream
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Decode the chunk and add it to the buffer
+          buffer += decoder.decode(value, { stream: true });
+
+          // Process complete events from the buffer
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || ""; // Keep the last incomplete chunk in buffer
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
+            // Parse the event and data
+            const eventMatch = line.match(/^event: (.+)$/m);
+            const dataMatch = line.match(/^data: (.+)$/m);
+
+            if (!eventMatch || !dataMatch) continue;
+
+            const event = eventMatch[1];
+            const data = JSON.parse(dataMatch[1]);
+
+            // Process the event
+            switch (event) {
+              case "step":
+                if (data.name && data.status) {
+                  setThinkingSteps((prev) => {
+                    // Check if this step already exists
+                    const existingIndex = prev.findIndex(
+                      (step) => step.name === data.name
+                    );
+
+                    if (existingIndex >= 0) {
+                      // Update existing step
+                      const newSteps = [...prev];
+                      newSteps[existingIndex] = data;
+                      return newSteps;
+                    } else {
+                      // Add new step
+                      return [...prev, data];
+                    }
+                  });
+                }
+                break;
+              case "results":
+                setResults(data);
+                break;
+              case "error":
+                setError(data.message);
+                break;
+              case "done":
+                setLoading(false);
+                break;
+            }
+          }
+        }
       } catch (err) {
         console.error("Search error:", err);
         setError("An error occurred while searching. Please try again.");
-      } finally {
         setLoading(false);
       }
     },
-    [useHyde, setLoading, setError, setResults]
+    []
   );
 
   useEffect(() => {
@@ -67,14 +155,6 @@ function SearchPageContent() {
       }
     }
   }, [searchParams, status, performSearch]);
-
-  // Update useHyde state based on URL param
-  useEffect(() => {
-    const hydeParam = searchParams.get("useHyde");
-    if (hydeParam !== null) {
-      setUseHyde(hydeParam === "true");
-    }
-  }, [searchParams]);
 
   // Handle profile selection
   const handleProfileSelect = (profile: ProfileFrontend, selected: boolean) => {
@@ -106,107 +186,34 @@ function SearchPageContent() {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Search Results</h1>
 
-          <div className="mb-8">
-            <SearchBox
-              initialQuery={query}
-              useHyde={useHyde}
-            />
-            <div className="flex items-center justify-center space-x-2 mt-4">
-              <input
-                type="checkbox"
-                id="search-hyde-toggle"
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                checked={useHyde}
-                onChange={(e) => {
-                  console.log(
-                    "HyDE Checkbox Changed, new state:",
-                    e.target.checked
-                  );
-                  setUseHyde(e.target.checked);
-                  // Optional: Re-run search when toggle changes
-                  // performSearch(query);
-                }}
-              />
-              <label
-                htmlFor="search-hyde-toggle"
-                className="text-sm font-medium cursor-pointer"
-              >
-                Use Enhanced Search (HyDE)
-              </label>
-            </div>
-          </div>
+          <SearchControls
+            initialQuery={query}
+          />
 
           {status === "unauthenticated" ? (
             <UnauthenticatedSearchWarning />
           ) : (
             <>
+              {/* Show thinking steps when available */}
+              {thinkingSteps.length > 0 && (
+                <ThinkingProcess thinkingSteps={thinkingSteps} />
+              )}
+
               {loading ? (
-                <LoadingIndicator />
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin h-8 w-8 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                </div>
               ) : error ? (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
                   {error}
                 </div>
               ) : (
-                <>
-                  {results.length > 0 ? (
-                    <div className="space-y-6">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Found {results.length} results for &quot;{query}&quot;
-                      </p>
-                      {results.map((result) => {
-                        // Convert SearchResult to Profile for the ProfileCard
-                        const profile: ProfileFrontend = {
-                          id: result.profile.id,
-                          user_id: result.profile.user_id,
-                          firstName: result.profile.full_name
-                            ? result.profile.full_name.split(" ")[0]
-                            : "Unknown",
-                          lastName: result.profile.full_name
-                            ? result.profile.full_name
-                                .split(" ")
-                                .slice(1)
-                                .join(" ")
-                            : "",
-                          headline: result.profile.headline,
-                          summary: result.profile.summary,
-                          location: result.profile.location,
-                          industry: result.profile.industry,
-                          profileUrl: result.profile.profile_url || "",
-                          profilePicture: result.profile.profile_picture_url,
-                          highlights: result.highlights,
-                          raw_profile_data: result.profile.raw_profile_data,
-                        };
-
-                        // Check if this profile is selected
-                        const isSelected = selectedProfiles.some(
-                          (p) => p.id === profile.id
-                        );
-
-                        return (
-                          <ProfileCard
-                            key={profile.id}
-                            profile={profile}
-                            matchScore={result.score}
-                            selectable={true}
-                            isSelected={isSelected}
-                            onSelect={handleProfileSelect}
-                          />
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    query && (
-                      <div className="text-center py-12">
-                        <p className="text-gray-600 dark:text-gray-400 mb-2">
-                          No results found for &quot;{query}&quot;
-                        </p>
-                        <p className="text-gray-500 dark:text-gray-500">
-                          Try a different search term or broaden your query
-                        </p>
-                      </div>
-                    )
-                  )}
-                </>
+                <SearchResults
+                  results={results}
+                  query={query}
+                  selectedProfiles={selectedProfiles}
+                  onProfileSelect={handleProfileSelect}
+                />
               )}
             </>
           )}

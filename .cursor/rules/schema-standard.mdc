@@ -1,0 +1,172 @@
+---
+description: Anytime we work with anything related to supabase, database, or typing
+globs: 
+alwaysApply: false
+---
+# LinkedIn Semantic Search - Schema Standards
+
+This document defines standards for working with Supabase, database operations, and TypeScript types.
+
+## Database Schema Standards
+
+### Table Structure
+- All tables MUST be in the `linkedin_profiles` schema
+- Required fields for all tables:
+  ```sql
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  ```
+- Foreign keys MUST reference `profiles(id)` with `ON DELETE CASCADE`
+
+### Data Types
+```sql
+-- Standard type mappings
+ids: UUID
+timestamps: TIMESTAMP WITH TIME ZONE
+text_fields: TEXT  -- Not VARCHAR
+urls: TEXT
+json_data: JSONB
+counts: INTEGER
+scores: DOUBLE PRECISION
+flags: BOOLEAN
+```
+
+### Relationships
+- Profile is the parent table
+- All child tables require `profile_id` foreign key
+- Normalize nested data (education, experience, etc.)
+- Index all foreign keys
+
+## TypeScript & Zod Standards
+
+### Validation Patterns
+```typescript
+// Required fields
+required: z.string().min(1, "Field is required")
+// Optional fields
+optional: z.string().optional()
+// Nullable fields
+nullable: z.string().nullable()
+// Nested objects
+nested: z.object({}).optional()
+```
+
+### Profile Data Structure
+```typescript
+{
+  // Required core fields
+  full_name: string
+  linkedin_id: string
+  user_id: string
+
+  // Optional structured data
+  education: Education[]
+  experiences: Experience[]
+  skills: string[]
+  certifications: Certification[]
+  projects: Project[]
+
+  // Metadata
+  created_at: timestamp
+  updated_at: timestamp
+  raw_profile_data: RawProfileDataSchema
+}
+```
+
+## Query Standards
+
+### SQL Best Practices
+```sql
+-- Use table aliases
+FROM linkedin_profiles.profiles p
+
+-- Qualify all columns
+SELECT p.id, p.full_name FROM profiles p
+
+-- Parameterize queries
+WHERE id = $1
+
+-- Handle nulls explicitly
+COALESCE(field, default_value)
+```
+
+### Performance Rules
+- Index frequently queried columns
+- Use JSONB for complex nested data
+- Include EXPLAIN ANALYZE for complex queries
+- Implement pagination
+- Use materialized views for complex aggregations
+
+## Error Handling
+
+```typescript
+try {
+  // Database operation
+} catch (error) {
+  // Log error
+  // Return appropriate error response
+  throw new Error(`Database operation failed: ${error.message}`);
+}
+```
+
+## Migration Standards
+- Version all schema changes
+- Include reversible migrations
+- Add appropriate indexes
+- Document changes
+- Follow naming pattern: `${timestamp}_${description}.sql`
+
+## Code Style
+
+### SQL
+- Keywords: UPPERCASE
+- Identifiers: snake_case
+- Max line length: 80
+- Indentation: 2 spaces
+
+### TypeScript
+- Interfaces/Types: PascalCase
+- Variables: camelCase
+- Use strict null checks
+- Explicit return types
+
+## Examples
+
+### SQL
+```sql
+-- Correct query
+SELECT p.id, p.full_name 
+FROM linkedin_profiles.profiles p 
+WHERE p.id = $1
+
+-- Correct join
+LEFT JOIN linkedin_profiles.education e ON e.profile_id = p.id
+```
+
+### TypeScript
+```typescript
+// Type definition
+export type Profile = z.infer<typeof ProfileSchema>
+
+// Validation
+const profile = ProfileSchema.parse(data)
+```
+
+## Linting Rules
+
+### SQL
+- No implicit joins
+- Require table aliases
+- Qualify all column names
+
+### TypeScript
+- Strict null checks
+- No any
+- Explicit return types
+
+## Documentation Requirements
+- Purpose
+- Schema Changes
+- API Changes
+- Migration Steps
