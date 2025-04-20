@@ -10,6 +10,12 @@ import { RawProfileDataSchema } from "@/types/types";
 import OpenAI from "openai";
 
 import { RawProfile } from "@/types/types";
+import { query_prompt } from "./query_prompt";
+import { relevant_sections_prompt } from "./relevant_sections_prompt";
+import { traits_prompt } from "./traits_prompt";
+import { filters_prompt } from "./filters_prompt";
+import { key_phrases_prompt } from "./key_phrases_prompt";
+
 // Define the filter type
 interface Filter {
   field: string;
@@ -19,112 +25,6 @@ interface Filter {
 
 // Import the JSON template
 // const jsonTemplate = JSON.stringify(RawProfileDataSchema);
-const jsonTemplate = `
-  CREATE TABLE linkedin_profiles.profiles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    linkedin_id TEXT,
-    full_name TEXT,
-    headline TEXT,
-    industry TEXT,
-    location TEXT,
-    profile_url TEXT,
-    profile_picture_url TEXT,
-    summary TEXT,
-    raw_profile_data JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  );
-
--- Create education table
-CREATE TABLE linkedin_profiles.education (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
-    activities_and_societies TEXT,
-    school TEXT NOT NULL,
-    grade TEXT,
-    degree_name TEXT,
-    field_of_study TEXT,
-    description TEXT,
-    starts_at_day INTEGER,
-    starts_at_month INTEGER,
-    starts_at_year INTEGER,
-    ends_at_day INTEGER,
-    ends_at_month INTEGER,
-    ends_at_year INTEGER,
-    logo_url TEXT,
-    school_linkedin_profile_url TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Create experience table
-CREATE TABLE linkedin_profiles.experience (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    company TEXT NOT NULL,
-    description TEXT,
-    starts_at_day INTEGER,
-    starts_at_month INTEGER,
-    starts_at_year INTEGER,
-    ends_at_day INTEGER,
-    ends_at_month INTEGER,
-    ends_at_year INTEGER,
-    logo_url TEXT,
-    location TEXT,
-    company_facebook_profile_url TEXT,
-    company_linkedin_profile_url TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Create certifications table
-CREATE TABLE linkedin_profiles.certifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
-    name TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Create courses table
-CREATE TABLE linkedin_profiles.courses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
-    name TEXT,
-    number TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Create projects table
-CREATE TABLE linkedin_profiles.projects (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
-    title TEXT,
-    description TEXT,
-    url TEXT,
-    starts_at_day INTEGER,
-    starts_at_month INTEGER,
-    starts_at_year INTEGER,
-    ends_at_day INTEGER,
-    ends_at_month INTEGER,
-    ends_at_year INTEGER,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Create skills table
-CREATE TABLE linkedin_profiles.skills (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    profile_id UUID NOT NULL REFERENCES linkedin_profiles.profiles(id) ON DELETE CASCADE,
-    skill TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-`;
-
 // Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -287,13 +187,13 @@ async function advanced_search(
 
     // Generate SQL query for initial filtering
 
-    const test_query = `
-    SELECT * FROM linkedin_profiles.profiles 
-WHERE (
-  raw_profile_data->'education' @> '[{"school": "Columbia University"}]' OR
-  raw_profile_data->'education' @> '[{"degree": "Bachelor''s degree from Columbia"}]'
-)
-LIMIT 100`;
+    //     const test_query = `
+    //     SELECT * FROM linkedin_profiles.profiles
+    // WHERE (
+    //   raw_profile_data->'education' @> '[{"school": "Columbia University"}]' OR
+    //   raw_profile_data->'education' @> '[{"degree": "Bachelor''s degree from Columbia"}]'
+    // )
+    // LIMIT 100`;
 
     const sql_query = await generate_sql_query([], traits, key_phrases);
     console.log("Generated SQL:", sql_query);
@@ -353,8 +253,9 @@ async function get_relevant_sections(query: string): Promise<string[]> {
   const possible_sections = [
     "basic_info",
     "education",
-    "experience",
+    "experiences",
     "achievements",
+    "projects",
     "location",
   ];
 
@@ -364,19 +265,16 @@ async function get_relevant_sections(query: string): Promise<string[]> {
     messages: [
       {
         role: "system",
-        content: `You are a search query analyzer. Analyze the search query and return a JSON object with:
-        - relevant_sections: Array of relevant section names from the provided list
-        - confidence: Number between 0-1 indicating confidence in the selection
-        - reasoning: Brief explanation of why these sections were chosen
-        
-        Available sections: ${JSON.stringify(possible_sections)}`,
+        content: `${relevant_sections_prompt}\n\nAvailable sections: ${JSON.stringify(
+          possible_sections
+        )}`,
       },
       {
         role: "user",
         content: `Analyze this search query: "${query}"`,
       },
     ],
-    temperature: 0.2, // Lower temperature for more consistent results
+    temperature: 0.2,
   });
 
   try {
@@ -418,19 +316,7 @@ async function get_traits(query: string): Promise<string[]> {
     messages: [
       {
         role: "system",
-        content: `You are a search query analyzer. Extract relevant traits from the search query that would help identify LinkedIn profiles.
-        Return a JSON object with:
-        - traits: Array of strings, each representing a distinct trait
-        - reasoning: Brief explanation of why these traits were chosen
-        
-        Focus on extracting:
-        - Educational background (e.g., "Graduated from Columbia University")
-        - Work experience (e.g., "Works at Google")
-        - Skills or expertise
-        - Notable achievements
-        - Location preferences
-        
-        Each trait should be a complete phrase that could appear in a LinkedIn profile.`,
+        content: traits_prompt,
       },
       {
         role: "user",
@@ -474,38 +360,7 @@ async function get_filters(query: string): Promise<Filter[]> {
     messages: [
       {
         role: "system",
-        content: `You are a search query analyzer. Extract exact filters from the search query that would help identify LinkedIn profiles.
-        
-        Return a JSON object with:
-        - filters: Array of filter objects, each containing:
-          * field: The JSONB path in raw_profile_data (e.g., 'full_name', 'education.school', 'experiences.company')
-          * value: The exact value to match
-          * operator: The operator to use ('=' for exact match, 'ILIKE' for text search, '@>' for array containment)
-        - reasoning: Brief explanation of why these filters were chosen
-        
-        Focus on extracting:
-        - Exact company names
-        - Exact school names
-        - Exact locations (city, state, country)
-        - Exact job titles
-        - Exact skill names
-        
-        Example response:
-        {
-          "filters": [
-            {
-              "field": "experiences.company",
-              "value": "Google",
-              "operator": "="
-            },
-            {
-              "field": "education.school",
-              "value": "Columbia University",
-              "operator": "="
-            }
-          ],
-          "reasoning": "Extracted exact company and school names for precise matching"
-        }`,
+        content: filters_prompt,
       },
       {
         role: "user",
@@ -561,22 +416,9 @@ async function get_key_phrases(
     messages: [
       {
         role: "system",
-        content: `You are a search query analyzer. For each trait, generate key phrases that relevant profiles might have in their ${JSON.stringify(
+        content: `${key_phrases_prompt}\n\nAvailable sections: ${JSON.stringify(
           possible_sections
-        )} section(s).
-
-        Can be somewhat creative with it. 
-
-        Return a JSON object with:
-        - key_phrases: Array of objects, each containing:
-          * key_phrase: The searchable phrase
-          * relevant_section: Which section this phrase applies to (must be one of: ${JSON.stringify(
-            possible_sections
-          )})
-          * confidence: Number between 0-1 indicating confidence in this mapping
-        - reasoning: Brief explanation of why these key phrases were chosen
-        
-        Focus on generating phrases that would be commonly found in LinkedIn profiles.`,
+        )}`,
       },
       {
         role: "user",
@@ -636,72 +478,7 @@ async function generate_sql_query(
     messages: [
       {
         role: "system",
-        content: `You are a SQL query generator for LinkedIn profile search. 
-
-        Generate a SQL query that searches across normalized LinkedIn profile tables:
-        - profiles (main table)
-        - education (school, degree, field)
-        - experience (title, company)
-        - skills
-        - certifications
-        - projects
-
-        Only query on properties that need more exact matching.
-
-        For example: location, education, or name, but not necessarily skills or experiences.
-        
-        The schema follows this format:
-        ${jsonTemplate}
-        
-        Return a JSON object with:
-        - query: The SQL query string
-        - reasoning: Brief explanation of the query structure
-        
-        Rules for Broad Maching:
-        1. For text searches, use ILIKE for case-insensitive matching
-        2. Use ILIKE with wildcards liberally (e.g., '%keyword%')
-        4. Break down search terms into individual words
-        5. For array fields, use @> operator
-        6. Combine conditions with AND/OR as appropriate
-        7. Use proper JSONB path syntax (->, ->>, #>>)
-        8. Include relevant sections from the key phrases
-        9. Handle nested arrays properly (e.g., education, experiences)
-        10. Use proper type casting for numeric fields
-        11. ALWAYS use the table name 'linkedin_profiles.profiles'
-        12. ALWAYS double escape single quotes in text values (e.g., 'O''Reilly' instead of 'O'Reilly')
-        13. DO NOT have a semicolon at the end of the query
-        
-        Example query structure:
-        SELECT DISTINCT p.* FROM linkedin_profiles.profiles p
-        LEFT JOIN linkedin_profiles.education e ON e.profile_id = p.id
-        LEFT JOIN linkedin_profiles.experience exp ON exp.profile_id = p.id
-        LEFT JOIN linkedin_profiles.skills s ON s.profile_id = p.id
-        WHERE (
-          -- Basic info matches (very broad)
-          p.full_name ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
-          p.headline ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
-          p.summary ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
-          
-          -- Education matches (broad)
-          e.school ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
-          e.field_of_study ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
-          
-          -- Experience matches (broad)
-          exp.title ILIKE ANY(array['%keyword1%', '%keyword2%']) OR
-          exp.company ILIKE ANY(array['%keyword1%', '%keyword2%'])
-        )
-        LIMIT 100
-
-
-        Important:
-        - Break down complex terms into simpler keywords
-        - Use ILIKE with wildcards for all text matching
-        - Minimize AND conditions unless necessary
-        - Include both exact and partial matches
-        - Consider all common variations of terms,
-        - ALWAYS use OR conditions over arrays
-        - ALWAYS break down search terms into individual words when possible
-`,
+        content: query_prompt,
       },
       {
         role: "user",
@@ -713,6 +490,8 @@ async function generate_sql_query(
     ],
     temperature: 0.2,
   });
+
+  console.log("complete prompt:" + response.choices[0].message.content);
 
   try {
     const content = response.choices[0].message.content;
