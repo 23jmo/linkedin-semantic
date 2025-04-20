@@ -167,42 +167,65 @@ function releaseSlot(): void {
   }
 }
 
+// Streaming search function
 async function advanced_search(
-  query: string
+  query: string,
+  writer: WritableStreamDefaultWriter<Uint8Array>
 ): Promise<SearchProfilesByEmbeddingResult[]> {
   await waitForSlot();
 
   try {
-    // Get relevant sections
+    // Helper function to write event to the stream
+    const writeEvent = async (event: string, data: any) => {
+      await writer.write(
+        new TextEncoder().encode(
+          `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
+        )
+      );
+    };
+
+    // Step 1: Relevant sections
+    await writeEvent("step", { name: "relevant_sections", status: "started" });
     const relevant_sections = await get_relevant_sections(query);
     console.log("Relevant sections:", relevant_sections);
+    await writeEvent("step", {
+      name: "relevant_sections",
+      status: "completed",
+      data: relevant_sections,
+    });
 
-    // Get traits
+    // Step 2: Traits
+    await writeEvent("step", { name: "traits", status: "started" });
     const traits = await get_traits(query);
     console.log("Traits:", traits);
+    await writeEvent("step", {
+      name: "traits",
+      status: "completed",
+      data: traits,
+    });
 
-    // Get key phrases
+    // Step 3: Key phrases
+    await writeEvent("step", { name: "key_phrases", status: "started" });
     const key_phrases = await get_key_phrases(traits, relevant_sections);
     console.log("Key phrases:", key_phrases);
+    await writeEvent("step", {
+      name: "key_phrases",
+      status: "completed",
+      data: key_phrases,
+    });
 
-    // Generate SQL query for initial filtering
-
-    //     const test_query = `
-    //     SELECT * FROM linkedin_profiles.profiles
-    // WHERE (
-    //   raw_profile_data->'education' @> '[{"school": "Columbia University"}]' OR
-    //   raw_profile_data->'education' @> '[{"degree": "Bachelor''s degree from Columbia"}]'
-    // )
-    // LIMIT 100`;
-
+    // Step 4: SQL query
+    await writeEvent("step", { name: "sql_query", status: "started" });
     const sql_query = await generate_sql_query([], traits, key_phrases);
     console.log("Generated SQL:", sql_query);
+    await writeEvent("step", {
+      name: "sql_query",
+      status: "completed",
+      data: sql_query,
+    });
 
-    // Execute combined search and ranking with timeout
-    // const result = await supabase.rpc("run_dynamic_query", {
-    //   query_text: sql_query.trim(),
-    // });
-
+    // Step 5: Execute search
+    await writeEvent("step", { name: "search_execution", status: "started" });
     const result = await supabase.rpc("search_and_rank", {
       query_text: sql_query.trim(),
       key_phrases: key_phrases,
@@ -210,11 +233,15 @@ async function advanced_search(
 
     if (result.error) {
       console.error("Search error:", result.error);
+      await writeEvent("error", {
+        message: `Search failed: ${result.error.message}`,
+      });
       throw new Error(`Search failed: ${result.error.message}`);
     }
 
     // Validate and transform results
     if (!Array.isArray(result.data)) {
+      await writeEvent("error", { message: "Invalid response format" });
       throw new Error("Invalid response format");
     }
 
@@ -240,9 +267,35 @@ async function advanced_search(
       })
     );
 
+    await writeEvent("step", {
+      name: "search_execution",
+      status: "completed",
+      data: { count: results.length },
+    });
+
+    // Send final results
+    await writeEvent(
+      "results",
+      results.map((profile) => ({
+        profile,
+        score: profile.similarity || 0,
+        highlights: [],
+      }))
+    );
+
+    // Signal completion
+    await writeEvent("done", {});
+
     return results;
   } catch (error) {
     console.error("Error in advanced search:", error);
+    await writer.write(
+      new TextEncoder().encode(
+        `event: error\ndata: ${JSON.stringify({
+          message: error instanceof Error ? error.message : "Unknown error",
+        })}\n\n`
+      )
+    );
     throw error;
   } finally {
     releaseSlot();
@@ -551,7 +604,10 @@ async function semantic_search(
   }
 }
 
+// Replace the POST handler with a streaming version
 export async function POST(request: Request) {
+  const encoder = new TextEncoder();
+
   try {
     const body = await request.json();
     const result = SearchQuerySchema.safeParse(body);
@@ -564,22 +620,36 @@ export async function POST(request: Request) {
     }
 
     const { query, match_limit, match_threshold, useHyde } = result.data;
-    const { data, error } = await semantic_search(
-      query,
-      match_limit,
-      match_threshold,
-      useHyde
-    );
 
-    if (error) {
-      console.error("Search error:", error);
-      return NextResponse.json(
-        { error: "Failed to search profiles" },
-        { status: 500 }
-      );
-    }
+    // Create a streaming response
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
 
-    return NextResponse.json(data);
+    // Start the search process (don't await - we want to start returning the stream)
+    advanced_search(query, writer)
+      .catch((error) => {
+        console.error("Search error:", error);
+        writer.write(
+          encoder.encode(
+            `event: error\ndata: ${JSON.stringify({
+              message: "Failed to search profiles",
+            })}\n\n`
+          )
+        );
+        writer.close();
+      })
+      .finally(() => {
+        writer.close();
+      });
+
+    // Return the stream as a response
+    return new Response(stream.readable, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
     console.error("Error in search:", error);
     return NextResponse.json(
