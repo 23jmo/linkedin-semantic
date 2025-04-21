@@ -182,7 +182,7 @@ WHERE
 
 Technical Requirements:
 - Use table aliases (p for profiles, e for experience)
-- Include LIMIT 100
+- Include LIMIT 10
 - No trailing semicolon
 - Use LEFT JOIN for all table joins
 - Prefer broader matches over strict conditions

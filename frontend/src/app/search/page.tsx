@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useSearchLimits } from "@/hooks/useSearchLimits";
+import { useReferralStats } from "@/hooks/useReferralStats";
 import Layout from "@/components/Layout";
 import UnauthenticatedSearchWarning from "@/components/UnauthenticatedSearchWarning";
 import SelectionChip from "@/components/SelectionChip";
@@ -12,6 +13,8 @@ import LoadingIndicator from "@/components/LoadingIndicator";
 import ThinkingProcess, { ThinkingStep } from "@/components/ThinkingProcess";
 import SearchControls from "@/components/SearchControls";
 import SearchResults from "@/components/SearchResults";
+import QuotaIndicator from "@/components/QuotaIndicator";
+import QuotaLimitError from "@/components/QuotaLimitError";
 import { ProfileFrontend } from "../../types/types";
 import { SearchResult } from "../../types/types";
 
@@ -30,6 +33,8 @@ function SearchPageContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [showQuotaLimitError, setShowQuotaLimitError] =
+    useState<boolean>(false);
 
   // Get quota management functions and state
   const {
@@ -38,6 +43,9 @@ function SearchPageContent() {
     quota,
     isLoading: quotaLoading,
   } = useSearchLimits();
+
+  // Fetch referral stats
+  const { stats: referralStats } = useReferralStats();
 
   // Create refs for state variables used in performSearch but shouldn't trigger its recreation
   const errorRef = useRef(error);
@@ -72,6 +80,7 @@ function SearchPageContent() {
 
       setLoading(true);
       setError(null);
+      setShowQuotaLimitError(false);
       setResults([]);
       setThinkingSteps([]);
 
@@ -92,20 +101,8 @@ function SearchPageContent() {
       }
 
       if (!canSearch) {
-        // --- Handle quota limit error more gracefully ---
-        let displayError =
-          quotaErrorRef.current ||
-          "Search limit reached or quota could not be updated. Please check your usage.";
-        // Check if the error is specifically about the limit
-        if (
-          quotaErrorRef.current &&
-          /limit reached/i.test(quotaErrorRef.current)
-        ) {
-          displayError =
-            "You have reached your monthly search limit. Please upgrade or wait until the quota resets.";
-        }
-        setError(displayError);
-        // --- End graceful handling ---
+        // Instead of setting generic error, show the specific quota limit component
+        setShowQuotaLimitError(true);
         setLoading(false);
         return;
       }
@@ -264,19 +261,11 @@ function SearchPageContent() {
             initialQuery={query}
             onSearch={performSearch}
           />
-          {/* --- Add Quota Indicator --- */}
-          <div className="text-right text-xs text-gray-500 dark:text-gray-400 mb-4 pr-1">
-            {quotaLoading ? (
-              <span>Loading quota...</span>
-            ) : quota ? (
-              <span>
-                Searches used: {quota.searches_this_month} /
-                {quota.monthly_search_limit}
-              </span>
-            ) : (
-              <span>Quota N/A</span>
-            )}
-          </div>
+          {/* --- Use Quota Indicator Component --- */}
+          <QuotaIndicator
+            isLoading={quotaLoading}
+            quota={quota}
+          />
           {/* --- End Quota Indicator --- */}
 
           {status === "unauthenticated" ? (
@@ -288,7 +277,11 @@ function SearchPageContent() {
                 <ThinkingProcess thinkingSteps={thinkingSteps} />
               )}
 
-              {loading ? (
+              {showQuotaLimitError ? (
+                <QuotaLimitError
+                  referralCode={referralStats?.referralCode || null}
+                />
+              ) : loading ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin h-8 w-8 border-2 border-blue-500 rounded-full border-t-transparent"></div>
                 </div>
