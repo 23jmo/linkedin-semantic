@@ -61,37 +61,46 @@ export function useSearchLimits(): UseSearchLimitsReturn {
    * Increments the usage count
    * Returns true if successful, false if limit reached or error
    */
-  const incrementUsage = async (): Promise<boolean> => {
+  const incrementUsage = useCallback(async (): Promise<boolean> => {
+    if (limitReached) {
+      return false;
+    }
+
     try {
       setError(null);
       const response = await fetch("/api/quotas/search", {
         method: "POST",
       });
 
-      const data = (await response.json()) as QuotaResponse;
+      const data = (await response.json().catch(() => ({}))) as QuotaResponse;
 
       setQuota(data.quota);
       setLimitReached(data.limitReached);
-      setError(data.error);
+      setError(data.error || null);
 
       if (!response.ok || data.error) {
+        if (response.status === 403 && data.limitReached) {
+          return false;
+        }
         console.error(
-          "Failed to increment usage:",
+          "Failed to increment usage 1:",
           data.error || response.statusText
         );
-        setError(data.error || "Failed to update quota usage");
+        if (!data.error) {
+          setError("Failed to update quota usage");
+        }
         return false;
       }
 
       return !data.limitReached;
     } catch (err) {
-      console.error("Failed to increment usage:", err);
+      console.error("Failed to increment usage 2:", err);
       setError(
         err instanceof Error ? err.message : "Failed to update quota usage"
       );
       return false;
     }
-  };
+  }, []);
 
   // Load quota on initial mount
   useEffect(() => {

@@ -10,11 +10,13 @@ import { useProfileCount } from "@/hooks/useProfileCount";
 interface HomeContentProps {
   isAuthenticated: boolean;
   suggestions: string[];
+  onSearch: (query: string) => void;
 }
 
 export default function HomeContent({
   isAuthenticated,
   suggestions,
+  onSearch,
 }: HomeContentProps) {
   const { resolvedTheme } = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -82,7 +84,7 @@ export default function HomeContent({
           Profiles
         </h1>
         <div className="mb-8 w-full">
-          <SearchBox />
+          <SearchBox onSearch={onSearch} />
         </div>
 
         {isAuthenticated ? (
@@ -107,6 +109,7 @@ export default function HomeContent({
                     <SuggestionBox
                       key={index}
                       suggestion={suggestion}
+                      onClick={onSearch}
                     />
                   ))}
                 </div>

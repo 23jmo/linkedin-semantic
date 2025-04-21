@@ -12,6 +12,8 @@ import EmailQuotaDisplay from "@/components/EmailQuotaDisplay";
 import { Card } from "@/components/ui/card";
 import { ToastWrapper } from "@/components/providers/ToastWrapper";
 import { toast } from "sonner";
+import QuotaDisplay from "@/components/QuotaDisplay";
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -26,6 +28,9 @@ export default function DashboardPage() {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [isLoadingCode, setIsLoadingCode] = useState(true);
   const [referralLink, setReferralLink] = useState("");
+  const [emailUsage, setEmailUsage] = useState(0);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     // console.log("DashboardPage - Session status:", status);
@@ -86,6 +91,29 @@ export default function DashboardPage() {
       setReferralLink(`${window.location.origin}/ref=${referralCode}`);
     }
   }, [referralCode]);
+
+  useEffect(() => {
+    const fetchEmailUsage = async () => {
+      if (status === "authenticated" && !isLoading) {
+        setIsCheckingEmail(true);
+        try {
+          const response = await fetch("/api/quotas/email-gen");
+          const data = await response.json();
+          if (response.ok) {
+            setEmailUsage(data.usage);
+            setEmailError("");
+          }
+        } catch (error) {
+          console.error("Failed to fetch email usage:", error);
+          setEmailError("Failed to fetch email usage");
+        } finally {
+          setIsCheckingEmail(false);
+        }
+      }
+    };
+
+    fetchEmailUsage();
+  }, [status, isLoading]);
 
   const handleDeleteProfile = async () => {
     if (!session?.user?.id) return;
@@ -172,13 +200,24 @@ export default function DashboardPage() {
             </div>
           </Card>
 
-          {/* Email Generation Quota Card */}
-          <EmailQuotaDisplay
-            usage={usage}
-            isLoading={isChecking}
-            quotaError={quotaError}
-            variant="dashboard"
-          />
+          {/* --- Corrected Quota Display Grid --- */}
+          <div className="grid gap-8 md:grid-cols-2 mb-6">
+            {/* Email Quota Card - Use EmailQuotaDisplay with props from useEmailLimits */}
+            <div>
+              <EmailQuotaDisplay
+                usage={usage}
+                isLoading={isChecking}
+                quotaError={quotaError}
+                variant="dashboard"
+              />
+            </div>
+
+            {/* Search Quota Card - Use QuotaDisplay (handles search internally) */}
+            <div>
+              <QuotaDisplay />
+            </div>
+          </div>
+          {/* --- End Quota Display Grid --- */}
 
           <div
             className={`${

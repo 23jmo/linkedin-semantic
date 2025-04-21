@@ -32,7 +32,12 @@ function SearchPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   // Get quota management functions and state
-  const { incrementUsage, error: quotaError } = useSearchLimits();
+  const {
+    incrementUsage,
+    error: quotaError,
+    quota,
+    isLoading: quotaLoading,
+  } = useSearchLimits();
 
   // State for selected profiles
   const [selectedProfiles, setSelectedProfiles] = useState<ProfileFrontend[]>(
@@ -69,11 +74,17 @@ function SearchPageContent() {
       }
 
       if (!canSearch) {
-        // IncrementUsage returned false - likely limit reached or API returned error
-        setError(
+        // --- Handle quota limit error more gracefully ---
+        let displayError =
           quotaError ||
-            "Search limit reached or quota could not be updated. Please check your usage."
-        );
+          "Search limit reached or quota could not be updated. Please check your usage.";
+        // Check if the error is specifically about the limit
+        if (quotaError && /limit reached/i.test(quotaError)) {
+          displayError =
+            "You have reached your monthly search limit. Please upgrade or wait until the quota resets.";
+        }
+        setError(displayError);
+        // --- End graceful handling ---
         setLoading(false);
         return;
       }
@@ -177,7 +188,7 @@ function SearchPageContent() {
         setLoading(false);
       }
     },
-    [incrementUsage, quotaError]
+    [incrementUsage]
   );
 
   useEffect(() => {
@@ -188,13 +199,14 @@ function SearchPageContent() {
         // Don't automatically search on load if quota is potentially an issue
         // Let user initiate via button or re-search
         // performSearch(q); // Consider removing auto-search on load
+        performSearch(q);
       } else {
         setError(null); // Clear errors if user logs out/in
         setResults([]);
         setThinkingSteps([]);
       }
     }
-  }, [searchParams, status]);
+  }, [searchParams, status, performSearch]);
 
   // Handle profile selection
   const handleProfileSelect = (profile: ProfileFrontend, selected: boolean) => {
@@ -230,6 +242,20 @@ function SearchPageContent() {
             initialQuery={query}
             onSearch={performSearch}
           />
+          {/* --- Add Quota Indicator --- */}
+          <div className="text-right text-xs text-gray-500 dark:text-gray-400 mb-4 pr-1">
+            {quotaLoading ? (
+              <span>Loading quota...</span>
+            ) : quota ? (
+              <span>
+                Searches used: {quota.searches_this_month} /
+                {quota.monthly_search_limit}
+              </span>
+            ) : (
+              <span>Quota N/A</span>
+            )}
+          </div>
+          {/* --- End Quota Indicator --- */}
 
           {status === "unauthenticated" ? (
             <UnauthenticatedSearchWarning />

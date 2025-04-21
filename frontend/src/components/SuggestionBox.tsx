@@ -1,23 +1,24 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/theme-context";
 
 interface SuggestionBoxProps {
   suggestion: string;
+  onClick: (suggestion: string) => void;
 }
 
-export default function SuggestionBox({ suggestion }: SuggestionBoxProps) {
-  const router = useRouter();
+export default function SuggestionBox({
+  suggestion,
+  onClick,
+}: SuggestionBoxProps) {
   const { resolvedTheme } = useTheme();
-
-  const handleSuggestionClick = () => {
-    router.push(`/search?q=${encodeURIComponent(suggestion)}`);
-  };
 
   return (
     <button
-      onClick={handleSuggestionClick}
+      onClick={() => {
+        console.log("SuggestionBox clicked:", suggestion);
+        onClick(suggestion);
+      }}
       className={`${
         resolvedTheme === "light"
           ? "bg-white text-gray-700 hover:bg-gray-50"
@@ -34,7 +35,7 @@ export default function SuggestionBox({ suggestion }: SuggestionBoxProps) {
           resolvedTheme === "light"
             ? "from-transparent via-white/40 to-transparent"
             : "from-transparent via-gray-600/30 to-transparent"
-        } -translate-x-full hover:translate-x-full transition-transform duration-700 ease-in-out shine-effect`}
+        } -translate-x-full hover:translate-x-full transition-transform duration-700 ease-in-out shine-effect pointer-events-none`}
       ></span>
     </button>
   );

@@ -10,6 +10,14 @@ export default function HomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Define the search handler for the home page
+  const handleHomeSearch = (query: string) => {
+    console.log("handleHomeSearch called with query:", query);
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    }
+  };
+
   useEffect(() => {
     console.log("Session state:", {
       status,
@@ -63,6 +71,7 @@ export default function HomePage() {
         <HomeContent
           isAuthenticated={status === "authenticated"}
           suggestions={suggestions}
+          onSearch={handleHomeSearch}
         />
         <ScrollingProfiles className="md:block hidden fixed bottom-0 left-0 right-0 w-full" />
       </div>

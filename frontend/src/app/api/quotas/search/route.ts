@@ -223,20 +223,36 @@ export async function POST() {
     if (
       currentDbData.searches_this_month >= currentDbData.monthly_search_limit
     ) {
-      const quotaResponseData: SearchLimitsData = {
-        user_id: currentDbData.user_id,
-        searches_this_month: currentDbData.searches_this_month,
-        monthly_search_limit: currentDbData.monthly_search_limit,
-        last_reset_date: currentDbData.last_reset_date,
-      };
-      return NextResponse.json(
-        {
-          quota: quotaResponseData,
-          limitReached: true,
-          error: "Search limit reached",
-        } as QuotaResponse,
-        { status: 403 } // Use 403 Forbidden for limit reached
+      console.log(
+        `---> User ${userId} search limit reached (${currentDbData.searches_this_month}/${currentDbData.monthly_search_limit}). Preparing 403 response.`
       );
+      try {
+        const quotaResponseData: SearchLimitsData = {
+          user_id: currentDbData.user_id,
+          searches_this_month: currentDbData.searches_this_month,
+          monthly_search_limit: currentDbData.monthly_search_limit,
+          last_reset_date: currentDbData.last_reset_date,
+        };
+        console.log("---> Constructed quotaResponseData:", quotaResponseData); // Log the object
+
+        return NextResponse.json(
+          {
+            quota: quotaResponseData,
+            limitReached: true,
+            error: "Search limit reached",
+          } as QuotaResponse,
+          { status: 403 }
+        );
+      } catch (constructionError) {
+        console.error(
+          "---> ERROR constructing/returning 403 response:",
+          constructionError
+        );
+        return NextResponse.json(
+          { error: "Internal server error during quota limit check" },
+          { status: 500 }
+        );
+      }
     }
 
     // Increment the used count using Supabase atomic increment function (RPC)
