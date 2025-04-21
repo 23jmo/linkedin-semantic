@@ -15,7 +15,7 @@ import SearchControls from "@/components/SearchControls";
 import SearchResults from "@/components/SearchResults";
 import QuotaIndicator from "@/components/QuotaIndicator";
 import QuotaLimitError from "@/components/QuotaLimitError";
-import { ProfileFrontend } from "../../types/types";
+import { ProfileFrontend, SearchLimits } from "../../types/types";
 import { SearchResult } from "../../types/types";
 
 export default function SearchPage() {
@@ -264,7 +264,7 @@ function SearchPageContent() {
           {/* --- Use Quota Indicator Component --- */}
           <QuotaIndicator
             isLoading={quotaLoading}
-            quota={quota}
+            quota={quota as SearchLimits | null}
           />
           {/* --- End Quota Indicator --- */}
 

@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { SearchLimitsData } from "@/types/types"; // Assuming types are defined here or adjust path
+import { SearchLimits } from "@/types/types"; // Assuming types are defined here or adjust path
 
 interface QuotaIndicatorProps {
   isLoading: boolean;
-  quota: SearchLimitsData | null;
+  quota: SearchLimits | null;
   // quotaError: string | null; // Optional: Pass error if needed for display
 }
 

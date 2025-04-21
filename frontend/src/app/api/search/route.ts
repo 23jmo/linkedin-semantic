@@ -315,7 +315,7 @@ async function get_relevant_sections(query: string): Promise<string[]> {
   ];
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini-2024-07-18",
     response_format: { type: "json_object" },
     messages: [
       {
@@ -366,7 +366,7 @@ async function get_relevant_sections(query: string): Promise<string[]> {
 
 async function get_traits(query: string): Promise<string[]> {
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini-2024-07-18",
     response_format: { type: "json_object" },
     messages: [
       {
@@ -415,7 +415,7 @@ async function get_key_phrases(
   const possible_sections = relevant_sections;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini-2024-07-18",
     response_format: { type: "json_object" },
     messages: [
       {
@@ -477,7 +477,7 @@ async function generate_sql_query(
   key_phrases: KeyPhrase[]
 ): Promise<string> {
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini-2024-07-18",
     response_format: { type: "json_object" },
     messages: [
       {
@@ -604,7 +604,7 @@ async function score_results(
 
     // Create the prompt for GPT
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini-2024-07-18",
       response_format: { type: "json_object" },
       messages: [
         {
