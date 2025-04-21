@@ -7,10 +7,12 @@ import { useTheme } from "@/lib/theme-context";
 
 interface SearchBoxProps {
   initialQuery?: string;
+  onSearch: (query: string) => void;
 }
 
 export default function SearchBox({
   initialQuery = "",
+  onSearch,
 }: SearchBoxProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
@@ -25,7 +27,7 @@ export default function SearchBox({
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}`);
+      onSearch(query);
     }
   };
 

@@ -334,6 +334,29 @@ export const EmailGenerationQuotaRequestSchema = z.object({
   user_id: z.string(),
 });
 
+// Schema for the search_limits table data based on the provided image
+export const SearchLimitsSchema = z.object({
+  user_id: z.string().uuid(),
+  searches_this_month: z.number().int(),
+  monthly_search_limit: z.number().int(),
+  last_reset_date: z.string().datetime({ offset: true }),
+  created_at: z.string().datetime({ offset: true }),
+  updated_at: z.string().datetime({ offset: true }),
+});
+
+// Schema for the search_limits table data
+// export const SearchQuotaSchema = z.object({
+//   user_id: z.string(),
+//   searches_this_month: z.number(),
+//   monthly_search_limit: z.number(),
+//   last_reset_date: z.string(), // Assuming datetime string from Supabase
+//   updated_at: z.string(), // Assuming datetime string from Supabase
+//   created_at: z.string(), // Assuming datetime string from Supabase
+// });
+
+// Type derived from the schema
+// export type SearchQuota = z.infer<typeof SearchQuotaSchema>;
+
 // TypeScript types derived from schemas
 export type CheckUserExistsRequest = z.infer<
   typeof CheckUserExistsRequestSchema
@@ -360,6 +383,7 @@ export type GetLinkedInProfileResponse = z.infer<
   typeof GetLinkedInProfileResponseSchema
 >;
 export type EmailGenerationQuota = z.infer<typeof EmailGenerationQuotaSchema>;
+export type SearchLimits = z.infer<typeof SearchLimitsSchema>; // Derived type
 
 // Export new types
 export type Experience = z.infer<typeof ExperienceSchema>;

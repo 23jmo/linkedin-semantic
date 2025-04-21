@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useSearchLimits } from "@/hooks/useSearchLimits";
 import Layout from "@/components/Layout";
 import UnauthenticatedSearchWarning from "@/components/UnauthenticatedSearchWarning";
 import SelectionChip from "@/components/SelectionChip";
@@ -30,6 +31,9 @@ function SearchPageContent() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get quota management functions and state
+  const { incrementUsage, error: quotaError } = useSearchLimits();
+
   // State for selected profiles
   const [selectedProfiles, setSelectedProfiles] = useState<ProfileFrontend[]>(
     []
@@ -39,119 +43,158 @@ function SearchPageContent() {
   // Thinking step states
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
 
-  const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+  const performSearch = useCallback(
+    async (searchQuery: string) => {
+      if (!searchQuery.trim()) return;
 
-    setLoading(true);
-    setError(null);
-    setResults([]);
-    setThinkingSteps([]);
+      setLoading(true);
+      setError(null);
+      setResults([]);
+      setThinkingSteps([]);
 
-    try {
-      // Create a new AbortController for this search
-      const controller = new AbortController();
-      const signal = controller.signal;
-
-      // Make the fetch request with streaming
-      const response = await fetch("/api/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: searchQuery,
-        }),
-        signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // --- Increment Usage and Check Limit ---
+      let canSearch = false;
+      try {
+        canSearch = await incrementUsage();
+      } catch (incError) {
+        // Error during increment call itself (network etc.)
+        console.error("Error calling incrementUsage:", incError);
+        setError(
+          `Failed to check search quota: ${
+            incError instanceof Error ? incError.message : String(incError)
+          }`
+        );
+        setLoading(false);
+        return;
       }
 
-      // Create a reader from the response body stream
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error("Failed to get stream reader");
+      if (!canSearch) {
+        // IncrementUsage returned false - likely limit reached or API returned error
+        setError(
+          quotaError ||
+            "Search limit reached or quota could not be updated. Please check your usage."
+        );
+        setLoading(false);
+        return;
       }
+      // --- End Increment Usage Check ---
 
-      // Create a TextDecoder to decode the chunks
-      const decoder = new TextDecoder();
-      let buffer = "";
+      // --- Proceed with Search Fetch ---
+      try {
+        const controller = new AbortController();
+        const signal = controller.signal;
 
-      // Process the stream
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        const response = await fetch("/api/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+          }),
+          signal,
+        });
 
-        // Decode the chunk and add it to the buffer
-        buffer += decoder.decode(value, { stream: true });
+        if (!response.ok) {
+          // Handle errors specifically from the search API
+          let errorMsg = `Search failed: ${response.status} ${response.statusText}`;
+          try {
+            const errData = await response.json();
+            if (errData.error) {
+              errorMsg = `Search failed: ${errData.error}`;
+            }
+          } catch (e) {
+            // Ignore if response body isn't JSON
+          }
+          throw new Error(errorMsg);
+        }
 
-        // Process complete events from the buffer
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() || ""; // Keep the last incomplete chunk in buffer
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("Failed to get stream reader");
+        }
 
-        for (const line of lines) {
-          if (!line.trim()) continue;
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-          // Parse the event and data
-          const eventMatch = line.match(/^event: (.+)$/m);
-          const dataMatch = line.match(/^data: (.+)$/m);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-          if (!eventMatch || !dataMatch) continue;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
 
-          const event = eventMatch[1];
-          const data = JSON.parse(dataMatch[1]);
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const eventMatch = line.match(/^event: (.+)$/m);
+            const dataMatch = line.match(/^data: (.+)$/m);
+            if (!eventMatch || !dataMatch) continue;
+            const event = eventMatch[1];
+            const data = JSON.parse(dataMatch[1]);
 
-          // Process the event
-          switch (event) {
-            case "step":
-              if (data.name && data.status) {
-                setThinkingSteps((prev) => {
-                  // Check if this step already exists
-                  const existingIndex = prev.findIndex(
-                    (step) => step.name === data.name
-                  );
-
-                  if (existingIndex >= 0) {
-                    // Update existing step
-                    const newSteps = [...prev];
-                    newSteps[existingIndex] = data;
-                    return newSteps;
-                  } else {
-                    // Add new step
-                    return [...prev, data];
-                  }
-                });
-              }
-              break;
-            case "results":
-              setResults(data);
-              break;
-            case "error":
-              setError(data.message);
-              break;
-            case "done":
-              setLoading(false);
-              break;
+            switch (event) {
+              case "step":
+                if (data.name && data.status) {
+                  setThinkingSteps((prev) => {
+                    const existingIndex = prev.findIndex(
+                      (step) => step.name === data.name
+                    );
+                    if (existingIndex >= 0) {
+                      const newSteps = [...prev];
+                      newSteps[existingIndex] = data;
+                      return newSteps;
+                    } else {
+                      return [...prev, data];
+                    }
+                  });
+                }
+                break;
+              case "results":
+                setResults(data);
+                break;
+              case "error":
+                setError(data.message); // Error from the backend search stream
+                break;
+              case "done":
+                setLoading(false);
+                break;
+            }
           }
         }
+        // If the loop finished without setting loading to false (no 'done' event)
+        if (loading) setLoading(false);
+      } catch (err) {
+        console.error("Search fetch error:", err);
+        // Set error state only if it hasn't been set by the stream
+        if (!error) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "An unexpected error occurred during the search."
+          );
+        }
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Search error:", err);
-      setError("An error occurred while searching. Please try again.");
-      setLoading(false);
-    }
-  }, []);
+    },
+    [incrementUsage, quotaError]
+  );
 
   useEffect(() => {
     const q = searchParams.get("q");
     if (q) {
       setQuery(q);
       if (status === "authenticated") {
-        performSearch(q);
+        // Don't automatically search on load if quota is potentially an issue
+        // Let user initiate via button or re-search
+        // performSearch(q); // Consider removing auto-search on load
+      } else {
+        setError(null); // Clear errors if user logs out/in
+        setResults([]);
+        setThinkingSteps([]);
       }
     }
-  }, [searchParams, status, performSearch]);
+  }, [searchParams, status]);
 
   // Handle profile selection
   const handleProfileSelect = (profile: ProfileFrontend, selected: boolean) => {
@@ -183,7 +226,10 @@ function SearchPageContent() {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Search Results</h1>
 
-          <SearchControls initialQuery={query} />
+          <SearchControls
+            initialQuery={query}
+            onSearch={performSearch}
+          />
 
           {status === "unauthenticated" ? (
             <UnauthenticatedSearchWarning />
