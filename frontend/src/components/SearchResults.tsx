@@ -2,8 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ProfileFrontend, TraitScore } from "../types/types";
 import { SearchResult } from "../types/types";
 import ProfileCard from "./ProfileCard";
-import { FaLinkedin, FaCheck } from "react-icons/fa";
-import Image from "next/image";
+import { FaLinkedin } from "react-icons/fa";
 import ProfileImage from "./ProfileImage";
 import { useTheme } from "@/lib/theme-context";
 
@@ -168,30 +167,6 @@ function TraitScoreCircle({ traitScores }: { traitScores?: TraitScore[] }) {
   );
 }
 
-// TraitEvidence Component
-function TraitEvidence({ traitScores }: { traitScores?: TraitScore[] }) {
-  if (!traitScores || traitScores.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-      {traitScores.map(
-        (trait, index) =>
-          trait.evidence && (
-            <div
-              key={index}
-              className="mb-1"
-            >
-              <span className="font-medium">{trait.trait}:</span>{" "}
-              {trait.evidence}
-            </div>
-          )
-      )}
-    </div>
-  );
-}
-
 export default function SearchResults({
   results,
   query,
@@ -284,21 +259,24 @@ export default function SearchResults({
     };
   };
 
-  // *** Restore proper estimateRowHeight ***
-  const estimateRowHeight = (index: number) => {
-    let height = 90;
-    const result = results[index];
-    if (result?.trait_scores && result.trait_scores.length > 0) {
-      height += Math.max(10, result.trait_scores.length * 28);
-      const hasEvidence = result.trait_scores.some(
-        (score) => score.evidence && score.evidence.length > 0
-      );
-      if (hasEvidence) {
-        height += 20;
+  // *** Wrap estimateRowHeight in useCallback ***
+  const estimateRowHeight = useCallback(
+    (index: number) => {
+      let height = 90;
+      const result = results[index]; // Depends on results prop
+      if (result?.trait_scores && result.trait_scores.length > 0) {
+        height += Math.max(10, result.trait_scores.length * 28);
+        const hasEvidence = result.trait_scores.some(
+          (score) => score.evidence && score.evidence.length > 0
+        );
+        if (hasEvidence) {
+          height += 20;
+        }
       }
-    }
-    return height;
-  };
+      return height;
+    },
+    [results]
+  ); // Add results as dependency
 
   // Calculate which items are visible based on scroll position
   const updateVisibleItems = useCallback(() => {
@@ -472,7 +450,7 @@ export default function SearchResults({
 
       {/* Visible items */}
       <div className="bg-white dark:bg-gray-900">
-        {visibleResults.map((result, index) => {
+        {visibleResults.map((result) => {
           const profile = convertToProfileFrontend(result);
           const isSelected = selectedProfiles.some((p) => p.id === profile.id);
 

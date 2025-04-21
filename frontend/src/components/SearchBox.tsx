@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { FaSearch } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
 
@@ -14,7 +13,6 @@ export default function SearchBox({
   initialQuery = "",
   onSearch,
 }: SearchBoxProps) {
-  const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);

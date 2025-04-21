@@ -4,27 +4,19 @@ import {
   SearchQuerySchema,
   SearchAndRankResultSchema,
   TransformedSearchResultsSchema,
-  SearchAndRankResult,
   SearchAndRankResultRow,
   TransformedSearchResult,
   ScoredSearchResults,
   ScoredSearchResultsSchema,
   TraitScore,
 } from "@/types/types";
-import { generateEmbedding } from "@/lib/server/embeddings";
-import { generateHydeChunks } from "@/lib/server/hyde";
 import type { Database } from "@/types/linkedin-profile.types";
-import { ProfileChunkType } from "@/types/profile-chunks";
-import { RawProfileDataSchema } from "@/types/types";
-import { z } from "zod";
 
 import OpenAI from "openai";
 
-import { RawProfile } from "@/types/types";
 import { query_prompt } from "./query_prompt";
 import { relevant_sections_prompt } from "./relevant_sections_prompt";
 import { traits_prompt } from "./traits_prompt";
-import { filters_prompt } from "./filters_prompt";
 import { key_phrases_prompt } from "./key_phrases_prompt";
 import { score_results_prompt } from "./score_results_prompt";
 
@@ -42,59 +34,16 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// --- Levenshtein Distance Function ---
-// Calculates the minimum number of single-character edits (insertions, deletions, or substitutions)
-// required to change one word into the other.
-function levenshteinDistance(s1: string, s2: string): number {
-  s1 = s1.toLowerCase();
-  s2 = s2.toLowerCase();
-
-  const costs = new Array(s2.length + 1);
-  for (let i = 0; i <= s1.length; i++) {
-    let lastValue = i;
-    for (let j = 0; j <= s2.length; j++) {
-      if (i === 0) {
-        costs[j] = j;
-      } else {
-        if (j > 0) {
-          let newValue = costs[j - 1];
-          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-          }
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-    }
-    if (i > 0) {
-      costs[s2.length] = lastValue;
-    }
-  }
-  return costs[s2.length];
-}
-
-// Function to check if a keyword fuzzily matches any word in a text
-function fuzzyCheck(
-  text: string,
-  keyword: string,
-  threshold: number = 2
-): boolean {
-  if (!text || !keyword) return false;
-  const words = text.toLowerCase().split(/\\s+/); // Split text into words
-  return words.some((word) => levenshteinDistance(word, keyword) <= threshold);
-}
-// --- End Levenshtein Distance ---
-
 // Extract the return type from the Database type
 type SearchProfilesByEmbeddingResult =
   Database["linkedin_profiles"]["Functions"]["search_profiles_by_embedding"]["Returns"][number];
 
 // Define the structure for profile scores map value
-interface ProfileScoreInfo {
-  profile: SearchProfilesByEmbeddingResult;
-  totalScore: number;
-  count: number;
-}
+// interface ProfileScoreInfo {
+//   profile: SearchProfilesByEmbeddingResult;
+//   totalScore: number;
+//   count: number;
+// }
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -167,7 +116,7 @@ async function advanced_search(
 
   try {
     // Helper function to write event to the stream
-    const writeEvent = async (event: string, data: any) => {
+    const writeEvent = async (event: string, data: unknown) => {
       if (writer) {
         await writer.write(
           new TextEncoder().encode(
@@ -235,7 +184,7 @@ async function advanced_search(
     // Validate the raw data from Supabase RPC using Zod
     const validatedRawData = SearchAndRankResultSchema.safeParse(result.data);
 
-    console.log("validatedRawData:", validatedRawData);
+    // console.log("validatedRawData:", validatedRawData);
 
     if (!validatedRawData.success) {
       console.error(
@@ -252,7 +201,7 @@ async function advanced_search(
     // Now use validatedRawData.data for transformation
     const rawResults = validatedRawData.data;
 
-    console.log("rawResults:", rawResults);
+    // console.log("rawResults:", rawResults);
 
     // Transform results to match SearchProfilesByEmbeddingResult type
     const transformedResultsData = rawResults.map(
@@ -546,7 +495,7 @@ async function generate_sql_query(
     temperature: 0.2,
   });
 
-  console.log("complete prompt:" + response.choices[0].message.content);
+  // console.log("complete prompt:" + response.choices[0].message.content);
 
   try {
     const content = response.choices[0].message.content;
@@ -595,7 +544,7 @@ async function score_results(
     // Extract relevant info from profiles for scoring
     const profilesForScoring = profiles.map((profile) => {
       // Create object with only relevant data
-      const profileData: Record<string, any> = {
+      const profileData: Record<string, unknown> = {
         id: profile.id,
       };
 
@@ -765,7 +714,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { query, match_limit, match_threshold } = result.data;
+    const { query } = result.data;
 
     // Create a streaming response
     const stream = new TransformStream();

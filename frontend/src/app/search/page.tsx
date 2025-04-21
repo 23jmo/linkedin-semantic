@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useSearchLimits } from "@/hooks/useSearchLimits";
@@ -39,6 +39,24 @@ function SearchPageContent() {
     isLoading: quotaLoading,
   } = useSearchLimits();
 
+  // Create refs for state variables used in performSearch but shouldn't trigger its recreation
+  const errorRef = useRef(error);
+  const loadingRef = useRef(loading);
+  const quotaErrorRef = useRef(quotaError);
+
+  // Update refs when state changes
+  useEffect(() => {
+    errorRef.current = error;
+  }, [error]);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
+
+  useEffect(() => {
+    quotaErrorRef.current = quotaError;
+  }, [quotaError]);
+
   // State for selected profiles
   const [selectedProfiles, setSelectedProfiles] = useState<ProfileFrontend[]>(
     []
@@ -76,10 +94,13 @@ function SearchPageContent() {
       if (!canSearch) {
         // --- Handle quota limit error more gracefully ---
         let displayError =
-          quotaError ||
+          quotaErrorRef.current ||
           "Search limit reached or quota could not be updated. Please check your usage.";
         // Check if the error is specifically about the limit
-        if (quotaError && /limit reached/i.test(quotaError)) {
+        if (
+          quotaErrorRef.current &&
+          /limit reached/i.test(quotaErrorRef.current)
+        ) {
           displayError =
             "You have reached your monthly search limit. Please upgrade or wait until the quota resets.";
         }
@@ -115,6 +136,7 @@ function SearchPageContent() {
               errorMsg = `Search failed: ${errData.error}`;
             }
           } catch (e) {
+            console.error("Search fetch error:", e);
             // Ignore if response body isn't JSON
           }
           throw new Error(errorMsg);
@@ -174,11 +196,11 @@ function SearchPageContent() {
           }
         }
         // If the loop finished without setting loading to false (no 'done' event)
-        if (loading) setLoading(false);
+        if (loadingRef.current) setLoading(false);
       } catch (err) {
         console.error("Search fetch error:", err);
         // Set error state only if it hasn't been set by the stream
-        if (!error) {
+        if (!errorRef.current) {
           setError(
             err instanceof Error
               ? err.message

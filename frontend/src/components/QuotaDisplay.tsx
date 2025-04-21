@@ -39,7 +39,7 @@ export function QuotaDisplay() {
         <InfoCircledIcon className="h-4 w-4 mr-2" />
         <AlertTitle>No quota information available</AlertTitle>
         <AlertDescription>
-          Your search quota information couldn't be loaded.
+          Your search quota information couldn&apos;t be loaded.
           <button
             onClick={() => refreshQuota()}
             className="underline ml-2"
@@ -104,9 +104,8 @@ export function QuotaDisplay() {
         >
           <AlertTitle>Search Limit Reached</AlertTitle>
           <AlertDescription>
-            You've reached your search quota limit for this period. Your quota
-            will reset on{" "}
-            {resetDate ? formatDate(resetDate) : "the next billing cycle"}.
+            You&apos;ve reached your search quota limit for this period. Your
+            quota will reset on {resetDate ? formatDate(resetDate) : "the next billing cycle"}.
           </AlertDescription>
         </Alert>
       )}

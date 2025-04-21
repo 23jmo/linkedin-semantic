@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { QuotaResponse, SearchLimitsData } from "@/types/quota";
-import { canPerformSearch } from "@/lib/search-quota";
 
 interface UseSearchLimitsReturn {
   isLoading: boolean;
@@ -100,7 +99,7 @@ export function useSearchLimits(): UseSearchLimitsReturn {
       );
       return false;
     }
-  }, []);
+  }, [limitReached]);
 
   // Load quota on initial mount
   useEffect(() => {

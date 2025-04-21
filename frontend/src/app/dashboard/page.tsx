@@ -28,9 +28,9 @@ export default function DashboardPage() {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [isLoadingCode, setIsLoadingCode] = useState(true);
   const [referralLink, setReferralLink] = useState("");
-  const [emailUsage, setEmailUsage] = useState(0);
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [emailError, setEmailError] = useState("");
+  // const [emailUsage, setEmailUsage] = useState(0);
+  // const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  // const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     // console.log("DashboardPage - Session status:", status);
@@ -95,19 +95,19 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchEmailUsage = async () => {
       if (status === "authenticated" && !isLoading) {
-        setIsCheckingEmail(true);
+        // setIsCheckingEmail(true);
         try {
           const response = await fetch("/api/quotas/email-gen");
-          const data = await response.json();
+          // const data = await response.json();
           if (response.ok) {
-            setEmailUsage(data.usage);
-            setEmailError("");
+            // setEmailUsage(data.usage);
+            // setEmailError("");
           }
         } catch (error) {
           console.error("Failed to fetch email usage:", error);
-          setEmailError("Failed to fetch email usage");
+          // setEmailError("Failed to fetch email usage");
         } finally {
-          setIsCheckingEmail(false);
+          // setIsCheckingEmail(false);
         }
       }
     };

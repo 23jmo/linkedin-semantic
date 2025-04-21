@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/lib/theme-context";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import SearchBox from "@/components/SearchBox";
 import SuggestionBox from "@/components/SuggestionBox";
 import AuthPrompt from "@/components/AuthPrompt";

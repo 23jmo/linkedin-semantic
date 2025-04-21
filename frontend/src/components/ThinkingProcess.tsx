@@ -6,8 +6,15 @@ import styles from "../app/search/shimmer.module.css";
 export interface ThinkingStep {
   name: string;
   status: "started" | "completed" | "error";
-  data?: any;
+  data?: unknown;
 }
+
+// --- Add KeyPhrase interface definition ---
+interface KeyPhrase {
+  key_phrase: string;
+  relevant_section: string;
+}
+// --- End KeyPhrase definition ---
 
 interface ThinkingProcessProps {
   thinkingSteps: ThinkingStep[];
@@ -73,51 +80,71 @@ export default function ThinkingProcess({
 }: ThinkingProcessProps) {
   const [showThinking, setShowThinking] =
     useState<boolean>(initialShowThinking);
-  const [progressPercentage, setProgressPercentage] = useState<number>(0);
+  // const [progressPercentage, setProgressPercentage] = useState<number>(0);
 
   // Calculate the progress based on completed steps
   useEffect(() => {
     if (thinkingSteps.length === 0) {
-      setProgressPercentage(0);
+      // setProgressPercentage(0);
       return;
     }
 
     // Define the total number of possible steps
-    const totalSteps = 5; // relevant_sections, traits, key_phrases, sql_query, search_execution
+    // const totalSteps = 5; // relevant_sections, traits, key_phrases, sql_query, search_execution
 
-    // Count completed steps
-    const completedSteps = thinkingSteps.filter(
-      (step) => step.status === "completed"
-    ).length;
+    // // Count completed steps
+    // const completedSteps = thinkingSteps.filter(
+    //   (step) => step.status === "completed"
+    // ).length;
 
-    // Calculate progress percentage - include partial credit for started steps
-    const startedSteps = thinkingSteps.filter(
-      (step) => step.status === "started"
-    ).length;
-    const progress = ((completedSteps + startedSteps * 0.5) / totalSteps) * 100;
+    // // Calculate progress percentage - include partial credit for started steps
+    // const startedSteps = thinkingSteps.filter(
+    //   (step) => step.status === "started"
+    // ).length;
+    // // const progress = ((completedSteps + startedSteps * 0.5) / totalSteps) * 100;
 
-    setProgressPercentage(progress);
+    // setProgressPercentage(progress);
   }, [thinkingSteps]);
 
-  // Get completed steps data
-  const relevantSections =
-    thinkingSteps.find(
-      (step) => step.name === "relevant_sections" && step.status === "completed"
-    )?.data || [];
+  // --- Get completed steps data with type safety ---
+  const relevantSectionsData = thinkingSteps.find(
+    (step) => step.name === "relevant_sections" && step.status === "completed"
+  )?.data;
+  const relevantSections = Array.isArray(relevantSectionsData)
+    ? (relevantSectionsData as string[])
+    : [];
 
-  const traits =
-    thinkingSteps.find(
-      (step) => step.name === "traits" && step.status === "completed"
-    )?.data || [];
+  const traitsData = thinkingSteps.find(
+    (step) => step.name === "traits" && step.status === "completed"
+  )?.data;
+  const traits = Array.isArray(traitsData) ? (traitsData as string[]) : [];
 
-  const keyPhrases =
-    thinkingSteps.find(
-      (step) => step.name === "key_phrases" && step.status === "completed"
-    )?.data || [];
+  // Assuming KeyPhrase is imported or defined
+  const keyPhrasesData = thinkingSteps.find(
+    (step) => step.name === "key_phrases" && step.status === "completed"
+  )?.data;
+  const keyPhrases = Array.isArray(keyPhrasesData)
+    ? (keyPhrasesData as KeyPhrase[])
+    : [];
 
-  const sqlQuery = thinkingSteps.find(
+  const sqlQueryData = thinkingSteps.find(
     (step) => step.name === "sql_query" && step.status === "completed"
   )?.data;
+  // Ensure sqlQuery is a string for rendering
+  const sqlQuery = typeof sqlQueryData === "string" ? sqlQueryData : "";
+
+  const searchExecutionData = thinkingSteps.find(
+    (step) => step.name === "search_execution" && step.status === "completed"
+  )?.data;
+  // Safely access count property
+  const searchCount =
+    typeof searchExecutionData === "object" &&
+    searchExecutionData !== null &&
+    "count" in searchExecutionData &&
+    typeof searchExecutionData.count === "number"
+      ? searchExecutionData.count
+      : 0;
+  // --- End type-safe data extraction ---
 
   // Check if a specific step is in progress
   const isRelevantSectionsLoading = thinkingSteps.some(
@@ -166,11 +193,11 @@ export default function ThinkingProcess({
       (step.status === "started" || step.status === "completed")
   );
 
-  const hasSearchExecutionStarted = thinkingSteps.some(
-    (step) =>
-      step.name === "search_execution" &&
-      (step.status === "started" || step.status === "completed")
-  );
+  // const hasSearchExecutionStarted = thinkingSteps.some(
+  //   (step) =>
+  //     step.name === "search_execution" &&
+  //     (step.status === "started" || step.status === "completed")
+  // );
 
   const getLoadingText = () => {
     if (!activeLoadingStep) return "Thinking process";
@@ -567,13 +594,8 @@ export default function ThinkingProcess({
                       <path d="M5 13l4 4L19 7"></path>
                     </svg>
                     <span>
-                      Found{" "}
-                      {thinkingSteps.find(
-                        (step) =>
-                          step.name === "search_execution" &&
-                          step.status === "completed"
-                      )?.data?.count || 0}{" "}
-                      results
+                      Found {/* Use the safe searchCount variable */}
+                      {searchCount} results
                     </span>
                   </div>
                 </div>

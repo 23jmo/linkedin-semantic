@@ -12,16 +12,16 @@ export default function QuotasDashboardPage() {
   const {
     checkCanGenerateEmail,
     isChecking: isCheckingEmail,
-    usage: emailUsage,
-    quotaError: emailError,
+    // usage: emailUsage,
+    // quotaError: emailError,
   } = useEmailLimits();
 
   const {
     refreshQuota,
     isLoading: isCheckingSearch,
-    quota: searchUsage,
-    error: searchError,
-    limitReached: searchLimitReached,
+    // quota: searchUsage,
+    // error: searchError,
+    // limitReached: searchLimitReached,
   } = useSearchLimits();
 
   // Load all quotas on page mount

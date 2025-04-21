@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SearchLimitsData, QuotaResponse } from "@/types/quota";
 import { auth } from "@/auth";
