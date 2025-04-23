@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import Layout from "@/components/Layout";
 import HomeContent from "@/components/HomeContent";
 import ScrollingProfiles from "@/components/ScrollingProfiles";
+import Image from "next/image";
+
 export default function HomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -60,7 +62,14 @@ export default function HomePage() {
   ) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black-500"></div>
+        <Image
+            className="absolute"
+            src="/LogoBlack.png"
+            alt="Logo"
+            width={32}
+            height={32}
+          />
       </div>
     );
   }

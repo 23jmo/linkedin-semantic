@@ -6,12 +6,17 @@ import { useSession } from "next-auth/react";
 import { LinkedInUrlForm } from "@/components/LinkedInUrlForm";
 // import { WaitlistForm } from "@/components/LinkedInUrlForm";
 import { createUser } from "@/lib/api";
+import Image from "next/image";
 // import { addToWaitlist } from "@/lib/server/waitlist";
 
 export default function CompleteProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [createStatus, setCreateStatus] = useState("");
+  const [createStage, setCreateStage] = useState("");
+  const [error, setError] = useState("");
+  const [createDetails, setCreateDetails] = useState("");
 
   useEffect(() => {
     // If user is not authenticated, redirect to login
@@ -43,9 +48,22 @@ export default function CompleteProfilePage() {
 
     try {
       setIsLoading(true);
+      setCreateStatus("Starting profile creation...");
+      setError("");
+
+      // Progress callback for streaming updates
+      const handleProgress = (
+        message: string,
+        stage: string,
+        details?: string
+      ) => {
+        setCreateStatus(message);
+        setCreateStage(stage);
+        setCreateDetails(details || "");
+      };
 
       // Call the API to create the user with the provided LinkedIn URL
-      await createUser(session.user, session.user, linkedInUrl);
+      await createUser(session.user, session.user, linkedInUrl, handleProgress);
 
       // Force a session refresh to update the exists flag
       const event = new Event("visibilitychange");
@@ -56,16 +74,54 @@ export default function CompleteProfilePage() {
     } catch (error) {
       console.error("Error creating user:", error);
       setIsLoading(false);
-      throw error;
+      setError(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      );
     }
   };
 
-  if (isLoading) {
+  const renderLoadingState = () => {
+    if (!isLoading) return null;
+
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <Image
+          src="/LogoBlack.png"
+          alt="Logo"
+          width={32}
+          height={32}
+          className="absolute"
+        />
+
+        {createStatus && (
+          <div className="text-center max-w-md mx-auto">
+            <p className="text-lg font-medium text-gray-800 mb-2">
+              {createStatus}
+            </p>
+
+            {createStage && (
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full animate-pulse"
+                  style={{ width: "100%" }}
+                ></div>
+              </div>
+            )}
+
+            {createDetails && (
+              <p className="text-sm text-gray-600">{createDetails}</p>
+            )}
+          </div>
+        )}
+
+        {error && <div className="text-red-500 mt-4 text-center">{error}</div>}
       </div>
     );
+  };
+
+  if (isLoading) {
+    return renderLoadingState();
   }
 
   return (
