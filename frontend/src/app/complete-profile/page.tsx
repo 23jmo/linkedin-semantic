@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { WaitlistForm } from "@/components/LinkedInUrlForm";
-// import { createUser } from "@/lib/api";
-import { addToWaitlist } from "@/lib/server/waitlist";
+import { LinkedInUrlForm } from "@/components/LinkedInUrlForm";
+// import { WaitlistForm } from "@/components/LinkedInUrlForm";
+import { createUser } from "@/lib/api";
+// import { addToWaitlist } from "@/lib/server/waitlist";
 
 export default function CompleteProfilePage() {
   const { data: session, status } = useSession();
@@ -26,38 +27,38 @@ export default function CompleteProfilePage() {
     }
   }, [status, session, router]);
 
-  const handleSubmitWaitlist = async (email: string) => {
-    try {
-      await addToWaitlist(email);
-      console.log("Added to waitlist");
-    } catch (error) {
-      console.error("Error adding to waitlist:", error);
-    }
-  };
-
-  // const handleSubmitLinkedInUrl = async (linkedInUrl: string) => {
-  //   if (!session?.user?.id) {
-  //     throw new Error("User ID not found");
-  //   }
-
+  // const handleSubmitWaitlist = async (email: string) => {
   //   try {
-  //     setIsLoading(true);
-
-  //     // Call the API to create the user with the provided LinkedIn URL
-  //     await createUser(session.user, session.user, linkedInUrl);
-
-  //     // Force a session refresh to update the exists flag
-  //     const event = new Event("visibilitychange");
-  //     document.dispatchEvent(event);
-
-  //     // Redirect to main page after successful creation
-  //     setTimeout(() => router.push("/"), 1000);
+  //     await addToWaitlist(email);
+  //     console.log("Added to waitlist");
   //   } catch (error) {
-  //     console.error("Error creating user:", error);
-  //     setIsLoading(false);
-  //     throw error;
+  //     console.error("Error adding to waitlist:", error);
   //   }
   // };
+
+  const handleSubmitLinkedInUrl = async (linkedInUrl: string) => {
+    if (!session?.user?.id) {
+      throw new Error("User ID not found");
+    }
+
+    try {
+      setIsLoading(true);
+
+      // Call the API to create the user with the provided LinkedIn URL
+      await createUser(session.user, session.user, linkedInUrl);
+
+      // Force a session refresh to update the exists flag
+      const event = new Event("visibilitychange");
+      document.dispatchEvent(event);
+
+      // Redirect to main page after successful creation
+      setTimeout(() => router.push("/"), 1000);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      setIsLoading(false);
+      throw error;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -77,24 +78,24 @@ export default function CompleteProfilePage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         {session?.user?.id && (
-          // <LinkedInUrlForm
-          //   userId={session.user.id}
-          //   linkedInAuthData={{
-          //     email: session.user.email || "",
-          //     name: session.user.name || "",
-          //     image: session.user.image ?? undefined,
-          //   }}
-          //   onSubmit={handleSubmitLinkedInUrl}
-          // />
-          <WaitlistForm
+          <LinkedInUrlForm
             userId={session.user.id}
             linkedInAuthData={{
               email: session.user.email || "",
               name: session.user.name || "",
               image: session.user.image ?? undefined,
             }}
-            onSubmit={handleSubmitWaitlist}
+            onSubmit={handleSubmitLinkedInUrl}
           />
+          // <WaitlistForm
+          //   userId={session.user.id}
+          //   linkedInAuthData={{
+          //     email: session.user.email || "",
+          //     name: session.user.name || "",
+          //     image: session.user.image ?? undefined,
+          //   }}
+          //   onSubmit={handleSubmitWaitlist}
+          // />
         )}
       </div>
     </div>

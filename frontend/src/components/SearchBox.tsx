@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { FaSearch } from "react-icons/fa";
+import { FaArrowUp } from "react-icons/fa";
 import { useTheme } from "@/lib/theme-context";
 
 interface SearchBoxProps {
@@ -14,74 +14,72 @@ export default function SearchBox({
   onSearch,
 }: SearchBoxProps) {
   const [query, setQuery] = useState(initialQuery);
-  const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
 
-  const handleSearch = (e?: React.FormEvent) => {
+  const handleSearch = (e?: React.FormEvent | React.MouseEvent) => {
     if (e) e.preventDefault();
     if (query.trim()) {
       onSearch(query);
     }
   };
 
-  // const clearSearch = () => {
-  //   setQuery("");
-  //   if (inputRef.current) {
-  //     inputRef.current.focus();
-  //   }
-  // };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
+  const isQueryEmpty = query.trim() === "";
 
   return (
-    <div className="w-full">
+    <div className="w-full flex items-start space-x-2">
       <form
         onSubmit={handleSearch}
-        className="relative"
+        className="relative flex-grow"
       >
-        <input
-          ref={inputRef}
-          type="text"
+        <textarea
+          ref={textareaRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onKeyDown={handleKeyDown}
           placeholder="Search your network with natural language"
-          className={`w-full py-4 px-12 text-lg rounded-xl shadow-sm transition-all duration-200 ease-in-out focus:outline-none ${
+          rows={1}
+          className={`w-full py-4 px-5 text-base rounded-lg focus:outline-none resize-none overflow-auto leading-tight ${
             resolvedTheme === "light"
-              ? `bg-white text-gray-800 border-gray-200 ${
-                  isFocused
-                    ? "ring-2 ring-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.4)]"
-                    : ""
-                }`
-              : `bg-gray-800 text-gray-200 border-gray-700 ${
-                  isFocused
-                    ? "ring-2 ring-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]"
-                    : ""
-                }`
-          } border`}
+              ? `bg-white text-gray-800`
+              : `bg-gray-800 text-gray-200`
+          }`}
+          style={{ height: "auto", minHeight: "58px", maxHeight: "240px" }}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = "auto";
+            target.style.height = `${Math.min(target.scrollHeight, 240)}px`;
+          }}
         />
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center">
-          <FaSearch
-            className={
-              resolvedTheme === "light" ? "text-gray-400" : "text-gray-500"
-            }
-          />
-        </div>
-        <button
-          type="submit"
-          className={`absolute inset-y-0 right-0 px-6 flex items-center ${
-            resolvedTheme === "light"
-              ? "text-blue-600 hover:text-blue-800"
-              : "text-blue-400 hover:text-blue-300"
-          } font-medium transition-colors`}
-        >
-          Search
-        </button>
       </form>
+      <button
+        type="button"
+        onClick={handleSearch}
+        disabled={isQueryEmpty}
+        className={`p-4 rounded-lg flex items-center justify-center transition-colors mt-1 ${
+          isQueryEmpty
+            ? resolvedTheme === "light"
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-gray-700 text-gray-500 cursor-not-allowed"
+            : resolvedTheme === "light"
+            ? "bg-blue-500 hover:bg-blue-600 text-white"
+            : "bg-blue-600 hover:bg-blue-700 text-white"
+        }`}
+        aria-label="Submit search"
+      >
+        <FaArrowUp className="w-5 h-5" />
+      </button>
     </div>
   );
 }

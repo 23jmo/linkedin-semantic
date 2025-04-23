@@ -6,8 +6,12 @@ import {
   ProfileData,
   Profile,
   RawProfile,
+  Education,
+  Experience,
+  Certification,
+  Project,
 } from "@/types/types";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { generate_embedding } from "@/utilities/generate-embeddings";
 import { chunkProfile } from "@/lib/server/profile-chunking";
 import { cookies } from "next/headers";
@@ -152,6 +156,198 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // --- Start: Insert related profile data ---
+
+      // Helper function to insert related data
+      const insertRelatedData = async <T>(
+        tableName: string,
+        data: T[],
+        mapper: (item: T) => Record<string, unknown>
+      ) => {
+        if (!data || data.length === 0) {
+          console.log(`No data to insert for ${tableName}`);
+          return;
+        }
+        try {
+          const mappedData = data.map(mapper);
+          // Log the data being inserted for debugging
+          console.log(
+            `Attempting to insert into ${tableName}:`,
+            JSON.stringify(mappedData, null, 2)
+          );
+
+          // --- Start: Conditional one-by-one insert for experience ---
+          if (tableName === "experience") {
+            console.log("Inserting experience records one by one...");
+            for (const record of mappedData) {
+              const { error: singleInsertError } = await supabase
+                .from("experience")
+                .insert(record);
+              if (singleInsertError) {
+                console.error(
+                  `Failed to store single experience record:`,
+                  record
+                );
+                // Also log the raw error object for better debugging
+                console.error("Supabase error details:", singleInsertError);
+                // Throw the specific error to be caught by the outer catch block
+                throw singleInsertError;
+              }
+            }
+            // If loop completes without error
+            console.log(`${tableName} stored successfully (one by one)`);
+          } else {
+            // Original batch insert for other tables
+            const { error } = await supabase.from(tableName).insert(mappedData);
+            if (error) {
+              // Log more details about the Supabase error object
+              console.error(`Failed to store ${tableName}:`, {
+                // Log the raw error object first
+                rawError: error,
+                message: error.message, // Log standard message property
+                details: error.details, // Log details property
+                hint: error.hint, // Log hint property
+                code: error.code, // Log code property
+                fullErrorString: JSON.stringify(error, null, 2), // Log full string representation
+              });
+              // Decide if this should be a critical error or just logged
+              // Optionally re-throw if it's critical
+              // throw error;
+            } else {
+              console.log(`${tableName} stored successfully`);
+            }
+          }
+          // --- End: Conditional one-by-one insert for experience ---
+        } catch (err: unknown) {
+          // Use unknown for caught errors
+          // Log more detailed error information
+          console.error(`Raw error object caught for ${tableName}:`, err);
+
+          // Type guard to check if it's a PostgrestError or a standard Error
+          if (
+            err &&
+            typeof err === "object" &&
+            ("message" in err ||
+              "details" in err ||
+              "hint" in err ||
+              "code" in err)
+          ) {
+            // It looks like a PostgrestError or similar object
+            const pgError = err as Partial<PostgrestError>; // Cast safely
+            console.error(`Error processing ${tableName}:`, {
+              message: pgError.message ?? "N/A",
+              details: pgError.details ?? "N/A",
+              hint: pgError.hint ?? "N/A",
+              code: pgError.code ?? "N/A",
+              fullError: JSON.stringify(err, null, 2),
+            });
+          } else if (err instanceof Error) {
+            // It's a standard Error
+            console.error(`Error processing ${tableName}:`, {
+              message: err.message,
+              fullError: JSON.stringify(err, null, 2),
+            });
+          } else {
+            // It's something else
+            console.error(
+              `Caught an unexpected error type for ${tableName}:`,
+              err
+            );
+            console.error(`Error processing ${tableName}:`, {
+              fullError: JSON.stringify(err, null, 2),
+            });
+          }
+        }
+      };
+
+      await insertRelatedData<Experience>(
+        "experience",
+        proxycurl_linkedin_profile?.experiences || [],
+        (exp) => ({
+          profile_id: profileData.id,
+          company: exp.company,
+          title: exp.title,
+          starts_at_day: exp.start_at?.day,
+          starts_at_month: exp.start_at?.month,
+          starts_at_year: exp.start_at?.year,
+          ends_at_day: exp.ends_at?.day,
+          ends_at_month: exp.ends_at?.month,
+          ends_at_year: exp.ends_at?.year,
+          description: exp.description,
+          location: exp.location,
+          logo_url: exp.logo_url,
+          company_facebook_profile_url: exp.company_facebook_profile_url,
+          company_linkedin_profile_url: exp.company_linkedin_profile_url,
+        })
+      );
+
+      // Insert Education
+      await insertRelatedData<Education>(
+        "education",
+        proxycurl_linkedin_profile?.education || [],
+        (edu) => ({
+          profile_id: profileData.id,
+          school: edu.school,
+          degree_name: edu.degree_name,
+          field_of_study: edu.field_of_study,
+          starts_at_day: edu.starts_at?.day,
+          starts_at_month: edu.starts_at?.month,
+          starts_at_year: edu.starts_at?.year,
+          ends_at_day: edu.ends_at?.day,
+          ends_at_month: edu.ends_at?.month,
+          ends_at_year: edu.ends_at?.year,
+          description: edu.description,
+          activities_and_societies: edu.activities_and_societies,
+          grade: edu.grade,
+          logo_url: edu.logo_url,
+          school_linkedin_profile_url: edu.school_linkedin_profile_url,
+          // ensure created_at and updated_at are handled by db default or add here
+        })
+      );
+
+      // Insert Skills
+      await insertRelatedData<string>(
+        "skills",
+        proxycurl_linkedin_profile?.skills || [],
+        (skill) => ({
+          profile_id: profileData.id,
+          skill: skill,
+          // ensure created_at and updated_at are handled by db default or add here
+        })
+      );
+
+      // Insert Certifications
+      await insertRelatedData<Certification>(
+        "certifications",
+        proxycurl_linkedin_profile?.certifications || [],
+        (cert) => ({
+          profile_id: profileData.id,
+          name: cert.name,
+          // ensure created_at and updated_at are handled by db default or add here
+        })
+      );
+
+      // Insert Projects
+      await insertRelatedData<Project>(
+        "projects",
+        proxycurl_linkedin_profile?.accomplishment_projects || [], // Assuming proxycurl uses this field name
+        (proj) => ({
+          profile_id: profileData.id,
+          title: proj.title,
+          description: proj.description,
+          url: proj.url,
+          starts_at_day: proj.starts_at?.day,
+          starts_at_month: proj.starts_at?.month,
+          starts_at_year: proj.starts_at?.year,
+          ends_at_day: proj.ends_at?.day,
+          ends_at_month: proj.ends_at?.month,
+          ends_at_year: proj.ends_at?.year,
+          // ensure created_at and updated_at are handled by db default or add here
+        })
+      );
+
+      // --- End: Insert related profile data ---
+
       // Generate and store chunks
       const chunks = await chunkProfile(profile);
 
@@ -228,19 +424,31 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(validatedResponse, { status: 200 });
-    } catch (error) {
-      console.error("Error in profile creation:", error);
+    } catch (error: unknown) {
+      // Use unknown here too
+      console.error("Error in profile creation process:", error);
+      // Handle error similarly if needed, check type before accessing properties
+      let errorMessage = "Failed to create user profile";
+      if (error instanceof Error) {
+        errorMessage += `: ${error.message}`;
+      } else if (typeof error === "string") {
+        errorMessage += `: ${error}`;
+      }
       return NextResponse.json(
-        { error: "Failed to create user profile: " + error },
+        { error: errorMessage, rawError: error }, // Optionally include raw error
         { status: 500 }
       );
     }
-  } catch (error) {
-    console.error("Error in profile creation:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    // And here
+    console.error("Outer error handler:", error);
+    let errorMessage = "Internal server error";
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+    } else if (typeof error === "string") {
+      errorMessage += `: ${error}`;
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -262,25 +470,38 @@ async function fetch_linkedin_profile(linkedin_url: string) {
   );
 
   if (!response.ok) {
-    if (response.status === 403) {
-      console.error("Error fetching LinkedIn profile:", response.statusText);
-      throw new Error("Failed to fetch LinkedIn profile");
-    } else {
-      console.error("Error fetching LinkedIn profile:", response.statusText);
-      throw new Error("Failed to fetch LinkedIn profile");
-    }
+    // Consider creating a custom error class for better handling
+    const errorBody = await response.text();
+    console.error(
+      `Error fetching LinkedIn profile (${response.status}): ${response.statusText}`,
+      errorBody
+    );
+    throw new Error(`Failed to fetch LinkedIn profile (${response.status})`);
   }
 
   const data = await response.json();
+  // TODO: Add validation here using a Zod schema for the Proxycurl response
   return { proxycurl_linkedin_profile: data };
 }
 
 async function verify_profile_match(
   auth_data: AuthData,
-  profile_data: ProfileData
+  profile_data: ProfileData | null // Allow profile_data to be potentially null
 ) {
+  // Check if profile_data is actually fetched
+  if (!profile_data) {
+    console.warn(
+      "Cannot verify profile match: Profile data is null or undefined."
+    );
+    // Depending on requirements, you might throw an error here or allow it
+    // For now, let's log a warning and proceed, assuming verification isn't strictly required if data is missing
+    return;
+    // throw new Error("Failed to fetch profile data for verification");
+  }
+
   // Compare email addresses if available
   const auth_email = auth_data?.email?.toLowerCase() || "";
+  // Safely access profile email
   const profile_email = profile_data?.email?.toLowerCase() || "";
 
   if (auth_email && profile_email && auth_email !== profile_email) {
@@ -292,6 +513,7 @@ async function verify_profile_match(
 
   // Compare names as fallback
   const auth_name = auth_data?.name?.toLowerCase() || "";
+  // Safely access profile full_name
   const profile_name = profile_data?.full_name?.toLowerCase() || "";
 
   if (auth_name && profile_name && auth_name !== profile_name) {

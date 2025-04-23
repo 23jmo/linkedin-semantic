@@ -66,6 +66,26 @@ export const EducationSchema = z.object({
 // Define Certification Schema
 export const CertificationSchema = z.object({
   name: z.string().nullable(),
+  authority: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  starts_at: z
+    .object({
+      day: z.number().optional(),
+      month: z.number().optional(),
+      year: z.number(),
+    })
+    .nullable()
+    .optional(),
+  ends_at: z
+    .object({
+      day: z.number().optional(),
+      month: z.number().optional(),
+      year: z.number(),
+    })
+    .nullable()
+    .optional(),
+  license_number: z.string().nullable().optional(),
+  display_source: z.string().nullable().optional(),
   // Add other fields if needed based on actual data, e.g., authority, url
 });
 

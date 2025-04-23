@@ -6,7 +6,7 @@ import { auth } from "@/auth";
  * Default search quota for new users
  */
 const DEFAULT_SEARCH_QUOTA_DB = {
-  monthly_search_limit: 50,
+  monthly_search_limit: 20,
   searches_this_month: 0,
   last_reset_date: new Date(
     new Date().getFullYear(),
