@@ -22,434 +22,471 @@ const supabase = createClient(
 ).schema("linkedin_profiles");
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+  // Create a ReadableStream to send progress updates
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
 
-    const result = ProfileCreateRequestSchema.safeParse(body);
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.issues[0].message },
-        { status: 400 }
-      );
-    }
-
-    const { user_id, linkedin_auth, linkedin_url } = result.data;
-
-    console.log("Fetching LinkedIn profile...");
-    let linkedin_url_to_fetch = linkedin_url;
-    if (linkedin_url_to_fetch.startsWith("linkedin.com")) {
-      linkedin_url_to_fetch = "https://www." + linkedin_url_to_fetch;
-    }
-
-    // Validate LinkedIn URL format
-    if (
-      !linkedin_url_to_fetch.match(
-        /^https:\/\/www\.linkedin\.com\/[a-zA-Z0-9\/-]+$/
-      )
-    ) {
-      console.log("Invalid LinkedIn URL format:", linkedin_url_to_fetch);
-      return NextResponse.json(
-        {
-          error:
-            "Invalid LinkedIn URL format. URL must be of the form 'https://www.linkedin.com/<profile-id>'",
-        },
-        { status: 400 }
-      );
-    }
-
-    console.log("Fetching LinkedIn profile...: ", linkedin_url_to_fetch);
-
-    const { proxycurl_linkedin_profile } = await fetch_linkedin_profile(
-      linkedin_url_to_fetch
-    );
-
-    console.log(
-      "LinkedIn profile:",
-      JSON.stringify(proxycurl_linkedin_profile).substring(0, 200) + "..."
-    );
-
-    if (linkedin_auth) {
-      await verify_profile_match(linkedin_auth, proxycurl_linkedin_profile);
-    } else {
-      console.log("No LinkedIn authentication data provided");
-      return NextResponse.json(
-        { error: "No LinkedIn authentication data provided" },
-        { status: 400 }
-      );
-    }
-
-    //works until here
-    // Safely build the location string
-    const location_parts = [
-      proxycurl_linkedin_profile?.country_full_name || "",
-      proxycurl_linkedin_profile?.city || "",
-      proxycurl_linkedin_profile?.state || "",
-      proxycurl_linkedin_profile?.postal_code || "",
-    ];
-    // Filter out empty parts and join with spaces
-    const location = location_parts.filter((part) => part).join(" ");
-
-    // Generate a UUID for the profile
-    const profile_id = crypto.randomUUID();
-
-    // Create timestamp for created_at and updated_at
-    const now = new Date();
-
-    const raw_profile_data: RawProfile = {
-      ...proxycurl_linkedin_profile,
-    };
-
-    // Prepare profile data
-    const profile: Profile = {
-      id: profile_id,
-      user_id: user_id,
-      linkedin_id: "",
-      full_name: proxycurl_linkedin_profile?.full_name || "",
-      headline: proxycurl_linkedin_profile?.headline || "",
-      industry: proxycurl_linkedin_profile?.industry || "",
-      location: location,
-      profile_url: linkedin_url_to_fetch,
-      profile_picture_url: proxycurl_linkedin_profile?.profile_pic_url || "",
-      summary: proxycurl_linkedin_profile?.summary || "",
-      raw_profile_data: raw_profile_data,
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
-    };
-
-    console.log("Generating embedding...");
-
-    const embedding = await generate_embedding(raw_profile_data);
-
-    try {
-      // Store the profile in Supabase
-      const { data: profileData, error: insertError } = await supabase
-        .from("profiles")
-        .insert(profile)
-        .select()
-        .single();
-      if (insertError) {
-        console.error("Error storing profile:", insertError);
-        return NextResponse.json(
-          { error: "Failed to store profile data" },
-          { status: 500 }
-        );
-      }
-
-      // Create embedding data with the correct profile_id
-      const validatedEmbedding = {
-        id: crypto.randomUUID(),
-        profile_id: profileData.id, // Use the actual profile ID
-        embedding: embedding,
-        embedding_model: "openai",
-        created_at: now,
+      // Helper function to send status updates
+      const sendUpdate = (status: string, message: string, stage: string) => {
+        const update = JSON.stringify({ status, message, stage });
+        controller.enqueue(encoder.encode(update));
       };
 
-      // Store the embedding
-      const { error: embeddingError } = await supabase
-        .from("profile_embeddings")
-        .insert(validatedEmbedding);
-      if (embeddingError) {
-        console.error("Error storing embedding:", embeddingError);
-        return NextResponse.json(
-          { error: "Failed to store embedding data: " + embeddingError },
-          { status: 500 }
-        );
-      }
+      try {
+        const body = await request.json();
 
-      // --- Start: Insert related profile data ---
-
-      // Helper function to insert related data
-      const insertRelatedData = async <T>(
-        tableName: string,
-        data: T[],
-        mapper: (item: T) => Record<string, unknown>
-      ) => {
-        if (!data || data.length === 0) {
-          console.log(`No data to insert for ${tableName}`);
+        const result = ProfileCreateRequestSchema.safeParse(body);
+        if (!result.success) {
+          sendUpdate("error", result.error.issues[0].message, "validation");
+          controller.close();
           return;
         }
-        try {
-          const mappedData = data.map(mapper);
-          // Log the data being inserted for debugging
-          console.log(
-            `Attempting to insert into ${tableName}:`,
-            JSON.stringify(mappedData, null, 2)
-          );
 
-          // --- Start: Conditional one-by-one insert for experience ---
-          if (tableName === "experience") {
-            console.log("Inserting experience records one by one...");
-            for (const record of mappedData) {
-              const { error: singleInsertError } = await supabase
-                .from("experience")
-                .insert(record);
-              if (singleInsertError) {
-                console.error(
-                  `Failed to store single experience record:`,
-                  record
-                );
-                // Also log the raw error object for better debugging
-                console.error("Supabase error details:", singleInsertError);
-                // Throw the specific error to be caught by the outer catch block
-                throw singleInsertError;
-              }
-            }
-            // If loop completes without error
-            console.log(`${tableName} stored successfully (one by one)`);
-          } else {
-            // Original batch insert for other tables
-            const { error } = await supabase.from(tableName).insert(mappedData);
-            if (error) {
-              // Log more details about the Supabase error object
-              console.error(`Failed to store ${tableName}:`, {
-                // Log the raw error object first
-                rawError: error,
-                message: error.message, // Log standard message property
-                details: error.details, // Log details property
-                hint: error.hint, // Log hint property
-                code: error.code, // Log code property
-                fullErrorString: JSON.stringify(error, null, 2), // Log full string representation
-              });
-              // Decide if this should be a critical error or just logged
-              // Optionally re-throw if it's critical
-              // throw error;
-            } else {
-              console.log(`${tableName} stored successfully`);
-            }
-          }
-          // --- End: Conditional one-by-one insert for experience ---
-        } catch (err: unknown) {
-          // Use unknown for caught errors
-          // Log more detailed error information
-          console.error(`Raw error object caught for ${tableName}:`, err);
+        const { user_id, linkedin_auth, linkedin_url } = result.data;
 
-          // Type guard to check if it's a PostgrestError or a standard Error
-          if (
-            err &&
-            typeof err === "object" &&
-            ("message" in err ||
-              "details" in err ||
-              "hint" in err ||
-              "code" in err)
-          ) {
-            // It looks like a PostgrestError or similar object
-            const pgError = err as Partial<PostgrestError>; // Cast safely
-            console.error(`Error processing ${tableName}:`, {
-              message: pgError.message ?? "N/A",
-              details: pgError.details ?? "N/A",
-              hint: pgError.hint ?? "N/A",
-              code: pgError.code ?? "N/A",
-              fullError: JSON.stringify(err, null, 2),
-            });
-          } else if (err instanceof Error) {
-            // It's a standard Error
-            console.error(`Error processing ${tableName}:`, {
-              message: err.message,
-              fullError: JSON.stringify(err, null, 2),
-            });
-          } else {
-            // It's something else
-            console.error(
-              `Caught an unexpected error type for ${tableName}:`,
-              err
-            );
-            console.error(`Error processing ${tableName}:`, {
-              fullError: JSON.stringify(err, null, 2),
-            });
-          }
+        sendUpdate("progress", "Validating LinkedIn URL...", "validation");
+
+        let linkedin_url_to_fetch = linkedin_url;
+        if (linkedin_url_to_fetch.startsWith("linkedin.com")) {
+          linkedin_url_to_fetch = "https://www." + linkedin_url_to_fetch;
         }
-      };
 
-      await insertRelatedData<Experience>(
-        "experience",
-        proxycurl_linkedin_profile?.experiences || [],
-        (exp) => ({
-          profile_id: profileData.id,
-          company: exp.company,
-          title: exp.title,
-          starts_at_day: exp.start_at?.day,
-          starts_at_month: exp.start_at?.month,
-          starts_at_year: exp.start_at?.year,
-          ends_at_day: exp.ends_at?.day,
-          ends_at_month: exp.ends_at?.month,
-          ends_at_year: exp.ends_at?.year,
-          description: exp.description,
-          location: exp.location,
-          logo_url: exp.logo_url,
-          company_facebook_profile_url: exp.company_facebook_profile_url,
-          company_linkedin_profile_url: exp.company_linkedin_profile_url,
-        })
-      );
+        // Validate LinkedIn URL format
+        if (
+          !linkedin_url_to_fetch.match(
+            /^https:\/\/www\.linkedin\.com\/[a-zA-Z0-9\/-]+$/
+          )
+        ) {
+          sendUpdate(
+            "error",
+            "Invalid LinkedIn URL format. URL must be of the form 'https://www.linkedin.com/<profile-id>'",
+            "validation"
+          );
+          controller.close();
+          return;
+        }
 
-      // Insert Education
-      await insertRelatedData<Education>(
-        "education",
-        proxycurl_linkedin_profile?.education || [],
-        (edu) => ({
-          profile_id: profileData.id,
-          school: edu.school,
-          degree_name: edu.degree_name,
-          field_of_study: edu.field_of_study,
-          starts_at_day: edu.starts_at?.day,
-          starts_at_month: edu.starts_at?.month,
-          starts_at_year: edu.starts_at?.year,
-          ends_at_day: edu.ends_at?.day,
-          ends_at_month: edu.ends_at?.month,
-          ends_at_year: edu.ends_at?.year,
-          description: edu.description,
-          activities_and_societies: edu.activities_and_societies,
-          grade: edu.grade,
-          logo_url: edu.logo_url,
-          school_linkedin_profile_url: edu.school_linkedin_profile_url,
-          // ensure created_at and updated_at are handled by db default or add here
-        })
-      );
+        sendUpdate("progress", "Fetching LinkedIn profile data...", "fetching");
 
-      // Insert Skills
-      await insertRelatedData<string>(
-        "skills",
-        proxycurl_linkedin_profile?.skills || [],
-        (skill) => ({
-          profile_id: profileData.id,
-          skill: skill,
-          // ensure created_at and updated_at are handled by db default or add here
-        })
-      );
-
-      // Insert Certifications
-      await insertRelatedData<Certification>(
-        "certifications",
-        proxycurl_linkedin_profile?.certifications || [],
-        (cert) => ({
-          profile_id: profileData.id,
-          name: cert.name,
-          // ensure created_at and updated_at are handled by db default or add here
-        })
-      );
-
-      // Insert Projects
-      await insertRelatedData<Project>(
-        "projects",
-        proxycurl_linkedin_profile?.accomplishment_projects || [], // Assuming proxycurl uses this field name
-        (proj) => ({
-          profile_id: profileData.id,
-          title: proj.title,
-          description: proj.description,
-          url: proj.url,
-          starts_at_day: proj.starts_at?.day,
-          starts_at_month: proj.starts_at?.month,
-          starts_at_year: proj.starts_at?.year,
-          ends_at_day: proj.ends_at?.day,
-          ends_at_month: proj.ends_at?.month,
-          ends_at_year: proj.ends_at?.year,
-          // ensure created_at and updated_at are handled by db default or add here
-        })
-      );
-
-      // --- End: Insert related profile data ---
-
-      // Generate and store chunks
-      const chunks = await chunkProfile(profile);
-
-      const { error: chunksError } = await supabase
-        .from("profile_chunks")
-        .upsert(
-          chunks.map((chunk) => ({
-            profile_id: profile.id,
-            chunk_type: chunk.chunk_type,
-            content: chunk.content,
-            embedding: chunk.embedding,
-          })),
-          { onConflict: "profile_id,chunk_type" }
+        const { proxycurl_linkedin_profile } = await fetch_linkedin_profile(
+          linkedin_url_to_fetch
         );
 
-      if (chunksError) {
-        console.error("Failed to store profile chunks:", chunksError);
-        // Don't throw - profile is still usable even if chunks fail
-      }
-
-      console.log("Profile chunks stored successfully");
-
-      // Return success response
-      // Validate response against ProfileCreateResponseSchema
-      const response = {
-        success: true,
-        message: "User profile created successfully",
-      };
-
-      // Ensure response matches the schema
-      const validatedResponse = ProfileCreateResponseSchema.parse(response);
-
-      //check for referral code
-      const cookieStore = await cookies();
-      const referralCode = cookieStore.get("referral_code")?.value;
-
-      if (referralCode) {
-        console.log("Referral code:", referralCode);
-        // reward the user
-
-        if (isValidReferralCode(referralCode)) {
-          console.log("Valid referral code:", referralCode);
-          // reward the user
-          const { data: referrerData, error: referrerError } = await supabase
-            .from("referrals")
-            .select("referrer_id")
-            .eq("referral_code", referralCode)
-            .single();
-
-          if (referrerError) {
-            console.error("Error fetching referrer:", referrerError);
-          }
-
-          const { data: referralData, error: referralError } = await supabase
-            .from("referred")
-            .insert({
-              referred_id: user_id,
-              referrer_id: referrerData?.referrer_id || "",
-              referral_code: referralCode,
-              created_at: now,
-              completed_at: now,
-            });
-
-          if (referralError) {
-            console.error(
-              "Error storing referral:",
-              referralError + " " + referralData
-            );
-          }
-          console.log("Referral stored successfully");
+        if (linkedin_auth) {
+          sendUpdate("progress", "Verifying profile match...", "verification");
+          await verify_profile_match(linkedin_auth, proxycurl_linkedin_profile);
         } else {
-          console.log("Invalid referral code:", referralCode);
+          sendUpdate(
+            "error",
+            "No LinkedIn authentication data provided",
+            "verification"
+          );
+          controller.close();
+          return;
         }
-      }
 
-      return NextResponse.json(validatedResponse, { status: 200 });
-    } catch (error: unknown) {
-      // Use unknown here too
-      console.error("Error in profile creation process:", error);
-      // Handle error similarly if needed, check type before accessing properties
-      let errorMessage = "Failed to create user profile";
-      if (error instanceof Error) {
-        errorMessage += `: ${error.message}`;
-      } else if (typeof error === "string") {
-        errorMessage += `: ${error}`;
+        // Safely build the location string
+        const location_parts = [
+          proxycurl_linkedin_profile?.country_full_name || "",
+          proxycurl_linkedin_profile?.city || "",
+          proxycurl_linkedin_profile?.state || "",
+          proxycurl_linkedin_profile?.postal_code || "",
+        ];
+        // Filter out empty parts and join with spaces
+        const location = location_parts.filter((part) => part).join(" ");
+
+        // Generate a UUID for the profile
+        const profile_id = crypto.randomUUID();
+
+        // Create timestamp for created_at and updated_at
+        const now = new Date();
+
+        const raw_profile_data: RawProfile = {
+          ...proxycurl_linkedin_profile,
+        };
+
+        // Prepare profile data
+        const profile: Profile = {
+          id: profile_id,
+          user_id: user_id,
+          linkedin_id: "",
+          full_name: proxycurl_linkedin_profile?.full_name || "",
+          headline: proxycurl_linkedin_profile?.headline || "",
+          industry: proxycurl_linkedin_profile?.industry || "",
+          location: location,
+          profile_url: linkedin_url_to_fetch,
+          profile_picture_url:
+            proxycurl_linkedin_profile?.profile_pic_url || "",
+          summary: proxycurl_linkedin_profile?.summary || "",
+          raw_profile_data: raw_profile_data,
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        };
+
+        sendUpdate("progress", "Generating embedding...", "embedding");
+        const embedding = await generate_embedding(raw_profile_data);
+
+        try {
+          // Store the profile in Supabase
+          sendUpdate("progress", "Storing profile data...", "storing_profile");
+          const { data: profileData, error: insertError } = await supabase
+            .from("profiles")
+            .insert(profile)
+            .select()
+            .single();
+          if (insertError) {
+            sendUpdate(
+              "error",
+              "Failed to store profile data",
+              "storing_profile"
+            );
+            controller.close();
+            return;
+          }
+
+          // Create embedding data with the correct profile_id
+          const validatedEmbedding = {
+            id: crypto.randomUUID(),
+            profile_id: profileData.id, // Use the actual profile ID
+            embedding: embedding,
+            embedding_model: "openai",
+            created_at: now,
+          };
+
+          // Store the embedding
+          sendUpdate(
+            "progress",
+            "Storing embedding data...",
+            "storing_embedding"
+          );
+          const { error: embeddingError } = await supabase
+            .from("profile_embeddings")
+            .insert(validatedEmbedding);
+          if (embeddingError) {
+            sendUpdate(
+              "error",
+              "Failed to store embedding data",
+              "storing_embedding"
+            );
+            controller.close();
+            return;
+          }
+
+          // --- Start: Insert related profile data ---
+
+          // Helper function to insert related data
+          const insertRelatedData = async <T>(
+            tableName: string,
+            data: T[],
+            mapper: (item: T) => Record<string, unknown>
+          ) => {
+            if (!data || data.length === 0) {
+              console.log(`No data to insert for ${tableName}`);
+              return;
+            }
+            try {
+              const mappedData = data.map(mapper);
+              sendUpdate(
+                "progress",
+                `Storing ${tableName} data...`,
+                `storing_${tableName}`
+              );
+
+              // --- Start: Conditional one-by-one insert for experience ---
+              if (tableName === "experience") {
+                console.log("Inserting experience records one by one...");
+                for (const record of mappedData) {
+                  const { error: singleInsertError } = await supabase
+                    .from("experience")
+                    .insert(record);
+                  if (singleInsertError) {
+                    console.error(
+                      `Failed to store single experience record:`,
+                      record
+                    );
+                    console.error("Supabase error details:", singleInsertError);
+                  }
+                }
+                console.log(`${tableName} stored successfully (one by one)`);
+              } else {
+                // Original batch insert for other tables
+                const { error } = await supabase
+                  .from(tableName)
+                  .insert(mappedData);
+                if (error) {
+                  console.error(`Failed to store ${tableName}:`, {
+                    rawError: error,
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code,
+                    fullErrorString: JSON.stringify(error, null, 2),
+                  });
+                } else {
+                  console.log(`${tableName} stored successfully`);
+                }
+              }
+              // --- End: Conditional one-by-one insert for experience ---
+            } catch (err: unknown) {
+              console.error(`Raw error object caught for ${tableName}:`, err);
+              // Use unknown for caught errors
+              // Type guard to check if it's a PostgrestError or a standard Error
+              if (
+                err &&
+                typeof err === "object" &&
+                ("message" in err ||
+                  "details" in err ||
+                  "hint" in err ||
+                  "code" in err)
+              ) {
+                // It looks like a PostgrestError or similar object
+                const pgError = err as Partial<PostgrestError>; // Cast safely
+                console.error(`Error processing ${tableName}:`, {
+                  message: pgError.message ?? "N/A",
+                  details: pgError.details ?? "N/A",
+                  hint: pgError.hint ?? "N/A",
+                  code: pgError.code ?? "N/A",
+                  fullError: JSON.stringify(err, null, 2),
+                });
+              } else if (err instanceof Error) {
+                // It's a standard Error
+                console.error(`Error processing ${tableName}:`, {
+                  message: err.message,
+                  fullError: JSON.stringify(err, null, 2),
+                });
+              } else {
+                // It's something else
+                console.error(
+                  `Caught an unexpected error type for ${tableName}:`,
+                  err
+                );
+                console.error(`Error processing ${tableName}:`, {
+                  fullError: JSON.stringify(err, null, 2),
+                });
+              }
+            }
+          };
+
+          sendUpdate(
+            "progress",
+            "Processing experience data...",
+            "processing_related_data"
+          );
+          await insertRelatedData<Experience>(
+            "experience",
+            proxycurl_linkedin_profile?.experiences || [],
+            (exp) => ({
+              profile_id: profileData.id,
+              company: exp.company,
+              title: exp.title,
+              starts_at_day: exp.start_at?.day,
+              starts_at_month: exp.start_at?.month,
+              starts_at_year: exp.start_at?.year,
+              ends_at_day: exp.ends_at?.day,
+              ends_at_month: exp.ends_at?.month,
+              ends_at_year: exp.ends_at?.year,
+              description: exp.description,
+              location: exp.location,
+              logo_url: exp.logo_url,
+              company_facebook_profile_url: exp.company_facebook_profile_url,
+              company_linkedin_profile_url: exp.company_linkedin_profile_url,
+            })
+          );
+
+          sendUpdate(
+            "progress",
+            "Processing education data...",
+            "processing_related_data"
+          );
+          await insertRelatedData<Education>(
+            "education",
+            proxycurl_linkedin_profile?.education || [],
+            (edu) => ({
+              profile_id: profileData.id,
+              school: edu.school,
+              degree_name: edu.degree_name,
+              field_of_study: edu.field_of_study,
+              starts_at_day: edu.starts_at?.day,
+              starts_at_month: edu.starts_at?.month,
+              starts_at_year: edu.starts_at?.year,
+              ends_at_day: edu.ends_at?.day,
+              ends_at_month: edu.ends_at?.month,
+              ends_at_year: edu.ends_at?.year,
+              description: edu.description,
+              activities_and_societies: edu.activities_and_societies,
+              grade: edu.grade,
+              logo_url: edu.logo_url,
+              school_linkedin_profile_url: edu.school_linkedin_profile_url,
+            })
+          );
+
+          sendUpdate(
+            "progress",
+            "Processing skills data...",
+            "processing_related_data"
+          );
+          await insertRelatedData<string>(
+            "skills",
+            proxycurl_linkedin_profile?.skills || [],
+            (skill) => ({
+              profile_id: profileData.id,
+              skill: skill,
+            })
+          );
+
+          sendUpdate(
+            "progress",
+            "Processing certifications data...",
+            "processing_related_data"
+          );
+          await insertRelatedData<Certification>(
+            "certifications",
+            proxycurl_linkedin_profile?.certifications || [],
+            (cert) => ({
+              profile_id: profileData.id,
+              name: cert.name,
+            })
+          );
+
+          sendUpdate(
+            "progress",
+            "Processing projects data...",
+            "processing_related_data"
+          );
+          await insertRelatedData<Project>(
+            "projects",
+            proxycurl_linkedin_profile?.accomplishment_projects || [],
+            (proj) => ({
+              profile_id: profileData.id,
+              title: proj.title,
+              description: proj.description,
+              url: proj.url,
+              starts_at_day: proj.starts_at?.day,
+              starts_at_month: proj.starts_at?.month,
+              starts_at_year: proj.starts_at?.year,
+              ends_at_day: proj.ends_at?.day,
+              ends_at_month: proj.ends_at?.month,
+              ends_at_year: proj.ends_at?.year,
+            })
+          );
+
+          // Generate and store chunks
+          sendUpdate(
+            "progress",
+            "Generating profile chunks...",
+            "generating_chunks"
+          );
+          const chunks = await chunkProfile(profile);
+
+          sendUpdate("progress", "Storing profile chunks...", "storing_chunks");
+          const { error: chunksError } = await supabase
+            .from("profile_chunks")
+            .upsert(
+              chunks.map((chunk) => ({
+                profile_id: profile.id,
+                chunk_type: chunk.chunk_type,
+                content: chunk.content,
+                embedding: chunk.embedding,
+              })),
+              { onConflict: "profile_id,chunk_type" }
+            );
+
+          if (chunksError) {
+            console.error("Failed to store profile chunks:", chunksError);
+          }
+
+          // Return success response
+          const response = {
+            success: true,
+            message: "User profile created successfully",
+          };
+
+          // Ensure response matches the schema
+          const validatedResponse = ProfileCreateResponseSchema.parse(response);
+
+          //check for referral code
+          const cookieStore = await cookies();
+          const referralCode = cookieStore.get("referral_code")?.value;
+
+          if (referralCode) {
+            sendUpdate(
+              "progress",
+              "Processing referral code...",
+              "processing_referral"
+            );
+            console.log("Referral code:", referralCode);
+            // reward the user
+
+            if (isValidReferralCode(referralCode)) {
+              console.log("Valid referral code:", referralCode);
+              // reward the user
+              const { data: referrerData, error: referrerError } =
+                await supabase
+                  .from("referrals")
+                  .select("referrer_id")
+                  .eq("referral_code", referralCode)
+                  .single();
+
+              if (referrerError) {
+                console.error("Error fetching referrer:", referrerError);
+              }
+
+              const { data: referralData, error: referralError } =
+                await supabase.from("referred").insert({
+                  referred_id: user_id,
+                  referrer_id: referrerData?.referrer_id || "",
+                  referral_code: referralCode,
+                  created_at: now,
+                  completed_at: now,
+                });
+
+              if (referralError) {
+                console.error(
+                  "Error storing referral:",
+                  referralError + " " + referralData
+                );
+              }
+              console.log("Referral stored successfully");
+            } else {
+              console.log("Invalid referral code:", referralCode);
+            }
+          }
+
+          sendUpdate(
+            "complete",
+            "User profile created successfully",
+            "complete"
+          );
+          controller.close();
+        } catch (error: unknown) {
+          console.error("Error in profile creation process:", error);
+          let errorMessage = "Failed to create user profile";
+          if (error instanceof Error) {
+            errorMessage += `: ${error.message}`;
+          }
+          sendUpdate("error", errorMessage, "error");
+          controller.close();
+        }
+      } catch (error: unknown) {
+        console.error("Outer error handler:", error);
+        let errorMessage = "Internal server error";
+        if (error instanceof Error) {
+          errorMessage += `: ${error.message}`;
+        }
+        sendUpdate("error", errorMessage, "error");
+        controller.close();
       }
-      return NextResponse.json(
-        { error: errorMessage, rawError: error }, // Optionally include raw error
-        { status: 500 }
-      );
-    }
-  } catch (error: unknown) {
-    // And here
-    console.error("Outer error handler:", error);
-    let errorMessage = "Internal server error";
-    if (error instanceof Error) {
-      errorMessage += `: ${error.message}`;
-    } else if (typeof error === "string") {
-      errorMessage += `: ${error}`;
-    }
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
-  }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }
 
 async function fetch_linkedin_profile(linkedin_url: string) {
