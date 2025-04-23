@@ -61,7 +61,7 @@ export default function Header() {
         resolvedTheme === "light"
           ? "bg-white border-gray-200"
           : "bg-gray-800 border-gray-700"
-      } shadow-sm sticky top-0 z-50 border-b`}
+      } shadow-sm sticky top-0 z-100 border-b`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
