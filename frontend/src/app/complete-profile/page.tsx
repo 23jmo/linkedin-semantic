@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { LinkedInUrlForm } from "@/components/LinkedInUrlForm";
 // import { WaitlistForm } from "@/components/LinkedInUrlForm";
 import { createUser } from "@/lib/api";
+import Image from "next/image";
 // import { addToWaitlist } from "@/lib/server/waitlist";
 
 export default function CompleteProfilePage() {
@@ -15,6 +16,7 @@ export default function CompleteProfilePage() {
   const [createStatus, setCreateStatus] = useState("");
   const [createStage, setCreateStage] = useState("");
   const [error, setError] = useState("");
+  const [createDetails, setCreateDetails] = useState("");
 
   useEffect(() => {
     // If user is not authenticated, redirect to login
@@ -50,9 +52,14 @@ export default function CompleteProfilePage() {
       setError("");
 
       // Progress callback for streaming updates
-      const handleProgress = (message: string, stage: string) => {
+      const handleProgress = (
+        message: string,
+        stage: string,
+        details?: string
+      ) => {
         setCreateStatus(message);
         setCreateStage(stage);
+        setCreateDetails(details || "");
       };
 
       // Call the API to create the user with the provided LinkedIn URL
@@ -79,6 +86,13 @@ export default function CompleteProfilePage() {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <Image
+          src="/LogoBlack.png"
+          alt="Logo"
+          width={32}
+          height={32}
+          className="absolute"
+        />
 
         {createStatus && (
           <div className="text-center max-w-md mx-auto">
@@ -93,6 +107,10 @@ export default function CompleteProfilePage() {
                   style={{ width: "100%" }}
                 ></div>
               </div>
+            )}
+
+            {createDetails && (
+              <p className="text-sm text-gray-600">{createDetails}</p>
             )}
           </div>
         )}

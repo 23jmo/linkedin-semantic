@@ -28,8 +28,13 @@ export async function POST(request: NextRequest) {
       const encoder = new TextEncoder();
 
       // Helper function to send status updates
-      const sendUpdate = (status: string, message: string, stage: string) => {
-        const update = JSON.stringify({ status, message, stage });
+      const sendUpdate = (
+        status: string,
+        message: string,
+        stage: string,
+        details?: string
+      ) => {
+        const update = JSON.stringify({ status, message, stage, details });
         controller.enqueue(encoder.encode(update));
       };
 
@@ -45,7 +50,12 @@ export async function POST(request: NextRequest) {
 
         const { user_id, linkedin_auth, linkedin_url } = result.data;
 
-        sendUpdate("progress", "Validating LinkedIn URL...", "validation");
+        sendUpdate(
+          "progress",
+          "Validating LinkedIn URL...",
+          "validation",
+          linkedin_url
+        );
 
         let linkedin_url_to_fetch = linkedin_url;
         if (linkedin_url_to_fetch.startsWith("linkedin.com")) {
@@ -67,14 +77,24 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        sendUpdate("progress", "Fetching LinkedIn profile data...", "fetching");
+        sendUpdate(
+          "progress",
+          "Fetching LinkedIn profile data...",
+          "fetching",
+          linkedin_url_to_fetch
+        );
 
         const { proxycurl_linkedin_profile } = await fetch_linkedin_profile(
           linkedin_url_to_fetch
         );
 
         if (linkedin_auth) {
-          sendUpdate("progress", "Verifying profile match...", "verification");
+          sendUpdate(
+            "progress",
+            "Verifying profile match...",
+            "verification",
+            linkedin_url_to_fetch
+          );
           await verify_profile_match(linkedin_auth, proxycurl_linkedin_profile);
         } else {
           sendUpdate(
@@ -124,12 +144,20 @@ export async function POST(request: NextRequest) {
           updated_at: now.toISOString(),
         };
 
-        sendUpdate("progress", "Generating embedding...", "embedding");
+        sendUpdate(
+          "progress",
+          "Generating embedding for " + profile.full_name,
+          "embedding"
+        );
         const embedding = await generate_embedding(raw_profile_data);
 
         try {
           // Store the profile in Supabase
-          sendUpdate("progress", "Storing profile data...", "storing_profile");
+          sendUpdate(
+            "progress",
+            "Storing profile data for " + profile.full_name,
+            "storing_profile"
+          );
           const { data: profileData, error: insertError } = await supabase
             .from("profiles")
             .insert(profile)
@@ -138,7 +166,7 @@ export async function POST(request: NextRequest) {
           if (insertError) {
             sendUpdate(
               "error",
-              "Failed to store profile data",
+              "Failed to store profile data for " + profile.full_name,
               "storing_profile"
             );
             controller.close();
@@ -179,7 +207,8 @@ export async function POST(request: NextRequest) {
           const insertRelatedData = async <T>(
             tableName: string,
             data: T[],
-            mapper: (item: T) => Record<string, unknown>
+            mapper: (item: T) => Record<string, unknown>,
+            snippetExtractor: (item: T) => string
           ) => {
             if (!data || data.length === 0) {
               console.log(`No data to insert for ${tableName}`);
@@ -187,10 +216,15 @@ export async function POST(request: NextRequest) {
             }
             try {
               const mappedData = data.map(mapper);
+              const firstItemSnippet =
+                data.length > 0 ? snippetExtractor(data[0]) : "";
               sendUpdate(
                 "progress",
                 `Storing ${tableName} data...`,
-                `storing_${tableName}`
+                `storing_${tableName}`,
+                `${data.length} ${tableName} record(s)... ${
+                  firstItemSnippet ? `(e.g., ${firstItemSnippet})` : ""
+                }`
               );
 
               // --- Start: Conditional one-by-one insert for experience ---
@@ -291,7 +325,8 @@ export async function POST(request: NextRequest) {
               logo_url: exp.logo_url,
               company_facebook_profile_url: exp.company_facebook_profile_url,
               company_linkedin_profile_url: exp.company_linkedin_profile_url,
-            })
+            }),
+            (exp) => `${exp.title} at ${exp.company}`
           );
 
           sendUpdate(
@@ -318,7 +353,8 @@ export async function POST(request: NextRequest) {
               grade: edu.grade,
               logo_url: edu.logo_url,
               school_linkedin_profile_url: edu.school_linkedin_profile_url,
-            })
+            }),
+            (edu) => `${edu.degree_name || "Degree"} at ${edu.school}`
           );
 
           sendUpdate(
@@ -332,7 +368,8 @@ export async function POST(request: NextRequest) {
             (skill) => ({
               profile_id: profileData.id,
               skill: skill,
-            })
+            }),
+            (skill) => `${skill}`
           );
 
           sendUpdate(
@@ -346,7 +383,8 @@ export async function POST(request: NextRequest) {
             (cert) => ({
               profile_id: profileData.id,
               name: cert.name,
-            })
+            }),
+            (cert) => cert.name || ""
           );
 
           sendUpdate(
@@ -368,7 +406,8 @@ export async function POST(request: NextRequest) {
               ends_at_day: proj.ends_at?.day,
               ends_at_month: proj.ends_at?.month,
               ends_at_year: proj.ends_at?.year,
-            })
+            }),
+            (proj) => proj.title || ""
           );
 
           // Generate and store chunks
