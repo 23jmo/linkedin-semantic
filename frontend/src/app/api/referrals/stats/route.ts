@@ -24,7 +24,10 @@ export async function GET() {
     .single();
 
   if (referralError) {
-    if (referralError.code === "PGRST106") {
+    if (
+      referralError.code === "PGRST106" ||
+      referralError.code === "PGRST116"
+    ) {
       // user not in the referrals list
       // create user in the referrals list
       const { error: referralError } = await supabase
@@ -32,12 +35,17 @@ export async function GET() {
         .insert({ referrer_id: session.user.id });
       if (referralError) {
         console.error("Error creating referral:", referralError);
-        return NextResponse.json({ error: "Error creating referral" }, { status: 500 });
+        return NextResponse.json(
+          { error: "Error creating referral" },
+          { status: 500 }
+        );
       }
-    }
-    else{
+    } else {
       console.error("Error fetching referral data:", referralError);
-      return NextResponse.json({ error: "Error fetching referral data" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Error fetching referral data" },
+        { status: 500 }
+      );
     }
   }
 
