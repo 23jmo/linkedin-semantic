@@ -364,6 +364,18 @@ export const SearchLimitsSchema = z.object({
   updated_at: z.string().datetime({ offset: true }),
 });
 
+export const SendEmailRequestSchema = z.object({
+  profiles: z.array(ProfileFrontendSchema),
+  purpose: z.string(),
+  emailContents: z.record(z.string(), z.object({ subject: z.string(), body: z.string() })),
+});
+
+export const SendEmailResponseSchema = z.object({
+  success: z.boolean(),
+  results: z.array(z.object({ profileId: z.string(), success: z.boolean() })),
+});
+
+
 // Schema for the search_limits table data
 // export const SearchQuotaSchema = z.object({
 //   user_id: z.string(),
@@ -436,3 +448,6 @@ export const ScoredSearchResultsSchema = z.array(ScoredSearchResultSchema);
 export type ScoredSearchResult = z.infer<typeof ScoredSearchResultSchema>;
 export type ScoredSearchResults = z.infer<typeof ScoredSearchResultsSchema>;
 export type TraitScore = z.infer<typeof TraitScoreSchema>;
+
+export type SendEmailRequest = z.infer<typeof SendEmailRequestSchema>;
+export type SendEmailResponse = z.infer<typeof SendEmailResponseSchema>;

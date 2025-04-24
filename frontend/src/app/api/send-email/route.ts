@@ -18,6 +18,16 @@ class ReAuthenticationRequiredError extends Error {
   }
 }
 
+// Custom error class to signal re-authentication needed
+class NestedError extends Error {
+  response?: { data?: { error?: string } };
+  constructor(message: string, response?: { data?: { error?: string } }) {
+    super(message);
+    this.name = "NestedError";
+    this.response = response;
+  }
+}
+
 /**
  * Helper function to find the best available email address for a profile.
  * @param profile The profile data.
@@ -49,41 +59,41 @@ async function findRecipientEmail(
   }
 
   // 2. Fallback to raw profile data
-  if (profile.raw_profile_data) {
-    // Use `any` assertion or check property existence for flexibility
-    const rawData: any = profile.raw_profile_data;
-    if (typeof rawData === "object" && rawData !== null) {
-      // Check for property existence before accessing
-      if (typeof rawData.email === "string" && rawData.email) {
-        console.log(`${logPrefix} Found email in rawData.email`);
-        return rawData.email;
-      }
-      if (typeof rawData.emailAddress === "string" && rawData.emailAddress) {
-        console.log(`${logPrefix} Found email in rawData.emailAddress`);
-        return rawData.emailAddress;
-      }
-      // Check nested property existence
-      if (
-        typeof rawData.contact_info === "object" &&
-        rawData.contact_info !== null &&
-        typeof rawData.contact_info.email === "string" &&
-        rawData.contact_info.email
-      ) {
-        console.log(`${logPrefix} Found email in rawData.contact_info.email`);
-        return rawData.contact_info.email;
-      }
-    }
-  }
+  // if (profile.raw_profile_data) {
+  //   // Use `any` assertion or check property existence for flexibility
+  //   const rawData: RawProfile = profile.raw_profile_data;
+  //   if (typeof rawData === "object" && rawData !== null) {
+  //     // Check for property existence before accessing
+  //     if (typeof rawData.email === "string" && rawData.email) {
+  //       console.log(`${logPrefix} Found email in rawData.email`);
+  //       return rawData.email;
+  //     }
+  //     if (typeof rawData.emailAddress === "string" && rawData.emailAddress) {
+  //       console.log(`${logPrefix} Found email in rawData.emailAddress`);
+  //       return rawData.emailAddress;
+  //     }
+  //     // Check nested property existence
+  //     if (
+  //       typeof rawData.contact_info === "object" &&
+  //       rawData.contact_info !== null &&
+  //       typeof rawData.contact_info.email === "string" &&
+  //       rawData.contact_info.email
+  //     ) {
+  //       console.log(`${logPrefix} Found email in rawData.contact_info.email`);
+  //       return rawData.contact_info.email;
+  //     }
+  //   }
+  // }
 
-  console.log(
-    `${logPrefix} No suitable email found for ${profile.firstName} ${profile.lastName}.`
-  );
+  // console.log(
+  //   `${logPrefix} No suitable email found for ${profile.firstName} ${profile.lastName}.`
+  // );
   return null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // --- Authentication & Initial Setup ---
+    // --- Authenticatioxn & Initial Setup ---
     const session = await auth();
     if (!session?.user?.id) {
       console.error(`${logPrefix} Authentication required.`);
@@ -218,7 +228,7 @@ export async function POST(request: NextRequest) {
         if (
           error instanceof Error &&
           (error.message.includes("invalid_grant") || // Standard invalid grant
-            (error as any).response?.data?.error === "invalid_grant") // Check nested error obj
+            (error as NestedError).response?.data?.error === "invalid_grant") // Check nested error obj
         ) {
           console.warn(
             `${logPrefix} Invalid grant detected for profile ${profile.id}. Throwing ReAuthenticationRequiredError.`

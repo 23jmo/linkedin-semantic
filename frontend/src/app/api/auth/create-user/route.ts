@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {
   ProfileCreateRequestSchema,
-  ProfileCreateResponseSchema,
   AuthData,
   ProfileData,
   Profile,
@@ -436,13 +435,13 @@ export async function POST(request: NextRequest) {
           }
 
           // Return success response
-          const response = {
-            success: true,
-            message: "User profile created successfully",
-          };
+          // const response = {
+          //   success: true,
+          //   message: "User profile created successfully",
+          // };
 
           // Ensure response matches the schema
-          const validatedResponse = ProfileCreateResponseSchema.parse(response);
+          //const validatedResponse = ProfileCreateResponseSchema.parse(response);
 
           //check for referral code
           const cookieStore = await cookies();
