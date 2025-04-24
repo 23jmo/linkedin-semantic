@@ -5,38 +5,77 @@ alwaysApply: false
 ---
 # Gmail Integration Workflow
 
-This document outlines the process for authenticating with Gmail and sending emails through the application's backend.
+This document outlines the process for authenticating with Gmail and sending emails through the application's backend, including handling token expiration and re-authentication.
 
-## Authentication Flow
+## Authentication Flow (Initial Connect & Re-Auth Trigger)
 
-1.  **Check Connection:** The frontend checks if a user has active Gmail credentials using `hasGmailConnected` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`. This function calls the `/api/gmail/check-connection` backend endpoint (handler not explicitly shown, presumed).
-2.  **Initiate Auth:** If not connected, the frontend calls `initiateGmailAuth` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`. This function calls the `/api/auth/gmail-auth` backend endpoint (handler not explicitly shown, presumed).
-3.  **OAuth Redirect:** The `/api/auth/gmail-auth` endpoint generates a Google OAuth consent URL and returns it to the frontend.
-4.  **User Consent:** The frontend redirects the user to Google's consent screen.
-5.  **Callback Handling:** After user approval, Google redirects to the backend callback URL (`/api/auth/gmail-auth/callback`, handler not explicitly shown, presumed). This handler exchanges the received code for OAuth tokens (access and refresh).
-6.  **Store Credentials:** The callback handler stores the obtained tokens securely, likely using functions from `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`.
-7.  **Final Redirect:** The user is redirected back to the original page on the frontend.
+1.  **Check Connection:** (Optional) Frontend checks if a user has active Gmail credentials using `hasGmailConnected` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)` -> `/api/gmail/check-connection`.
+2.  **Initiate Auth:** Frontend calls `initiateGmailAuth` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`. This happens either:
+    *   Manually via a "Connect Gmail" button (e.g., in `[GmailConnector.tsx](mdc:frontend/src/components/GmailConnector.tsx)`).
+    *   Automatically when the `sendEmailBatch` function in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)` detects a `GMAIL_REAUTH_REQUIRED` error from the backend.
+    *   Manually via a "Reconnect Gmail" button (e.g., in `[page.tsx](mdc:frontend/src/app/search/page.tsx)`) when a callback error is detected.
+3.  **Backend Auth URL:** `initiateGmailAuth` calls the `/api/auth/gmail-auth` backend endpoint (handler not explicitly shown, presumed) which generates the Google OAuth consent URL, including the `returnTo` path and `userId` in the `state` parameter.
+4.  **User Consent:** Frontend redirects the user to Google's consent screen using the URL provided by the backend.
+5.  **Google Redirect:** After user approval, Google redirects back to the application's predefined callback URL: `/api/auth/gmail-auth/callback`.
 
-## Email Sending Flow
+## Authentication Callback Flow
 
-1.  **Frontend Trigger:** The frontend calls `sendEmail` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`, passing necessary email details.
-2.  **Backend API Call:** The `sendEmail` function makes a POST request to the `[route.ts](mdc:frontend/src/app/api/send-email/route.ts)` endpoint.
-3.  **Backend Processing:**
-    *   The API route authenticates the user via `[@/auth](mdc:frontend/src/auth.ts)`.
-    *   It retrieves the stored Gmail credentials using `getEmailCredentials` from `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`.
-    *   It initializes the `googleapis` Gmail client with the user's credentials.
-    *   For each recipient profile provided:
-        *   It attempts to find the recipient's email address, first using `getUserEmail` from `[@/lib/api.ts](mdc:frontend/src/lib/api.ts)`, then checking raw profile data, and finally using a fallback.
-        *   It constructs the email message (headers, body) and Base64 encodes it.
-        *   It sends the email using `gmail.users.messages.send`.
-        *   It logs the sent email using `storeEmailHistory` from `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`.
-    *   It returns a success or error response to the frontend.
+1.  **Callback Handler:** The `[route.ts](mdc:frontend/src/app/api/auth/gmail-auth/callback/route.ts)` handler receives the request from Google.
+2.  **Parameter Extraction:** It extracts the `code` and `state` (containing `userId` and `returnTo`) from the URL search parameters. It also checks for an `error` parameter from Google.
+3.  **Error Handling (Google):** If Google returns an `error` parameter, the handler immediately redirects the user back to the `returnTo` URL, adding `error=gmail_auth_failed` and the Google `reason` as query parameters.
+4.  **Token Exchange:** If no Google error, it exchanges the `code` for access and refresh tokens using `googleapis`.
+5.  **Store Credentials:** It stores the obtained tokens securely, associated with the `userId`, using `storeEmailCredentials` from `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`.
+6.  **Final Redirect (Success):** If successful, it redirects the user back to the clean `returnTo` URL (without extra query parameters).
+7.  **Error Handling (Server):** If any server-side error occurs during token exchange or storage, it redirects to the `returnTo` URL (or `/`) with `error=gmail_auth_failed&reason=server_error`.
+
+## Email Sending Flow (with Re-Auth Handling)
+
+1.  **Frontend Trigger:** A component (e.g., `[EmailComposer.tsx](mdc:frontend/src/components/EmailComposer.tsx)`) calls `sendEmailBatch` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`, passing the batch payload (`profiles`, `purpose`, `emailContents`).
+2.  **Backend API Call:** `sendEmailBatch` makes a POST request to the `[route.ts](mdc:frontend/src/app/api/send-email/route.ts)` endpoint with the payload.
+3.  **Backend Processing (`/api/send-email`):**
+    *   Authenticates the user via `[@/auth](mdc:frontend/src/auth.ts)`.
+    *   Retrieves stored Gmail credentials using `getEmailCredentials`.
+    *   Initializes the `googleapis` Gmail client.
+    *   Uses `Promise.all` to process send requests for each profile concurrently:
+        *   Finds recipient email using `findRecipientEmail` helper (checks DB via `getUserEmail` from `[@/lib/api.ts](mdc:frontend/src/lib/api.ts)`, then raw data, then fallback).
+        *   Constructs and Base64 encodes the message.
+        *   Calls `gmail.users.messages.send`.
+        *   **Catch Block (Inside Map):** If `send` fails:
+            *   If the error is `invalid_grant`, it throws a custom `ReAuthenticationRequiredError`.
+            *   Otherwise, it throws a generic error for that specific profile.
+        *   If successful, logs history using `storeEmailHistory`.
+    *   **Catch Block (Around Promise.all):**
+        *   If the caught error is `ReAuthenticationRequiredError`, it returns a **401 Unauthorized** `NextResponse` with `{ code: "GMAIL_REAUTH_REQUIRED" }`.
+        *   Other errors caught here are re-thrown.
+    *   If `Promise.all` succeeds, returns a **200 OK** `NextResponse` with success status and results.
+    *   A final outer `catch` block handles any unhandled errors and returns a **500 Internal Server Error**.
+4.  **Frontend Response Handling (`sendEmailBatch`):**
+    *   Checks the `response.status`.
+    *   If status is **401** and the JSON body contains `{ code: "GMAIL_REAUTH_REQUIRED" }`:
+        *   It calls `initiateGmailAuth()` (triggering Step 2 of Authentication Flow).
+        *   It redirects the user (`window.location.href`).
+        *   It returns `null` to the calling component (`EmailComposer`).
+    *   If the response is OK (200), it returns the JSON body.
+    *   If any other error occurs (non-401 response, network error), it throws an error.
+5.  **UI Handling (`EmailComposer`):**
+    *   If `sendEmailBatch` returns `null`, it indicates re-auth started, and no UI update is needed (page will reload).
+    *   If `sendEmailBatch` returns successfully, it shows the success state.
+    *   If `sendEmailBatch` throws an error, it displays the error message.
+
+## Handling Callback Errors (`page.tsx`)
+
+1.  The search page (`[page.tsx](mdc:frontend/src/app/search/page.tsx)`) uses `useSearchParams`.
+2.  A `useEffect` hook checks for `error=gmail_auth_failed` in the URL.
+3.  If found, it reads the `reason` parameter and displays a user-friendly error message.
+4.  It shows a "Reconnect Gmail" button which calls `handleGmailReAuth`, triggering `initiateGmailAuth` (Step 2 of Authentication Flow).
 
 ## Key Files
 
-*   Frontend Logic: `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`
+*   Frontend Service Logic: `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)` (exports `hasGmailConnected`, `initiateGmailAuth`, `sendEmailBatch`)
 *   Backend Sending Endpoint: `[route.ts](mdc:frontend/src/app/api/send-email/route.ts)`
+*   Backend Auth Callback Endpoint: `[route.ts](mdc:frontend/src/app/api/auth/gmail-auth/callback/route.ts)`
 *   Server-side Credentials/History: `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`
-*   User Email Lookup: `[@/lib/api.ts](mdc:frontend/src/lib/api.ts)`
-*   Authentication: `[@/auth](mdc:frontend/src/auth.ts)` (or relevant auth setup file)
-*   Implied Backend Auth Routes: `/api/gmail/check-connection`, `/api/auth/gmail-auth`, `/api/auth/gmail-auth/callback`
+*   User Email Lookup (DB): `[@/lib/api.ts](mdc:frontend/src/lib/api.ts)` (exports `getUserEmail`)
+*   Authentication Core: `[@/auth](mdc:frontend/src/auth.ts)` (or relevant auth setup file)
+*   UI Components: `[EmailComposer.tsx](mdc:frontend/src/components/EmailComposer.tsx)`, `[page.tsx](mdc:frontend/src/app/search/page.tsx)`
+*   Implied Backend Auth Route: `/api/auth/gmail-auth` (generates OAuth URL)
