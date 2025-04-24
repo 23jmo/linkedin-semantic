@@ -17,6 +17,7 @@ import QuotaIndicator from "@/components/QuotaIndicator";
 import QuotaLimitError from "@/components/QuotaLimitError";
 import { ProfileFrontend, SearchLimits } from "../../types/types";
 import { SearchResult } from "../../types/types";
+import { initiateGmailAuth } from "@/lib/gmail-service";
 
 export default function SearchPage() {
   return (
@@ -35,6 +36,8 @@ function SearchPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [showQuotaLimitError, setShowQuotaLimitError] =
     useState<boolean>(false);
+  const [gmailAuthError, setGmailAuthError] = useState<string | null>(null);
+  const [isReAuthLoading, setIsReAuthLoading] = useState<boolean>(false);
 
   // Get quota management functions and state
   const {
@@ -215,9 +218,6 @@ function SearchPageContent() {
     if (q) {
       setQuery(q);
       if (status === "authenticated") {
-        // Don't automatically search on load if quota is potentially an issue
-        // Let user initiate via button or re-search
-        // performSearch(q); // Consider removing auto-search on load
         performSearch(q);
       } else {
         setError(null); // Clear errors if user logs out/in
@@ -226,6 +226,58 @@ function SearchPageContent() {
       }
     }
   }, [searchParams, status, performSearch]);
+
+  // Effect to handle Gmail auth errors from URL parameters
+  useEffect(() => {
+    const authError = searchParams.get("error");
+    const reason = searchParams.get("reason");
+
+    if (authError === "gmail_auth_failed") {
+      let message = "Failed to connect your Gmail account.";
+      switch (reason) {
+        case "oauth_error":
+          message =
+            "There was an error during Google authentication. Please try again.";
+          break;
+        case "missing_parameters":
+          message =
+            "Authentication failed due to missing information. Please try again.";
+          break;
+        case "no_access_token":
+          message =
+            "Could not retrieve necessary permissions from Google. Please ensure you grant access and try again.";
+          break;
+        case "server_error":
+          message =
+            "An unexpected server error occurred during Gmail authentication. Please try again later.";
+          break;
+      }
+      setGmailAuthError(message);
+      // Optionally, clear the URL parameters to avoid re-showing the error on refresh
+      // window.history.replaceState(null, '', window.location.pathname);
+    } else {
+      // Clear the error if the parameters are not present
+      setGmailAuthError(null);
+    }
+  }, [searchParams]);
+
+  // Handler for Gmail Re-Authentication Button
+  const handleGmailReAuth = async () => {
+    setIsReAuthLoading(true);
+    setGmailAuthError(null); // Clear the error message
+    try {
+      const authUrl = await initiateGmailAuth();
+      console.log("Redirecting to Gmail auth:", authUrl);
+      window.location.href = authUrl;
+      // No need to set loading false, page will redirect
+    } catch (err) {
+      console.error("Failed to initiate Gmail re-auth:", err);
+      setGmailAuthError(
+        err instanceof Error ? err.message : "Failed to start Gmail connection."
+      );
+      setIsReAuthLoading(false);
+    }
+  };
 
   // Handle profile selection
   const handleProfileSelect = (profile: ProfileFrontend, selected: boolean) => {
@@ -256,6 +308,25 @@ function SearchPageContent() {
       <div className="py-6">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Search Results</h1>
+
+          {/* Render Gmail Auth Error if present */}
+          {gmailAuthError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+              <strong className="font-bold">Gmail Connection Error: </strong>
+              <span className="block sm:inline">{gmailAuthError}</span>
+              <div className="mt-2">
+                <button
+                  onClick={handleGmailReAuth}
+                  disabled={isReAuthLoading}
+                  className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ${
+                    isReAuthLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isReAuthLoading ? "Connecting..." : "Reconnect Gmail"}
+                </button>
+              </div>
+            </div>
+          )}
 
           <SearchControls
             initialQuery={query}

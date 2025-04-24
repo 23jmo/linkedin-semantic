@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
 
     // Redirect back to the original page with success message
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}${returnTo}?success=gmail_connected`
+      `${process.env.NEXTAUTH_URL}${returnTo}`
     );
   } catch (error) {
     console.error("[API] GET /api/auth/gmail-auth/callback - Error:", error);

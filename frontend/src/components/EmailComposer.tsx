@@ -10,6 +10,7 @@ import { checkUserExists, getLinkedInProfile } from "@/lib/api";
 import { ProfileFrontend, RawProfile } from "../types/types";
 import { useEmailLimits } from "@/hooks/useEmailLimits";
 import EmailQuotaDisplay from "./EmailQuotaDisplay";
+import { sendEmailBatch } from "@/lib/gmail-service";
 
 interface EmailComposerProps {
   selectedProfiles: ProfileFrontend[];
@@ -231,9 +232,10 @@ export default function EmailComposer({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    console.log("[EmailComposer] handleSubmit initiated");
 
     try {
-      // Use generated emails if available, otherwise use empty strings
+      // Prepare the payload for the sendEmailBatch function
       const emailContents = selectedProfiles.reduce((acc, profile) => {
         acc[profile.id] = generatedEmails[profile.id] || {
           subject: "",
@@ -242,42 +244,47 @@ export default function EmailComposer({
         return acc;
       }, {} as Record<string, { subject: string; body: string }>);
 
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          profiles: selectedProfiles,
-          purpose,
-          notes,
-          emailContents, // Include the generated/edited emails with subject and body
-        }),
+      const payload = {
+        profiles: selectedProfiles,
+        purpose,
+        emailContents,
+      };
+      console.log("[EmailComposer] Calling sendEmailBatch with payload:", {
+        purpose: payload.purpose,
+        profileCount: payload.profiles.length,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (errorData.code === "TOKEN_EXPIRED") {
-          setIsGmailConnected(false);
-          setError(
-            "Your Gmail connection has expired. Please reconnect your Gmail account to continue."
-          );
-          return;
-        }
-        throw new Error(errorData.message || "Failed to send email");
-      }
+      // Call the imported function from gmail-service
+      const result = await sendEmailBatch(payload);
 
-      setSuccess(true);
-      // Reset form after success
-      setPurpose("");
-      setNotes({});
-      setGeneratedEmails({});
-      setShowGeneratedEmails(false);
+      // sendEmailBatch returns null if redirection for re-auth occurred.
+      // If it returns successfully, we proceed.
+      if (result !== null) {
+        console.log("[EmailComposer] sendEmailBatch successful:", result);
+        setSuccess(true);
+        // Reset form after success
+        setPurpose("");
+        setNotes({});
+        setGeneratedEmails({});
+        setShowGeneratedEmails(false);
+      } else {
+        // If result is null, re-auth redirect was initiated by sendEmailBatch.
+        // The page will reload after re-auth, so no specific UI update is needed here,
+        // but we log it for clarity.
+        console.log(
+          "[EmailComposer] sendEmailBatch initiated re-auth. No further action in handleSubmit."
+        );
+        // Keep isLoading true because the page will likely redirect/reload
+        // setIsLoading(false); // Don't set loading to false here
+      }
     } catch (err) {
+      // This catch block now only handles errors *not* caught by sendEmailBatch
+      // (e.g., network errors, or errors thrown by sendEmailBatch other than re-auth)
+      console.error("[EmailComposer] Error in handleSubmit:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading false on error
     }
+    // Removed finally block that set isLoading false, as it interferes with re-auth redirect
   };
 
   return (
