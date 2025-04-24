@@ -17,6 +17,8 @@ export default function SearchBox({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { resolvedTheme } = useTheme();
 
+  const [isPointerDown, setIsPointerDown] = useState(false);
+
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
@@ -31,8 +33,22 @@ export default function SearchBox({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSearch();
+      if (query.trim()) {
+        setIsPointerDown(true);
+        handleSearch();
+        setTimeout(() => {
+          setIsPointerDown(false);
+        }, 200);
+      }
     }
+  };
+
+  const handlePointerDown = () => {
+    setIsPointerDown(true);
+  };
+
+  const handlePointerUp = () => {
+    setIsPointerDown(false);
   };
 
   const isQueryEmpty = query.trim() === "";
@@ -66,6 +82,8 @@ export default function SearchBox({
       <button
         type="button"
         onClick={handleSearch}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
         disabled={isQueryEmpty}
         className={`p-4 rounded-lg flex items-center justify-center transition-colors mt-1 ${
           isQueryEmpty
@@ -73,7 +91,11 @@ export default function SearchBox({
               ? "bg-gray-200 text-gray-400 cursor-not-allowed"
               : "bg-gray-700 text-gray-500 cursor-not-allowed"
             : resolvedTheme === "light"
-            ? "bg-blue-500 hover:bg-blue-600 text-white"
+            ? isPointerDown
+              ? "bg-blue-300 text-white" // Highlight when pointer down (light mode)
+              : "bg-blue-500 hover:bg-blue-600 text-white"
+            : isPointerDown
+            ? "bg-blue-500 text-white" // Highlight when pointer down (dark mode)
             : "bg-blue-600 hover:bg-blue-700 text-white"
         }`}
         aria-label="Submit search"
