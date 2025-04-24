@@ -1,0 +1,42 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Gmail Integration Workflow
+
+This document outlines the process for authenticating with Gmail and sending emails through the application's backend.
+
+## Authentication Flow
+
+1.  **Check Connection:** The frontend checks if a user has active Gmail credentials using `hasGmailConnected` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`. This function calls the `/api/gmail/check-connection` backend endpoint (handler not explicitly shown, presumed).
+2.  **Initiate Auth:** If not connected, the frontend calls `initiateGmailAuth` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`. This function calls the `/api/auth/gmail-auth` backend endpoint (handler not explicitly shown, presumed).
+3.  **OAuth Redirect:** The `/api/auth/gmail-auth` endpoint generates a Google OAuth consent URL and returns it to the frontend.
+4.  **User Consent:** The frontend redirects the user to Google's consent screen.
+5.  **Callback Handling:** After user approval, Google redirects to the backend callback URL (`/api/auth/gmail-auth/callback`, handler not explicitly shown, presumed). This handler exchanges the received code for OAuth tokens (access and refresh).
+6.  **Store Credentials:** The callback handler stores the obtained tokens securely, likely using functions from `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`.
+7.  **Final Redirect:** The user is redirected back to the original page on the frontend.
+
+## Email Sending Flow
+
+1.  **Frontend Trigger:** The frontend calls `sendEmail` in `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`, passing necessary email details.
+2.  **Backend API Call:** The `sendEmail` function makes a POST request to the `[route.ts](mdc:frontend/src/app/api/send-email/route.ts)` endpoint.
+3.  **Backend Processing:**
+    *   The API route authenticates the user via `[@/auth](mdc:frontend/src/auth.ts)`.
+    *   It retrieves the stored Gmail credentials using `getEmailCredentials` from `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`.
+    *   It initializes the `googleapis` Gmail client with the user's credentials.
+    *   For each recipient profile provided:
+        *   It attempts to find the recipient's email address, first using `getUserEmail` from `[@/lib/api.ts](mdc:frontend/src/lib/api.ts)`, then checking raw profile data, and finally using a fallback.
+        *   It constructs the email message (headers, body) and Base64 encodes it.
+        *   It sends the email using `gmail.users.messages.send`.
+        *   It logs the sent email using `storeEmailHistory` from `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`.
+    *   It returns a success or error response to the frontend.
+
+## Key Files
+
+*   Frontend Logic: `[gmail-service.ts](mdc:frontend/src/lib/gmail-service.ts)`
+*   Backend Sending Endpoint: `[route.ts](mdc:frontend/src/app/api/send-email/route.ts)`
+*   Server-side Credentials/History: `[@/lib/server/email-credentials.ts](mdc:frontend/src/lib/server/email-credentials.ts)`
+*   User Email Lookup: `[@/lib/api.ts](mdc:frontend/src/lib/api.ts)`
+*   Authentication: `[@/auth](mdc:frontend/src/auth.ts)` (or relevant auth setup file)
+*   Implied Backend Auth Routes: `/api/gmail/check-connection`, `/api/auth/gmail-auth`, `/api/auth/gmail-auth/callback`

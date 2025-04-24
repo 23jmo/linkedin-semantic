@@ -8,186 +8,280 @@ import { google } from "googleapis";
 import { getUserEmail } from "@/lib/api";
 import { ProfileFrontend } from "@/types/types";
 
+const logPrefix = "[API:/api/send-email]";
+
+// Custom error class to signal re-authentication needed
+class ReAuthenticationRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ReAuthenticationRequiredError";
+  }
+}
+
+/**
+ * Helper function to find the best available email address for a profile.
+ * @param profile The profile data.
+ * @returns The email address string or null if not found.
+ */
+async function findRecipientEmail(
+  profile: ProfileFrontend
+): Promise<string | null> {
+  // 1. Try fetching from database via user_id
+  if (profile.user_id) {
+    try {
+      const email = await getUserEmail(profile.user_id);
+      if (email) {
+        console.log(
+          `${logPrefix} Found email for ${profile.firstName} ${profile.lastName} from DB: Yes`
+        );
+        return email;
+      } else {
+        console.log(
+          `${logPrefix} No email found for ${profile.firstName} ${profile.lastName} in DB`
+        );
+      }
+    } catch (error) {
+      console.error(
+        `${logPrefix} Error fetching email from DB for profile ${profile.id}:`,
+        error
+      );
+    }
+  }
+
+  // 2. Fallback to raw profile data
+  if (profile.raw_profile_data) {
+    // Use `any` assertion or check property existence for flexibility
+    const rawData: any = profile.raw_profile_data;
+    if (typeof rawData === "object" && rawData !== null) {
+      // Check for property existence before accessing
+      if (typeof rawData.email === "string" && rawData.email) {
+        console.log(`${logPrefix} Found email in rawData.email`);
+        return rawData.email;
+      }
+      if (typeof rawData.emailAddress === "string" && rawData.emailAddress) {
+        console.log(`${logPrefix} Found email in rawData.emailAddress`);
+        return rawData.emailAddress;
+      }
+      // Check nested property existence
+      if (
+        typeof rawData.contact_info === "object" &&
+        rawData.contact_info !== null &&
+        typeof rawData.contact_info.email === "string" &&
+        rawData.contact_info.email
+      ) {
+        console.log(`${logPrefix} Found email in rawData.contact_info.email`);
+        return rawData.contact_info.email;
+      }
+    }
+  }
+
+  console.log(
+    `${logPrefix} No suitable email found for ${profile.firstName} ${profile.lastName}.`
+  );
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Get the current session
+    // --- Authentication & Initial Setup ---
     const session = await auth();
-    // console.log("Session", session);
     if (!session?.user?.id) {
+      console.error(`${logPrefix} Authentication required.`);
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
     }
+    const userId = session.user.id;
+    console.log(`${logPrefix} Request initiated by user: ${userId}`);
 
-    // Parse the request body
     const { profiles, purpose, emailContents } = await request.json();
 
-    // Log the email request
-    console.log("Email Send Request:", {
-      userId: session.user.id,
-      recipientCount: profiles.length,
-      recipients: profiles.map((p: ProfileFrontend) => ({
-        id: p.id,
-        name: `${p.firstName} ${p.lastName}`,
-      })),
-      purpose: purpose.substring(0, 100) + (purpose.length > 100 ? "..." : ""),
+    console.log(`${logPrefix} Email Send Request Details:`, {
+      userId,
+      recipientCount: profiles?.length ?? 0,
+      purpose:
+        purpose?.substring(0, 100) + (purpose?.length > 100 ? "..." : ""),
     });
 
-    // Validate required fields
     if (!profiles || !Array.isArray(profiles) || profiles.length === 0) {
+      console.error(`${logPrefix} Validation Error: No recipients provided.`);
       return NextResponse.json(
         { error: "At least one recipient is required" },
         { status: 400 }
       );
     }
 
-    // Get Gmail credentials
-    const credentials = await getEmailCredentials(session.user.id, "gmail");
-    if (!credentials) {
+    // --- Gmail Client Setup ---
+    const credentials = await getEmailCredentials(userId, "gmail");
+    if (!credentials?.access_token || !credentials?.refresh_token) {
+      console.error(
+        `${logPrefix} Gmail credentials not found for user ${userId}.`
+      );
+      // If credentials aren't found AT ALL, this might also imply re-auth is needed, or initial setup.
+      // Consider returning the specific 401 code here too if appropriate.
       return NextResponse.json(
-        { error: "Gmail credentials not found" },
-        { status: 400 }
+        { error: "Gmail credentials not found or incomplete" },
+        { status: 400 } // Or potentially 401 if it means re-auth
       );
     }
 
-    // Set up Gmail API client
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
       process.env.GOOGLE_CLIENT_SECRET!,
       `${process.env.NEXTAUTH_URL}/api/auth/gmail-auth/callback`
     );
-
     oauth2Client.setCredentials({
       access_token: credentials.access_token,
       refresh_token: credentials.refresh_token,
     });
-
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    // Send emails to each recipient
-    const results = await Promise.all(
-      profiles.map(async (profile) => {
-        // Get recipient email from database
-        let recipientEmail = "";
+    // --- Process Emails Concurrently ---
+    // Create promises for each email sending operation
+    const sendPromises = profiles.map(async (profile: ProfileFrontend) => {
+      // Find recipient email
+      let recipientEmail: string;
+      const foundEmail = await findRecipientEmail(profile);
 
-        try {
-          // Use the getUserEmail function from api.ts
-          // console.log("Fucking Profile", profile);
-          const email = await getUserEmail(profile.user_id);
-          if (email) {
-            recipientEmail = email;
-            console.log(
-              `Found email for ${profile.firstName} ${profile.lastName} from database: Yes`
-            );
-          } else {
-            console.log(
-              `No email found for ${profile.firstName} ${profile.lastName} in database`
-            );
-          }
-        } catch (error) {
-          console.error("Error fetching target profile email:", error);
-        }
-
-        // Fallback to profile data if database lookup failed
-        if (!recipientEmail && profile.raw_profile_data) {
-          const rawData = profile.raw_profile_data;
-          if (typeof rawData === "object" && rawData !== null) {
-            if (typeof rawData.email === "string" && rawData.email) {
-              recipientEmail = rawData.email;
-            } else if (
-              typeof rawData.emailAddress === "string" &&
-              rawData.emailAddress
-            ) {
-              recipientEmail = rawData.emailAddress;
-            } else if (
-              rawData.contact_info &&
-              typeof rawData.contact_info.email === "string"
-            ) {
-              recipientEmail = rawData.contact_info.email;
-            }
-          }
-        }
-
-        // Final fallback
-        if (!recipientEmail) {
-          recipientEmail = `${profile.firstName.toLowerCase()}.${profile.lastName.toLowerCase()}@example.com`;
-        }
-
-        // Get the email content for this profile
-        const emailContent = emailContents[profile.id] || {
-          subject: "",
-          body: "",
-        };
-        if (!emailContent.subject || !emailContent.body) {
-          throw new Error(
-            `Email content missing for ${profile.firstName} ${profile.lastName}`
-          );
-        }
-
-        // Convert newlines to <br> tags for HTML email
-        const htmlBody = emailContent.body.replace(/\n/g, "<br>");
-
-        // Log the email being sent
+      if (foundEmail) {
+        recipientEmail = foundEmail;
+      } else {
+        // Use fallback if no email found
+        recipientEmail = `${profile.firstName?.toLowerCase() || "user"}.${
+          profile.lastName?.toLowerCase() || Date.now()
+        }@example.com`; // Added null checks for names
         console.log(
-          `Sending email to ${recipientEmail} with subject ${emailContent.subject}`
+          `${logPrefix} Using fallback email for ${profile.id}: ${recipientEmail}`
+        );
+      }
+
+      // Get email content for this profile
+      const emailContent = emailContents[profile.id];
+      if (!emailContent?.subject || !emailContent?.body) {
+        console.error(
+          `${logPrefix} Email content missing for profile ${profile.id}`
+        );
+        // Throw an error for this specific profile if content is missing
+        throw new Error(
+          `Email content missing for ${profile.firstName} ${profile.lastName}`
+        );
+      }
+
+      // Convert newlines to <br> tags for HTML email
+      const htmlBody = emailContent.body.replace(/\n/g, "<br>");
+
+      // Log the email being sent
+      console.log(
+        `${logPrefix} Preparing to send email to ${recipientEmail} for profile ${profile.id}`
+      );
+
+      // Create the message
+      const message = {
+        raw: Buffer.from(
+          `To: ${recipientEmail}\r\n` +
+            `Subject: ${emailContent.subject}\r\n\r\n` +
+            `${htmlBody}`
+        ).toString("base64url"),
+      };
+
+      // Send the email via Gmail API
+      try {
+        await gmail.users.messages.send({
+          userId: "me",
+          requestBody: message,
+        });
+        console.log(
+          `${logPrefix} Email successfully sent for profile ${profile.id}`
         );
 
-        // Create and send the email
-        const message = {
-          raw: Buffer.from(
-            `To: ${recipientEmail}\r\n` +
-              `Subject: ${emailContent.subject}\r\n\r\n` +
-              `${htmlBody}`
-          ).toString("base64url"),
-        };
-
-        // Send the email
-        try {
-          await gmail.users.messages.send({
-            userId: "me",
-            requestBody: message,
-          });
-        } catch (error) {
-          console.error("Error sending email:", error);
-          if (
-            error instanceof Error &&
-            error.message.includes("invalid_grant")
-          ) {
-            return NextResponse.json(
-              { error: "Gmail token expired", code: "TOKEN_EXPIRED" },
-              { status: 401 }
-            );
-          }
-          throw error;
-        }
-
-        // Store email history
+        // Store email history on success
         await storeEmailHistory(
-          session.user.id as string,
+          userId,
           profile.id,
-          `${profile.firstName} ${profile.lastName}`,
+          `${profile.firstName || ""} ${profile.lastName || ""}`.trim(), // Handle potential null names
           recipientEmail,
           emailContent.subject,
           emailContent.body
         );
+        console.log(
+          `${logPrefix} Email history stored for profile ${profile.id}`
+        );
 
-        // Log successful send
+        return { profileId: profile.id, success: true };
+      } catch (error) {
+        console.error(
+          `${logPrefix} Error sending email via Gmail for profile ${profile.id}:`,
+          error
+        );
+        // Check if the error is an invalid grant
+        if (
+          error instanceof Error &&
+          (error.message.includes("invalid_grant") || // Standard invalid grant
+            (error as any).response?.data?.error === "invalid_grant") // Check nested error obj
+        ) {
+          console.warn(
+            `${logPrefix} Invalid grant detected for profile ${profile.id}. Throwing ReAuthenticationRequiredError.`
+          );
+          // Throw specific error to be caught by the outer handler
+          throw new ReAuthenticationRequiredError("Gmail token invalid");
+        }
+        // For other Gmail API errors, throw a new error or re-throw
+        // Wrapping it provides context about which profile failed
+        throw new Error(
+          `Failed to send email for profile ${profile.id}: ${
+            error instanceof Error ? error.message : "Unknown Gmail API error"
+          }`
+        );
+      }
+    }); // End of profiles.map
 
-        return {
-          profileId: profile.id,
-          success: true,
-        };
-      })
+    // --- Wait for all send operations and handle results ---
+    let results;
+    try {
+      results = await Promise.all(sendPromises);
+      // If Promise.all resolves, all individual promises either succeeded
+      // or caught their specific errors and threw the ReAuthenticationRequiredError or another error.
+      // If ReAuthenticationRequiredError was thrown, it would be caught below.
+      // If other errors were thrown, they'd also be caught below.
+      console.log(
+        `${logPrefix} All email promises settled. Result count: ${results.length}`
+      );
+    } catch (error) {
+      // Catch errors propagated from the map promises
+      console.error(`${logPrefix} Error during Promise.all execution:`, error);
+
+      // Check if it's the specific re-authentication error
+      if (error instanceof ReAuthenticationRequiredError) {
+        console.warn(
+          `${logPrefix} ReAuthenticationRequiredError caught. Returning 401.`
+        );
+        return NextResponse.json(
+          {
+            error: "Gmail re-authentication required",
+            code: "GMAIL_REAUTH_REQUIRED",
+          },
+          { status: 401 }
+        );
+      }
+
+      // For any other error caught from Promise.all (like content missing error, or other Gmail errors)
+      // Re-throw it to be caught by the final generic error handler
+      throw error;
+    }
+
+    // If we reach here, all sends were successful (or handled individually if needed)
+    console.log(
+      `${logPrefix} All emails processed successfully. Final results:`,
+      results
     );
-
-    console.log(`All emails sent successfully: ${results.length} emails`);
     return NextResponse.json({ success: true, results });
   } catch (error) {
-    console.error("Error sending email:", error);
+    // Final catch-all for any errors not handled above (including re-thrown ones)
+    console.error(`${logPrefix} Unhandled error in POST handler:`, error);
     return NextResponse.json(
       {
-        error: "Failed to send email",
+        error: "Failed to process email request",
         message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
