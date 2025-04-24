@@ -17,14 +17,15 @@ export default function QuotaIndicator({
     <div className="text-right text-xs text-gray-500 dark:text-gray-400 pr-1 mb-4">
       {isLoading ? (
         <span>Loading quota...</span>
-      ) : quota ? (
+      ) : quota &&
+        typeof quota.searches_this_month === "number" && // Check if searches_this_month is a number
+        typeof quota.monthly_search_limit === "number" ? ( // Check if monthly_search_limit is a number
         <span>
           Searches used: {quota.searches_this_month} /
           {quota.monthly_search_limit}
         </span>
       ) : (
-        // Display something if quota is null and not loading (e.g., error occurred)
-        // Could use quotaError prop here if passed
+        // Display N/A if quota is null, or if the required fields are missing or not numbers
         <span>Quota N/A</span>
       )}
     </div>
