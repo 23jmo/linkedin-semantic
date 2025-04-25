@@ -310,7 +310,7 @@ function SearchPageContent() {
 
   return (
     <Layout data-oid="2g8j:ke">
-      <div className="py-6" data-oid="otjj7dn">
+      <div className="py-6 px-3" data-oid="otjj7dn">
         <div className="max-w-4xl mx-auto" data-oid="ha3:uld">
           <h1 className="text-2xl font-bold mb-6" data-oid="36sfh9e">
             Search Results
