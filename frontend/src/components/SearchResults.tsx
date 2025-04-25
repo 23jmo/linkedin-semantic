@@ -16,7 +16,11 @@ interface SearchResultsProps {
 // TraitScoreCircle Component
 function TraitScoreCircle({ traitScores }: { traitScores?: TraitScore[] }) {
   if (!traitScores || traitScores.length === 0) {
-    return <span className="text-xs italic text-gray-400">No scores</span>;
+    return (
+      <span className="text-xs italic text-gray-400" data-oid="5s.:ocq">
+        No scores
+      </span>
+    );
   }
 
   const size = 40;
@@ -48,14 +52,15 @@ function TraitScoreCircle({ traitScores }: { traitScores?: TraitScore[] }) {
           path: `
             M ${center.x + radius},${center.y}
             A ${radius},${radius} 0 1 1 ${center.x + radius - epsilon},${
-            center.y
-          }
+              center.y
+            }
             L ${center.x + innerRadius - epsilon},${center.y}
             A ${innerRadius},${innerRadius} 0 1 0 ${center.x + innerRadius},${
-            center.y
-          }
+              center.y
+            }
             Z
           `,
+
           fill:
             scoreColors[score.score as keyof typeof scoreColors] || "#cccccc",
           score,
@@ -118,6 +123,7 @@ function TraitScoreCircle({ traitScores }: { traitScores?: TraitScore[] }) {
     <div
       className="relative group flex items-center justify-center"
       style={{ width: size, height: size }}
+      data-oid="m3.chbv"
     >
       <svg
         width={size}
@@ -125,6 +131,7 @@ function TraitScoreCircle({ traitScores }: { traitScores?: TraitScore[] }) {
         viewBox={`0 0 ${size} ${size}`}
         className="inline-block"
         style={{ display: "block" }}
+        data-oid="u3xh2q0"
       >
         {slices.map(
           (slice, index) =>
@@ -135,30 +142,35 @@ function TraitScoreCircle({ traitScores }: { traitScores?: TraitScore[] }) {
                 fill={slice.fill}
                 stroke="#fff"
                 strokeWidth="0.5"
+                data-oid="cxf:x9y"
               />
-            )
+            ),
         )}
       </svg>
 
       {/* Tooltip */}
-      <div className="absolute left-full ml-2 top-0 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform scale-95 group-hover:scale-100 origin-top-left transition-all duration-200 ease-in-out bg-white dark:bg-gray-800 shadow-lg rounded p-2 w-64">
-        <p className="text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+      <div
+        className="absolute left-full ml-2 top-0 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform scale-95 group-hover:scale-100 origin-top-left transition-all duration-200 ease-in-out bg-white dark:bg-gray-800 shadow-lg rounded p-2 w-64"
+        data-oid="brfoj6y"
+      >
+        <p
+          className="text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+          data-oid="6lxy_7a"
+        >
           Trait Scores:
         </p>
-        <ul className="space-y-1">
+        <ul className="space-y-1" data-oid="y8pkkox">
           {traitScores.map((trait, index) => (
-            <li
-              key={index}
-              className="text-xs"
-            >
+            <li key={index} className="text-xs" data-oid="88b6-_n">
               <span
                 className="inline-block w-3 h-3 mr-2 rounded-full"
                 style={{
                   backgroundColor:
                     scoreColors[trait.score as keyof typeof scoreColors],
                 }}
+                data-oid="i:y3:pz"
               ></span>
-              <strong>{trait.trait}:</strong> {trait.score}
+              <strong data-oid="22gy-yt">{trait.trait}:</strong> {trait.score}
             </li>
           ))}
         </ul>
@@ -178,7 +190,7 @@ export default function SearchResults({
 
   // State for hover preview
   const [hoveredProfile, setHoveredProfile] = useState<ProfileFrontend | null>(
-    null
+    null,
   );
   const [previewPosition, setPreviewPosition] = useState<{
     x: number;
@@ -267,7 +279,7 @@ export default function SearchResults({
       if (result?.trait_scores && result.trait_scores.length > 0) {
         height += Math.max(10, result.trait_scores.length * 28);
         const hasEvidence = result.trait_scores.some(
-          (score) => score.evidence && score.evidence.length > 0
+          (score) => score.evidence && score.evidence.length > 0,
         );
         if (hasEvidence) {
           height += 20;
@@ -275,7 +287,7 @@ export default function SearchResults({
       }
       return height;
     },
-    [results]
+    [results],
   ); // Add results as dependency
 
   // Calculate which items are visible based on scroll position
@@ -332,7 +344,7 @@ export default function SearchResults({
     visibleEndIndex = Math.max(
       visibleEndIndex,
       visibleStartIndex + 15,
-      startIndex + 5
+      startIndex + 5,
     );
 
     setStartIndex(visibleStartIndex);
@@ -386,11 +398,11 @@ export default function SearchResults({
 
   if (results.length === 0 && query) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600 dark:text-gray-400 mb-2">
+      <div className="text-center py-12" data-oid="g5z5op6">
+        <p className="text-gray-600 dark:text-gray-400 mb-2" data-oid="b8qx:5h">
           No results found for &quot;{query}&quot;
         </p>
-        <p className="text-gray-500 dark:text-gray-500">
+        <p className="text-gray-500 dark:text-gray-500" data-oid="r8ny7f7">
           Try a different search term or broaden your query
         </p>
       </div>
@@ -404,7 +416,7 @@ export default function SearchResults({
   const topPlaceholderHeight =
     startIndex > 0
       ? Array.from({ length: startIndex }, (_, i) =>
-          estimateRowHeight(i)
+          estimateRowHeight(i),
         ).reduce((sum, height) => sum + height, 0)
       : 0;
 
@@ -412,7 +424,7 @@ export default function SearchResults({
   const bottomPlaceholderHeight =
     endIndex < results.length - 1
       ? Array.from({ length: results.length - endIndex - 1 }, (_, i) =>
-          estimateRowHeight(endIndex + 1 + i)
+          estimateRowHeight(endIndex + 1 + i),
         ).reduce((sum, height) => sum + height, 0)
       : 0;
 
@@ -420,36 +432,57 @@ export default function SearchResults({
     <div
       className="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg"
       ref={containerRef}
+      data-oid="llkbobk"
     >
       {/* Table header */}
-      <div className="bg-gray-50 dark:bg-gray-800 flex border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <div className="w-12 px-3 py-3 text-left">
-          <span className="sr-only">Select</span>
+      <div
+        className="bg-gray-50 dark:bg-gray-800 flex border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10"
+        data-oid="4:ogtxo"
+      >
+        <div className="w-12 px-3 py-3 text-left" data-oid="euw8:kl">
+          <span className="sr-only" data-oid="7-.4rv-">
+            Select
+          </span>
         </div>
-        <div className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">
+        <div
+          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16"
+          data-oid="az_aysy"
+        >
           Score
         </div>
-        <div className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56">
+        <div
+          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56"
+          data-oid=".51vwpe"
+        >
           Name
         </div>
-        <div className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex-1">
+        <div
+          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex-1"
+          data-oid="00ddtv:"
+        >
           Relevant Info
         </div>
-        <div className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-40">
+        <div
+          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-40"
+          data-oid="6uaf8_7"
+        >
           Previous Emails
         </div>
-        <div className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">
+        <div
+          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24"
+          data-oid="_4q7pxq"
+        >
           LinkedIn
         </div>
       </div>
 
       {/* Top spacer */}
       {topPlaceholderHeight > 0 && (
-        <div style={{ height: topPlaceholderHeight }} />
+        <div style={{ height: topPlaceholderHeight }} data-oid="xp.m-.v" />
       )}
 
       {/* Visible items */}
-      <div className="bg-white dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-900" data-oid="5oav6ab">
         {visibleResults.map((result) => {
           const profile = convertToProfileFrontend(result);
           const isSelected = selectedProfiles.some((p) => p.id === profile.id);
@@ -465,49 +498,77 @@ export default function SearchResults({
               onMouseEnter={(e) => handleRowHover(profile, e)}
               onMouseLeave={handleRowHoverEnd}
               onClick={() => handleRowClick(profile)}
+              data-oid="99h_i-1"
             >
               {/* Checkbox column */}
-              <div className="px-3 py-4 flex items-center w-12">
+              <div
+                className="px-3 py-4 flex items-center w-12"
+                data-oid="9.6:auq"
+              >
                 <div
                   className="flex items-center h-5"
                   onClick={(e) => e.stopPropagation()}
+                  data-oid="p83b6xy"
                 >
                   <input
                     type="checkbox"
                     className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
                     checked={isSelected}
                     onChange={(e) => onProfileSelect(profile, e.target.checked)}
+                    data-oid="xzyeyo3"
                   />
                 </div>
               </div>
 
               {/* Score column */}
-              <div className="px-3 py-4 flex items-center justify-center w-16 min-h-[60px]">
+              <div
+                className="px-3 py-4 flex items-center justify-center w-16 min-h-[60px]"
+                data-oid="wl1u_bs"
+              >
                 {result.trait_scores && result.trait_scores.length > 0 ? (
-                  <TraitScoreCircle traitScores={result.trait_scores} />
+                  <TraitScoreCircle
+                    traitScores={result.trait_scores}
+                    data-oid="jh8jt-n"
+                  />
                 ) : (
-                  <span className="text-xs italic text-gray-400">
+                  <span
+                    className="text-xs italic text-gray-400"
+                    data-oid="hnqqe76"
+                  >
                     No scores
                   </span>
                 )}
               </div>
 
               {/* Name column */}
-              <div className="px-3 py-4 flex items-center w-56">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10">
+              <div
+                className="px-3 py-4 flex items-center w-56"
+                data-oid="0mg:b0p"
+              >
+                <div className="flex items-center" data-oid="4_:01sr">
+                  <div className="flex-shrink-0 h-10 w-10" data-oid="kmjk61d">
                     <ProfileImage
                       imageUrl={profile.profilePicture}
                       firstName={profile.firstName}
                       lastName={profile.lastName}
                       size="sm"
+                      data-oid="or6v3e."
                     />
                   </div>
-                  <div className="ml-4 max-w-[12rem] relative">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-full">
+                  <div
+                    className="ml-4 max-w-[12rem] relative"
+                    data-oid="k0vx.xm"
+                  >
+                    <div
+                      className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-full"
+                      data-oid="x:m_fk:"
+                    >
                       {profile.firstName} {profile.lastName}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-full">
+                    <div
+                      className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-full"
+                      data-oid="u4yo7j:"
+                    >
                       {profile.headline || "LinkedIn Member"}
                     </div>
                     {/* Add fade effect for long text */}
@@ -521,6 +582,7 @@ export default function SearchResults({
                               ? "linear-gradient(to right, rgba(17,24,39,0), rgba(17,24,39,1))"
                               : "linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1))",
                         }}
+                        data-oid="kwgzgtk"
                       />
                     )}
                   </div>
@@ -528,20 +590,32 @@ export default function SearchResults({
               </div>
 
               {/* Relevant Info column */}
-              <div className="px-3 py-4 flex-1">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="px-3 py-4 flex-1" data-oid="4a1w10l">
+                <div
+                  className="text-sm text-gray-500 dark:text-gray-400"
+                  data-oid="m-knm72"
+                >
                   {result.trait_scores ? (
-                    <div>
-                      <ul className="list-disc pl-4 space-y-1">
+                    <div data-oid="ctem3es">
+                      <ul
+                        className="list-disc pl-4 space-y-1"
+                        data-oid="69ul1um"
+                      >
                         {result.trait_scores.map((t, idx) => (
                           <li
                             key={idx}
                             className="text-xs text-gray-700 dark:text-gray-300 break-words"
+                            data-oid="iaup264"
                           >
-                            <span className="font-semibold">{t.trait}:</span>{" "}
+                            <span className="font-semibold" data-oid="7cqmzpo">
+                              {t.trait}:
+                            </span>{" "}
                             {t.score}
                             {t.evidence && (
-                              <span className="block text-xs italic text-gray-500 dark:text-gray-400 mt-0.5 ml-2">
+                              <span
+                                className="block text-xs italic text-gray-500 dark:text-gray-400 mt-0.5 ml-2"
+                                data-oid="wt.2kua"
+                              >
                                 {t.evidence}
                               </span>
                             )}
@@ -550,7 +624,10 @@ export default function SearchResults({
                       </ul>
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-400 dark:text-gray-500 italic">
+                    <span
+                      className="text-xs text-gray-400 dark:text-gray-500 italic"
+                      data-oid="xnf4h17"
+                    >
                       No trait scores available
                     </span>
                   )}
@@ -558,17 +635,23 @@ export default function SearchResults({
               </div>
 
               {/* Previous Emails column */}
-              <div className="px-3 py-4 w-40">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="px-3 py-4 w-40" data-oid="ibyoaal">
+                <div
+                  className="text-sm text-gray-500 dark:text-gray-400"
+                  data-oid="gww8:3r"
+                >
                   {/* Placeholder for previous emails */}
-                  <span className="text-xs text-gray-400 dark:text-gray-500 italic">
+                  <span
+                    className="text-xs text-gray-400 dark:text-gray-500 italic"
+                    data-oid="4eu:1y2"
+                  >
                     Not implemented yet
                   </span>
                 </div>
               </div>
 
               {/* LinkedIn column */}
-              <div className="px-3 py-4 w-24">
+              <div className="px-3 py-4 w-24" data-oid="7pb0e2c">
                 {profile.profileUrl ? (
                   <a
                     href={profile.profileUrl}
@@ -576,11 +659,15 @@ export default function SearchResults({
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                    data-oid="ei99vl9"
                   >
-                    <FaLinkedin className="inline mr-1" />
+                    <FaLinkedin className="inline mr-1" data-oid="y935g1s" />
                   </a>
                 ) : (
-                  <span className="text-xs text-gray-400 dark:text-gray-500 italic">
+                  <span
+                    className="text-xs text-gray-400 dark:text-gray-500 italic"
+                    data-oid="2-q.n49"
+                  >
                     No link
                   </span>
                 )}
@@ -592,7 +679,7 @@ export default function SearchResults({
 
       {/* Bottom spacer */}
       {bottomPlaceholderHeight > 0 && (
-        <div style={{ height: bottomPlaceholderHeight }} />
+        <div style={{ height: bottomPlaceholderHeight }} data-oid="xc:-._z" />
       )}
 
       {/* Profile Preview on Hover */}
@@ -604,29 +691,43 @@ export default function SearchResults({
             left: `${previewPosition.x}px`,
             maxWidth: "320px",
           }}
+          data-oid="ihcl.bh"
         >
-          <div className="flex items-start">
-            <div className="flex-shrink-0 mr-4">
+          <div className="flex items-start" data-oid="gl02hc.">
+            <div className="flex-shrink-0 mr-4" data-oid="fck367:">
               <ProfileImage
                 imageUrl={hoveredProfile.profilePicture}
                 firstName={hoveredProfile.firstName}
                 lastName={hoveredProfile.lastName}
                 size="md"
+                data-oid="hbmfofe"
               />
             </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            <div data-oid="xaq5nd:">
+              <h3
+                className="text-lg font-medium text-gray-900 dark:text-gray-100"
+                data-oid="n.myv2p"
+              >
                 {hoveredProfile.firstName} {hoveredProfile.lastName}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <p
+                className="text-sm text-gray-600 dark:text-gray-400 mb-2"
+                data-oid=":ndlhri"
+              >
                 {hoveredProfile.headline}
               </p>
               {hoveredProfile.summary && (
-                <div className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-2">
+                <div
+                  className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-2"
+                  data-oid="c21eo6e"
+                >
                   {hoveredProfile.summary}
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-gray-500 italic">
+              <p
+                className="text-xs text-gray-500 dark:text-gray-500 italic"
+                data-oid="a3s7qsm"
+              >
                 Hover for preview, click for details
               </p>
             </div>
@@ -639,27 +740,34 @@ export default function SearchResults({
         <div
           className="fixed inset-0 bg-black/50 bg-opacity-50 z-50 flex items-center justify-center overflow-auto"
           onClick={handleBackdropClick}
+          data-oid="tbl6q87"
         >
           <div
             ref={modalRef}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl max-h-[90vh] overflow-auto p-6 m-4 w-full"
+            data-oid="f59lm7w"
           >
-            <div className="flex justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="flex justify-between mb-4" data-oid="izvwc1c">
+              <h2
+                className="text-xl font-bold text-gray-900 dark:text-gray-100"
+                data-oid="6mr-0x."
+              >
                 Profile Details
               </h2>
               <button
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 onClick={() => setSelectedProfileForDetail(null)}
+                data-oid="hj0dlws"
               >
                 &times;
               </button>
             </div>
-            <div>
+            <div data-oid="zcliuq.">
               <ProfileCard
                 profile={selectedProfileForDetail}
                 selectable={false}
                 initialExpanded={true} // Auto-expand the profile card
+                data-oid="m28-8m9"
               />
             </div>
           </div>

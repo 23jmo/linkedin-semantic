@@ -43,7 +43,7 @@ export default function GmailConnector() {
       checkGmailConnection();
     } else if (error) {
       console.error(
-        `Gmail connection error: ${error}, reason: ${urlParams.get("reason")}`
+        `Gmail connection error: ${error}, reason: ${urlParams.get("reason")}`,
       );
       // Clear the URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -83,11 +83,13 @@ export default function GmailConnector() {
         className={`mb-6 p-4 border rounded-lg ${
           resolvedTheme === "light" ? "border-gray-200" : "border-gray-700"
         }`}
+        data-oid="mlq2isk"
       >
         <h3
           className={`text-lg font-medium mb-2 ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
+          data-oid="pt.1hzi"
         >
           Email Connection
         </h3>
@@ -95,6 +97,7 @@ export default function GmailConnector() {
           className={`${
             resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
           }`}
+          data-oid="up0muxp"
         >
           Checking connection status...
         </p>
@@ -107,26 +110,29 @@ export default function GmailConnector() {
       className={`mb-6 p-4 border rounded-lg ${
         resolvedTheme === "light" ? "border-gray-200" : "border-gray-700"
       }`}
+      data-oid="n6y1e-y"
     >
       <h3
         className={`text-lg font-medium mb-2 ${
           resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
         }`}
+        data-oid="7yl7t9c"
       >
         Email Connection
       </h3>
 
       {isConnected ? (
-        <div className="flex items-center text-green-600">
-          <FaCheck className="mr-2" />
-          <span>Gmail connected</span>
+        <div className="flex items-center text-green-600" data-oid="-u-bk3h">
+          <FaCheck className="mr-2" data-oid="4kn8z4_" />
+          <span data-oid="kc_2p3z">Gmail connected</span>
         </div>
       ) : (
-        <div>
+        <div data-oid="jwhapy4">
           <p
             className={`mb-3 ${
               resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
             }`}
+            data-oid="gmypn5i"
           >
             Connect your Gmail account to send cold emails directly from the
             app.
@@ -141,8 +147,9 @@ export default function GmailConnector() {
                 ? "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                 : "bg-gray-700 border border-gray-600 text-gray-200 hover:bg-gray-600"
             }`}
+            data-oid="52q9by."
           >
-            <FaGoogle className="mr-2 text-red-500" />
+            <FaGoogle className="mr-2 text-red-500" data-oid="vh2s5n0" />
             {isConnecting ? "Connecting..." : "Connect Gmail"}
           </button>
         </div>

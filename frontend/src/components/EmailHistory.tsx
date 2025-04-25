@@ -61,15 +61,18 @@ export default function EmailHistory() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center py-8" data-oid="fkr5s2-">
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"
+          data-oid="9nyhnph"
+        ></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="py-4 text-red-500">
+      <div className="py-4 text-red-500" data-oid="an44a11">
         Error loading email history: {error}
       </div>
     );
@@ -81,6 +84,7 @@ export default function EmailHistory() {
         className={`${
           resolvedTheme === "dark" ? "text-gray-300" : "text-gray-500"
         }`}
+        data-oid="08xmsr8"
       >
         You haven&apos;t sent any emails yet.
       </p>
@@ -88,11 +92,12 @@ export default function EmailHistory() {
   }
 
   return (
-    <div>
+    <div data-oid="kr7ij5u">
       <div
         className={`space-y-4 overflow-hidden transition-all duration-300 ${
           isContainerExpanded ? "" : "max-h-96"
         }`}
+        data-oid="w55gy82"
       >
         {history.map((item) => {
           const isExpanded = expandedEmails.has(item.id);
@@ -105,19 +110,23 @@ export default function EmailHistory() {
                   ? "bg-gray-700 border-gray-600"
                   : "bg-gray-50 border-gray-200"
               } border rounded-lg p-4`}
+              data-oid="._m.mnd"
             >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-medium">
+              <div
+                className="flex justify-between items-start mb-2"
+                data-oid=":ziz144"
+              >
+                <div data-oid="_6x47uo">
+                  <h3 className="font-medium" data-oid="s8-735m">
                     {isExpanded || item.subject.length <= 50
                       ? item.subject
                       : `${item.subject.substring(0, 50)}...`}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500" data-oid="fs47.16">
                     To: {item.recipient_name} ({item.recipient_email})
                   </p>
                 </div>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500" data-oid="2mf_o2f">
                   {new Date(item.sent_at).toLocaleString()}
                 </span>
               </div>
@@ -125,12 +134,13 @@ export default function EmailHistory() {
                 className={`text-sm mt-2 ${
                   resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
+                data-oid="dt:ivlr"
               >
                 {isExpanded
                   ? item.content
                   : item.content.length > 150
-                  ? `${item.content.substring(0, 150)}...`
-                  : item.content}
+                    ? `${item.content.substring(0, 150)}...`
+                    : item.content}
               </div>
               {item.content.length > 150 && (
                 <button
@@ -140,6 +150,7 @@ export default function EmailHistory() {
                       ? "text-blue-400 hover:text-blue-300"
                       : "text-blue-600 hover:text-blue-700"
                   }`}
+                  data-oid=".np92.u"
                 >
                   {isExpanded ? "Show less" : "Read more"}
                 </button>
@@ -150,7 +161,7 @@ export default function EmailHistory() {
       </div>
 
       {history.length > 3 && (
-        <div className="text-center mt-4">
+        <div className="text-center mt-4" data-oid="k9hyst8">
           <button
             onClick={() => setIsContainerExpanded(!isContainerExpanded)}
             className={`text-sm px-4 py-2 rounded-md ${
@@ -158,6 +169,7 @@ export default function EmailHistory() {
                 ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-800"
             }`}
+            data-oid="47g_gqb"
           >
             {isContainerExpanded ? "Show less" : "Show more"}
           </button>

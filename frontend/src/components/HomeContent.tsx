@@ -64,12 +64,13 @@ export default function HomeContent({
   }, [isAuthenticated]);
 
   return (
-    <div className="py-8 relative z-50">
-      <div className="max-w-3xl mx-auto">
+    <div className="py-8 relative z-50" data-oid="f6oy3ni">
+      <div className="max-w-3xl mx-auto" data-oid="ny2xip8">
         <h1
           className={`text-3xl font-bold mb-8 pt-16 pb-8 text-center ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
+          data-oid="-uminon"
         >
           Search{" "}
           <span
@@ -78,19 +79,20 @@ export default function HomeContent({
                 ? "text-blue-900 bg-blue-500/30 px-2 rounded"
                 : "text-blue-100 bg-blue-500/30 px-2 rounded"
             }`}
+            data-oid="1ym.i:j"
           >
             {isLoading ? "0" : count.toLocaleString()}
           </span>{" "}
           Profiles
         </h1>
-        <div className="mb-8 w-full">
-          <SearchBox onSearch={onSearch} />
+        <div className="mb-8 w-full" data-oid="mmurxz-">
+          <SearchBox onSearch={onSearch} data-oid="_2op_kk" />
         </div>
 
         {isAuthenticated ? (
           <>
-            <div className="mt-8">
-              <div className="relative">
+            <div className="mt-8" data-oid="h5aonet">
+              <div className="relative" data-oid="wuhzsoy">
                 <div
                   className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
                   style={{
@@ -99,17 +101,20 @@ export default function HomeContent({
                         ? "linear-gradient(to right, var(--background) 0%, transparent 100%)"
                         : "linear-gradient(to right, var(--background) 0%, transparent 100%)",
                   }}
+                  data-oid="fdt5jp9"
                 ></div>
 
                 <div
                   ref={scrollRef}
                   className="flex overflow-x-auto pb-4 gap-2 no-scrollbar relative w-full "
+                  data-oid="m2x0.jm"
                 >
                   {suggestions.map((suggestion, index) => (
                     <SuggestionBox
                       key={index}
                       suggestion={suggestion}
                       onClick={onSearch}
+                      data-oid="3magn7u"
                     />
                   ))}
                 </div>
@@ -122,12 +127,13 @@ export default function HomeContent({
                         ? "linear-gradient(to left, var(--background) 0%, transparent 100%)"
                         : "linear-gradient(to left, var(--background) 0%, transparent 100%)",
                   }}
+                  data-oid="0qfpjy7"
                 ></div>
               </div>
             </div>
           </>
         ) : (
-          <AuthPrompt />
+          <AuthPrompt data-oid="gt4h-7." />
         )}
       </div>
     </div>

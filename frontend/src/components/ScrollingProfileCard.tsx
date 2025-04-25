@@ -51,22 +51,28 @@ export default function ScrollingProfileCard({
         transform: `translateZ(${-row * 100}px)`,
         zIndex: 10 - row,
       }}
+      data-oid="iqc1xgk"
     >
-      <div className="relative z-10 flex items-start pointer-events-auto">
-        <div className="flex-shrink-0 mr-4">
+      <div
+        className="relative z-10 flex items-start pointer-events-auto"
+        data-oid="_9yb9xy"
+      >
+        <div className="flex-shrink-0 mr-4" data-oid="a3yqigr">
           <ProfileImage
             imageUrl={profile.profile_picture_url}
             firstName={profile.full_name.split(" ")[0]}
             lastName={profile.full_name.split(" ").slice(1).join(" ")}
             size="lg"
+            data-oid="tbbswlk"
           />
         </div>
-        <div className="flex-grow pr-12">
-          <div className="flex items-center gap-2 mb-1">
+        <div className="flex-grow pr-12" data-oid="xi2tgz9">
+          <div className="flex items-center gap-2 mb-1" data-oid=":fn6cn9">
             <h2
               className={`text-xl font-bold ${
                 isDark ? "text-gray-200" : "text-gray-800"
               }`}
+              data-oid="ocwu6v:"
             >
               {profile.full_name}
             </h2>
@@ -76,6 +82,7 @@ export default function ScrollingProfileCard({
             className={`text-lg ${
               isDark ? "text-gray-300" : "text-gray-700"
             } mb-1`}
+            data-oid="wc1718q"
           >
             {profile.headline || "LinkedIn Member"}
           </p>
@@ -85,10 +92,13 @@ export default function ScrollingProfileCard({
               className={`flex items-center ${
                 isDark ? "text-gray-400" : "text-gray-600"
               } mb-1`}
+              data-oid="d-7dd13"
             >
               <FaMapMarkerAlt
                 className={`mr-1 ${isDark ? "text-gray-500" : "text-gray-500"}`}
+                data-oid="6lwtdu3"
               />
+
               {profile.location}
             </p>
           )}
@@ -98,10 +108,13 @@ export default function ScrollingProfileCard({
               className={`flex items-center ${
                 isDark ? "text-gray-400" : "text-gray-600"
               } mb-1`}
+              data-oid="84iyhg8"
             >
               <FaBriefcase
                 className={`mr-1 ${isDark ? "text-gray-500" : "text-gray-500"}`}
+                data-oid="_.fgbfq"
               />
+
               {profile.industry}
             </p>
           )}
@@ -116,8 +129,9 @@ export default function ScrollingProfileCard({
                   ? "text-[#0a85c7] hover:text-[#0a95e0]"
                   : "text-[#0077b5] hover:text-[#0066a1]"
               } mt-2`}
+              data-oid="ho6hjgw"
             >
-              <FaLinkedin className="mr-1" />
+              <FaLinkedin className="mr-1" data-oid="g79mb77" />
               View LinkedIn Profile
             </a>
           )}

@@ -13,17 +13,21 @@ export default function Layout({ children }: LayoutProps) {
   const { resolvedTheme } = useTheme();
 
   return (
-    <div className={resolvedTheme === "dark" ? "dark" : ""}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
+    <div className={resolvedTheme === "dark" ? "dark" : ""} data-oid="k_r27ao">
+      <div
+        className="min-h-screen bg-gray-50 dark:bg-gray-900"
+        data-oid="rqh6j46"
+      >
+        <Header data-oid="_pk3wj5" />
         <main
           className={`mx-auto py-6 ${
             resolvedTheme === "light" ? "text-gray-900" : "text-gray-100"
           }`}
+          data-oid="uwpghcd"
         >
           {children}
         </main>
-        <ReferralPopup />
+        <ReferralPopup data-oid="jc1vhhj" />
       </div>
     </div>
   );

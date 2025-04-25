@@ -30,6 +30,7 @@ export default function ProfileImage({
     return (
       <div
         className={`${sizeClasses[size]} rounded-full flex items-center justify-center bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 font-bold`}
+        data-oid="vc0n0ub"
       >
         {firstName.charAt(0)}
         {lastName.charAt(0)}
@@ -39,7 +40,10 @@ export default function ProfileImage({
 
   // Show image with fallback
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden`}>
+    <div
+      className={`${sizeClasses[size]} rounded-full overflow-hidden`}
+      data-oid=":gzn5kb"
+    >
       <Image
         src={imageUrl}
         alt={`${firstName} ${lastName}`}
@@ -47,6 +51,7 @@ export default function ProfileImage({
         onError={() => setHasError(true)}
         width={40}
         height={40}
+        data-oid="ddy0vqx"
       />
     </div>
   );

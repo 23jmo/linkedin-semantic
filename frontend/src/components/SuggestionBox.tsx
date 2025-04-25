@@ -28,14 +28,18 @@ export default function SuggestionBox({
           ? "bg-gradient-to-r from-blue-100 to-blue-50"
           : "bg-gradient-to-r from-blue-900/20 to-blue-800/20"
       } relative overflow-hidden hover:-translate-y-1 hover:shadow-md flex-shrink-0`}
+      data-oid="q5twt2q"
     >
-      <span className="relative z-10">{suggestion}</span>
+      <span className="relative z-10" data-oid="gznbpkn">
+        {suggestion}
+      </span>
       <span
         className={`absolute inset-0 bg-gradient-to-r ${
           resolvedTheme === "light"
             ? "from-transparent via-white/40 to-transparent"
             : "from-transparent via-gray-600/30 to-transparent"
         } -translate-x-full hover:translate-x-full transition-transform duration-700 ease-in-out shine-effect pointer-events-none`}
+        data-oid="am6.az7"
       ></span>
     </button>
   );

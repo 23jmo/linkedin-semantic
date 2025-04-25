@@ -54,10 +54,11 @@ export default function SearchBox({
   const isQueryEmpty = query.trim() === "";
 
   return (
-    <div className="w-full flex items-start space-x-2">
+    <div className="w-full flex items-start space-x-2" data-oid="f7xpef3">
       <form
         onSubmit={handleSearch}
         className="relative flex-grow"
+        data-oid="9rv2r0u"
       >
         <textarea
           ref={textareaRef}
@@ -77,6 +78,7 @@ export default function SearchBox({
             target.style.height = "auto";
             target.style.height = `${Math.min(target.scrollHeight, 240)}px`;
           }}
+          data-oid="gjsl6g."
         />
       </form>
       <button
@@ -91,16 +93,17 @@ export default function SearchBox({
               ? "bg-gray-200 text-gray-400 cursor-not-allowed"
               : "bg-gray-700 text-gray-500 cursor-not-allowed"
             : resolvedTheme === "light"
-            ? isPointerDown
-              ? "bg-blue-300 text-white" // Highlight when pointer down (light mode)
-              : "bg-blue-500 hover:bg-blue-600 text-white"
-            : isPointerDown
-            ? "bg-blue-500 text-white" // Highlight when pointer down (dark mode)
-            : "bg-blue-600 hover:bg-blue-700 text-white"
+              ? isPointerDown
+                ? "bg-blue-300 text-white" // Highlight when pointer down (light mode)
+                : "bg-blue-500 hover:bg-blue-600 text-white"
+              : isPointerDown
+                ? "bg-blue-500 text-white" // Highlight when pointer down (dark mode)
+                : "bg-blue-600 hover:bg-blue-700 text-white"
         }`}
         aria-label="Submit search"
+        data-oid="cy9_a2c"
       >
-        <FaArrowUp className="w-5 h-5" />
+        <FaArrowUp className="w-5 h-5" data-oid="vdmf_gs" />
       </button>
     </div>
   );

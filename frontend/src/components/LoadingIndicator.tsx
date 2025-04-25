@@ -35,17 +35,24 @@ export default function LoadingIndicator() {
           ? "bg-white border-gray-200"
           : "bg-gray-800 border-gray-700"
       } w-full mx-auto p-8 rounded-lg shadow-md text-center border`}
+      data-oid="_djtc0b"
     >
-      <div className="flex flex-col items-center justify-center">
+      <div
+        className="flex flex-col items-center justify-center"
+        data-oid="29nhi3k"
+      >
         <FaSpinner
           className={`${
             resolvedTheme === "light" ? "text-blue-600" : "text-blue-400"
           } text-4xl animate-spin mb-4`}
+          data-oid="qj5-twk"
         />
+
         <h2
           className={`text-xl font-bold mb-2 ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           } ${styles["shimmer-text"]}`}
+          data-oid="zod17vd"
         >
           {loadingMessages[messageIndex]}
         </h2>
@@ -53,6 +60,7 @@ export default function LoadingIndicator() {
           className={`${
             resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
           }`}
+          data-oid="xv8lezb"
         >
           This may take a moment...
         </p>

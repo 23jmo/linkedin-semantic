@@ -45,25 +45,27 @@ export default function SearchSuggestions() {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto mt-8">
+    <div className="w-full max-w-3xl mx-auto mt-8" data-oid="i7hess-">
       <h2
         className={`text-xl font-semibold mb-4 ${
           resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
         }`}
+        data-oid="5j9dji0"
       >
         Try searching for:
       </h2>
-      <div className="space-y-6">
+      <div className="space-y-6" data-oid="tunejz-">
         {suggestions.map((group) => (
-          <div key={group.category}>
+          <div key={group.category} data-oid="0b.oksp">
             <h3
               className={`text-md font-medium mb-2 ${
                 resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
               }`}
+              data-oid="cu-00np"
             >
               {group.category}
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" data-oid=":davpnl">
               {group.queries.map((query) => (
                 <button
                   key={query}
@@ -73,6 +75,7 @@ export default function SearchSuggestions() {
                       ? "bg-gray-100 text-gray-800 hover:bg-gray-200"
                       : "bg-gray-700 text-gray-200 hover:bg-gray-600"
                   }`}
+                  data-oid="5.-2u4p"
                 >
                   {query}
                 </button>

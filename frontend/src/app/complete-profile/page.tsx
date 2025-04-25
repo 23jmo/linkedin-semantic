@@ -55,7 +55,7 @@ export default function CompleteProfilePage() {
       const handleProgress = (
         message: string,
         stage: string,
-        details?: string
+        details?: string,
       ) => {
         setCreateStatus(message);
         setCreateStage(stage);
@@ -75,7 +75,7 @@ export default function CompleteProfilePage() {
       console.error("Error creating user:", error);
       setIsLoading(false);
       setError(
-        error instanceof Error ? error.message : "Unknown error occurred"
+        error instanceof Error ? error.message : "Unknown error occurred",
       );
     }
   };
@@ -84,38 +84,58 @@ export default function CompleteProfilePage() {
     if (!isLoading) return null;
 
     return (
-      <div className="flex flex-col justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+      <div
+        className="flex flex-col justify-center items-center min-h-screen"
+        data-oid="_bjui.t"
+      >
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"
+          data-oid="-4jix39"
+        ></div>
         <Image
           src="/LogoBlack.png"
           alt="Logo"
           width={32}
           height={32}
           className="absolute"
+          data-oid="m.k7cu8"
         />
 
         {createStatus && (
-          <div className="text-center max-w-md mx-auto">
-            <p className="text-lg font-medium text-gray-800 mb-2">
+          <div className="text-center max-w-md mx-auto" data-oid="zehb.v1">
+            <p
+              className="text-lg font-medium text-gray-800 mb-2"
+              data-oid="c7b-df."
+            >
               {createStatus}
             </p>
 
             {createStage && (
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+              <div
+                className="w-full bg-gray-200 rounded-full h-2.5 mb-4"
+                data-oid="6c5nkt0"
+              >
                 <div
                   className="bg-blue-600 h-2.5 rounded-full animate-pulse"
                   style={{ width: "100%" }}
+                  data-oid="so52plw"
                 ></div>
               </div>
             )}
 
             {createDetails && (
-              <p className="text-sm text-gray-600">{createDetails}</p>
+              <p className="text-sm text-gray-600" data-oid="1wy.dz7">
+                {createDetails}
+              </p>
             )}
           </div>
         )}
 
-        {error && <div className="text-red-500 mt-4 text-center">{error}</div>}
+        {error && (
+          <div className="text-red-500 mt-4 text-center" data-oid="0f84x2_">
+            {error}
+          </div>
+        )}
       </div>
     );
   };
@@ -125,24 +145,34 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-extrabold text-gray-900">
+    <div
+      className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+      data-oid="sbh3ov3"
+    >
+      <div className="sm:mx-auto sm:w-full sm:max-w-md" data-oid="gv_t9l4">
+        <h1
+          className="text-center text-3xl font-extrabold text-gray-900"
+          data-oid="xxil3f_"
+        >
           Locked In
         </h1>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        {session?.user?.id && (
-          <LinkedInUrlForm
-            userId={session.user.id}
-            linkedInAuthData={{
-              email: session.user.email || "",
-              name: session.user.name || "",
-              image: session.user.image ?? undefined,
-            }}
-            onSubmit={handleSubmitLinkedInUrl}
-          />
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md" data-oid="bnymmqx">
+        {
+          session?.user?.id && (
+            <LinkedInUrlForm
+              userId={session.user.id}
+              linkedInAuthData={{
+                email: session.user.email || "",
+                name: session.user.name || "",
+                image: session.user.image ?? undefined,
+              }}
+              onSubmit={handleSubmitLinkedInUrl}
+              data-oid="6qd7a7_"
+            />
+          )
+
           // <WaitlistForm
           //   userId={session.user.id}
           //   linkedInAuthData={{
@@ -152,7 +182,7 @@ export default function CompleteProfilePage() {
           //   }}
           //   onSubmit={handleSubmitWaitlist}
           // />
-        )}
+        }
       </div>
     </div>
   );

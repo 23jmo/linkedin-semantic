@@ -8,7 +8,7 @@ export default function ThemeToggle() {
 
   if (!mounted) {
     // Prevent layout shift
-    return <div className="w-10 h-10" />;
+    return <div className="w-10 h-10" data-oid="x3ku_o2" />;
   }
 
   return (
@@ -25,18 +25,13 @@ export default function ThemeToggle() {
         theme === "light" ? "dark" : theme === "dark" ? "system" : "light"
       } mode`}
       title={`Current theme: ${theme}`}
+      data-oid="cohv-v."
     >
       {theme === "light" && (
-        <FaSun
-          className="text-yellow-500"
-          size={18}
-        />
+        <FaSun className="text-yellow-500" size={18} data-oid="1m:66:8" />
       )}
       {theme === "dark" && (
-        <FaMoon
-          className="text-blue-400"
-          size={18}
-        />
+        <FaMoon className="text-blue-400" size={18} data-oid="62hclub" />
       )}
       {theme === "system" && (
         <FaDesktop
@@ -44,6 +39,7 @@ export default function ThemeToggle() {
             resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
           }
           size={18}
+          data-oid="xuxutxy"
         />
       )}
     </button>
