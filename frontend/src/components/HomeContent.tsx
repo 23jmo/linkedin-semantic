@@ -64,10 +64,10 @@ export default function HomeContent({
   }, [isAuthenticated]);
 
   return (
-    <div className="py-8 relative z-50" data-oid="f6oy3ni">
-      <div className="max-w-3xl mx-auto" data-oid="ny2xip8">
+    <div className="relative z-50 h-[470px]" data-oid="f6oy3ni">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6" data-oid="ny2xip8">
         <h1
-          className={`text-3xl font-bold mb-8 pt-16 pb-8 text-center ${
+          className={`text-2xl md:text-3xl font-bold mb-10 pt-16 pb-8 text-center ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
           data-oid="-uminon"
@@ -85,14 +85,14 @@ export default function HomeContent({
           </span>{" "}
           Profiles
         </h1>
-        <div className="mb-8 w-full" data-oid="mmurxz-">
+        <div className="mb-12 w-full" data-oid="mmurxz-">
           <SearchBox onSearch={onSearch} data-oid="_2op_kk" />
         </div>
 
         {isAuthenticated ? (
           <>
-            <div className="mt-8" data-oid="h5aonet">
-              <div className="relative" data-oid="wuhzsoy">
+            <div className="mt-10 mb-6" data-oid="h5aonet">
+              <div className="relative mx-2" data-oid="wuhzsoy">
                 <div
                   className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
                   style={{
@@ -106,7 +106,7 @@ export default function HomeContent({
 
                 <div
                   ref={scrollRef}
-                  className="flex overflow-x-auto pb-4 gap-2 no-scrollbar relative w-full "
+                  className="flex overflow-x-auto py-2 pb-6 gap-3 no-scrollbar relative w-full"
                   data-oid="m2x0.jm"
                 >
                   {suggestions.map((suggestion, index) => (

@@ -20,7 +20,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         <Header data-oid="_pk3wj5" />
         <main
-          className={`mx-auto py-6 ${
+          className={`mx-auto py-3 md:py-12 ${
             resolvedTheme === "light" ? "text-gray-900" : "text-gray-100"
           }`}
           data-oid="uwpghcd"
