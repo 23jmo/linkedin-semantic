@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createClient } from "@supabase/supabase-js";
+import { generateReferralCode } from "@/lib/referral";
 
 export async function GET() {
   const session = await auth();
@@ -30,9 +31,18 @@ export async function GET() {
     ) {
       // user not in the referrals list
       // create user in the referrals list
-      const { error: referralError } = await supabase
-        .from("referrals")
-        .insert({ referrer_id: session.user.id });
+
+      // need to create a referral code for them
+
+      const newReferralCode = generateReferralCode(
+        session.user.id,
+        session.user.email?.split("@")[0]
+      );
+      const { error: referralError } = await supabase.from("referrals").insert({
+        referrer_id: session.user.id,
+        referral_code: newReferralCode,
+      });
+
       if (referralError) {
         console.error("Error creating referral:", referralError);
         return NextResponse.json(
