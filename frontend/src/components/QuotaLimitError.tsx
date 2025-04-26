@@ -43,20 +43,15 @@ export default function QuotaLimitError({
         damping: 25,
       }}
       className="bg-red-50 dark:bg-gray-800 border border-red-200 dark:border-red-700 p-6 rounded-xl shadow-md max-w-md mx-auto my-8 z-10 relative"
-      data-oid="1eens62"
     >
-      <div className="flex items-center mb-4" data-oid="qqu9472">
-        <ExclamationTriangleIcon
-          className="h-6 w-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0"
-          data-oid="w3jd4a1"
-        />
+      <div className="flex items-center mb-4">
+        <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0" />
 
         <motion.h3
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
           className="text-xl font-semibold text-red-800 dark:text-red-200"
-          data-oid="3e3_hqr"
         >
           Search Limit Reached
         </motion.h3>
@@ -66,7 +61,6 @@ export default function QuotaLimitError({
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3 }}
         className="text-base mb-4 leading-relaxed text-red-700 dark:text-red-300"
-        data-oid="ohv:tzs"
       >
         You&apos;ve used all your searches for this month.
         {
@@ -77,10 +71,7 @@ export default function QuotaLimitError({
       </motion.p>
 
       {referralLink && (
-        <div
-          className="flex flex-col sm:flex-row gap-3 mt-5"
-          data-oid=":m392c9"
-        >
+        <div className="flex flex-col sm:flex-row gap-3 mt-5">
           <motion.input
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -90,7 +81,6 @@ export default function QuotaLimitError({
             readOnly
             className="flex-grow p-3 text-base border rounded-lg bg-white dark:bg-gray-700 border-red-300 dark:border-red-600 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-red-500"
             aria-label="Referral Link"
-            data-oid="3e80c80"
           />
 
           <motion.button
@@ -102,7 +92,6 @@ export default function QuotaLimitError({
                 ? "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
                 : "bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white"
             }`}
-            data-oid="2ftscrt"
           >
             {copied ? "Copied!" : "Copy Link"}
           </motion.button>

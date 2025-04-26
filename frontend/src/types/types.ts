@@ -367,14 +367,16 @@ export const SearchLimitsSchema = z.object({
 export const SendEmailRequestSchema = z.object({
   profiles: z.array(ProfileFrontendSchema),
   purpose: z.string(),
-  emailContents: z.record(z.string(), z.object({ subject: z.string(), body: z.string() })),
+  emailContents: z.record(
+    z.string(),
+    z.object({ subject: z.string(), body: z.string() })
+  ),
 });
 
 export const SendEmailResponseSchema = z.object({
   success: z.boolean(),
   results: z.array(z.object({ profileId: z.string(), success: z.boolean() })),
 });
-
 
 // Schema for the search_limits table data
 // export const SearchQuotaSchema = z.object({

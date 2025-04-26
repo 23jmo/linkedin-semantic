@@ -62,40 +62,27 @@ export default function Header() {
           ? "bg-white border-gray-200"
           : "bg-gray-800 border-gray-700"
       } shadow-sm sticky top-0 z-100 border-b`}
-      data-oid=".cd-svy"
     >
-      <div
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-        data-oid="2z3vfe."
-      >
-        <div className="flex justify-between h-16" data-oid="boqrk5o">
-          <div
-            className="flex items-center justify-center space-x-8"
-            data-oid="pc9_bzh"
-          >
-            <Link
-              href="/"
-              className="flex items-center justify-center"
-              data-oid="rd_v0g_"
-            >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center justify-center space-x-8">
+            <Link href="/" className="flex items-center justify-center">
               <Image
                 src="/LogoBlack.png"
                 alt="LockedIn"
                 width={48}
                 height={48}
-                data-oid="j1147-2"
               />
 
               <h1
                 className={`ml-2 text-xl font-bold ${
                   resolvedTheme === "light" ? "text-gray-900" : "text-white"
                 } hidden md:block`}
-                data-oid="afqijm4"
               ></h1>
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4" data-oid="dljcl:k">
+          <div className="flex items-center space-x-4">
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-full ${
@@ -106,17 +93,12 @@ export default function Header() {
               aria-label={`Switch to ${
                 resolvedTheme === "light" ? "dark" : "light"
               } mode`}
-              data-oid="tz1:nba"
             >
-              {resolvedTheme === "light" ? (
-                <FaMoon data-oid="01z8aba" />
-              ) : (
-                <FaSun data-oid="g7940yx" />
-              )}
+              {resolvedTheme === "light" ? <FaMoon /> : <FaSun />}
             </button>
 
             {status === "authenticated" ? (
-              <div className="relative ml-3" ref={menuRef} data-oid="2_hs8:t">
+              <div className="relative ml-3" ref={menuRef}>
                 <button
                   onClick={toggleMenu}
                   className={`flex items-center space-x-2 ${
@@ -126,11 +108,8 @@ export default function Header() {
                   } rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#0077b5] p-1 transition-colors duration-200 border`}
                   aria-expanded={menuOpen}
                   aria-haspopup="true"
-                  data-oid="okov0lf"
                 >
-                  <span className="sr-only" data-oid="fd:scv7">
-                    Open user menu
-                  </span>
+                  <span className="sr-only">Open user menu</span>
                   {session?.user?.image ? (
                     <Image
                       className={`h-8 w-8 rounded-full border ${
@@ -142,24 +121,19 @@ export default function Header() {
                       alt={session.user.name || "User"}
                       width={32}
                       height={32}
-                      data-oid="g::1qdh"
                     />
                   ) : (
-                    <div
-                      className="h-8 w-8 rounded-full bg-[#0077b5] flex items-center justify-center"
-                      data-oid=":zo4b3_"
-                    >
-                      <FaUser className="text-white" data-oid="8ufhvj8" />
+                    <div className="h-8 w-8 rounded-full bg-[#0077b5] flex items-center justify-center">
+                      <FaUser className="text-white" />
                     </div>
                   )}
-                  <div className="hidden md:block text-left" data-oid="g8pj1h9">
+                  <div className="hidden md:block text-left">
                     <p
                       className={`text-sm font-medium ${
                         resolvedTheme === "light"
                           ? "text-gray-700"
                           : "text-gray-300"
                       } truncate max-w-[120px]`}
-                      data-oid=".bltxep"
                     >
                       {session?.user?.name}
                     </p>
@@ -169,7 +143,6 @@ export default function Header() {
                           ? "text-gray-500"
                           : "text-gray-400"
                       } truncate max-w-[120px]`}
-                      data-oid="kxt6wf3"
                     >
                       {session?.user?.email}
                     </p>
@@ -180,7 +153,6 @@ export default function Header() {
                         ? "text-gray-400"
                         : "text-gray-500"
                     } h-4 w-4`}
-                    data-oid="qwsf7u3"
                   />
                 </button>
 
@@ -191,7 +163,6 @@ export default function Header() {
                         ? "bg-white ring-black ring-opacity-5 border-gray-100"
                         : "bg-gray-800 ring-opacity-10 border-gray-700"
                     } ring-1 focus:outline-none border`}
-                    data-oid="4p7r2xv"
                   >
                     <div
                       className={`px-4 py-2 border-b ${
@@ -199,7 +170,6 @@ export default function Header() {
                           ? "border-gray-100"
                           : "border-gray-700"
                       } md:hidden`}
-                      data-oid=".xawv9-"
                     >
                       <p
                         className={`text-sm font-medium ${
@@ -207,7 +177,6 @@ export default function Header() {
                             ? "text-gray-700"
                             : "text-gray-300"
                         } truncate`}
-                        data-oid="3y5j5m3"
                       >
                         {session?.user?.name}
                       </p>
@@ -217,7 +186,6 @@ export default function Header() {
                             ? "text-gray-500"
                             : "text-gray-400"
                         } truncate`}
-                        data-oid="lc7_ieq"
                       >
                         {session?.user?.email}
                       </p>
@@ -230,7 +198,6 @@ export default function Header() {
                           ? "text-gray-700 hover:bg-gray-100"
                           : "text-gray-300 hover:bg-gray-700"
                       } flex items-center`}
-                      data-oid="jsaxp8r"
                     >
                       <FaChartBar
                         className={`mr-2 ${
@@ -238,7 +205,6 @@ export default function Header() {
                             ? "text-gray-500"
                             : "text-gray-400"
                         }`}
-                        data-oid="_n4b77b"
                       />
                       Dashboard
                     </button>
@@ -249,7 +215,6 @@ export default function Header() {
                           ? "text-gray-700 hover:bg-gray-100"
                           : "text-gray-300 hover:bg-gray-700"
                       } flex items-center`}
-                      data-oid="3o59wex"
                     >
                       <FaSignOutAlt
                         className={`mr-2 ${
@@ -257,7 +222,6 @@ export default function Header() {
                             ? "text-gray-500"
                             : "text-gray-400"
                         }`}
-                        data-oid="33-:7r0"
                       />
                       Sign out
                     </button>
@@ -265,7 +229,7 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <SignIn data-oid="cm0r1n8" />
+              <SignIn />
             )}
           </div>
         </div>

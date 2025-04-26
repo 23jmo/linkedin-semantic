@@ -3,36 +3,124 @@ import OpenAI from "openai";
 import { prompt } from "./prompt";
 import { createClient } from "@supabase/supabase-js";
 import { auth } from "@/auth";
+import { ProfileFrontend, Education, Experience, Project } from "@/types/types";
+import {
+  ensureValidProfile,
+  transformRawToFrontendProfile,
+} from "@/lib/utils/profile-transformers";
+
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const convertProfileToReadableString = (profile: ProfileFrontend) => {
+  const education = profile.raw_profile_data?.education?.map(
+    (edu: Education) => {
+      return `
+    ${edu.school} - ${edu.starts_at?.year} - ${edu.ends_at?.year}
+      ${edu.degree_name ? `- ${edu.degree_name} in ${edu.field_of_study}:` : ""}
+      ${edu.description ? `- ${edu.description}` : ""}
+      ${edu.activities_and_societies ? `- ${edu.activities_and_societies}` : ""}
+    `;
+    }
+  );
+
+  const experience = profile.raw_profile_data?.experiences?.map(
+    (exp: Experience) => {
+      return `
+    ${exp.company} - ${exp.title} - ${exp.start_at?.year} - ${
+        exp.ends_at?.year || "Present"
+      }
+      ${exp.description ? `- ${exp.description}` : ""}
+    `;
+    }
+  );
+
+  const projects = profile.raw_profile_data?.accomplishment_projects?.map(
+    (project: Project) => {
+      return `- ${project.title} - ${project.description} - ${
+        project.starts_at?.year
+      } - ${project.ends_at?.year || "Present"}`;
+    }
+  );
+
+  return `
+    ===== Begin Profile for ${profile.firstName} ${profile.lastName} =====
+    Headline: ${profile.headline}
+    Location: ${profile.location}
+    Summary: ${profile.summary}
+    ----------
+    Education: 
+    ${education || "No education data available"}
+    ----------
+    Experience: 
+    ${experience || "No experience data available"}
+    ----------
+    Projects: ${projects || "No project data available"}
+    ----------
+    Skills: ${profile.raw_profile_data?.skills || "No skills data available"}
+    ===== End Profile for ${profile.firstName} ${profile.lastName} =====
+  `;
+};
+
 export async function POST(request: NextRequest) {
   try {
-    const { recipientProfile, senderProfile, purpose } = await request.json();
+    const requestData = await request.json();
+    const {
+      recipientProfile: rawRecipientProfile,
+      senderProfile: rawSenderProfile,
+      purpose,
+    } = requestData;
+
+    console.log("Raw recipient profile:", rawRecipientProfile);
+    console.log("Raw sender profile:", rawSenderProfile);
 
     // Simple validation
-    if (!recipientProfile || !purpose) {
+    if (!rawRecipientProfile || !purpose) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Log the request data
-    console.log("OpenAI Request:", {
-      recipientProfile: {
-        id: recipientProfile.id,
-        name: `${recipientProfile.firstName} ${recipientProfile.lastName}`,
-        headline: recipientProfile.headline,
-        // Include other basic fields but not the full raw_profile_data to keep logs clean
-      },
-      senderProfile: senderProfile,
-      purpose: purpose,
-    });
+    // Ensure profiles are valid and conform to ProfileFrontend type
 
+    console.log(
+      "Raw sender profile right before transformation:",
+      rawSenderProfile
+    );
+    console.log(
+      "Raw recipient profile right before transformation:",
+      rawRecipientProfile
+    );
+
+    const senderProfile = rawSenderProfile as ProfileFrontend;
+    const recipientProfile = rawRecipientProfile as ProfileFrontend;
+
+    console.log("Sender profile after transformation:", senderProfile);
+    console.log("Recipient profile after transformation:", recipientProfile);
+
+    // Log profile transformation result
+    // console.log(`[API:/api/generate-email] Profiles transformed:`, {
+    //   sender: `${senderProfile.firstName} ${senderProfile.lastName}`,
+    //   recipient: `${recipientProfile.firstName} ${recipientProfile.lastName}`,
+    // });
+
+    // convert the two profiles into a more readable string
+    const readableSenderProfileString =
+      convertProfileToReadableString(senderProfile);
+    const readableRecipientProfileString =
+      convertProfileToReadableString(recipientProfile);
     // Generate email content using OpenAI with JSON mode
+
+    console.log(
+      `OpenAI Request:
+      Prompt: ${prompt}
+      Sender: ${readableSenderProfileString}
+      Recipient: ${readableRecipientProfileString}
+      Purpose: ${purpose}`
+    );
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       response_format: { type: "json_object" },
@@ -43,16 +131,13 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "user",
-          content: `Write a professional email from ${
-            senderProfile ? JSON.stringify(senderProfile) : "me"
-          } to ${JSON.stringify(recipientProfile)}. 
-          
-          The purpose of the email is: ${purpose}.
-          
+          content: `Sender: ${readableSenderProfileString}
+          Recipient: ${readableRecipientProfileString}
+          Purpose: ${purpose}.    
           `,
         },
       ],
-      max_tokens: 500,
+      max_completion_tokens: 500,
     });
 
     // Extract the generated email content as JSON

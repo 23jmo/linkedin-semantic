@@ -21,11 +21,8 @@ import { initiateGmailAuth } from "@/lib/gmail-service";
 
 export default function SearchPage() {
   return (
-    <Suspense
-      fallback={<LoadingIndicator data-oid="8:3w_w6" />}
-      data-oid="2ga5_-p"
-    >
-      <SearchPageContent data-oid=":4ivf_n" />
+    <Suspense fallback={<LoadingIndicator />}>
+      <SearchPageContent />
     </Suspense>
   );
 }
@@ -309,33 +306,23 @@ function SearchPageContent() {
   };
 
   return (
-    <Layout data-oid="2g8j:ke">
-      <div className="py-6 px-3" data-oid="otjj7dn">
-        <div className="max-w-4xl mx-auto" data-oid="ha3:uld">
-          <h1 className="text-2xl font-bold mb-6" data-oid="36sfh9e">
-            Search Results
-          </h1>
+    <Layout>
+      <div className="py-6 px-3">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6">Search Results</h1>
 
           {/* Render Gmail Auth Error if present */}
           {gmailAuthError && (
-            <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6"
-              data-oid="mh_yrvg"
-            >
-              <strong className="font-bold" data-oid="b:xnztn">
-                Gmail Connection Error:{" "}
-              </strong>
-              <span className="block sm:inline" data-oid="1jd6d8r">
-                {gmailAuthError}
-              </span>
-              <div className="mt-2" data-oid=":bivzna">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+              <strong className="font-bold">Gmail Connection Error: </strong>
+              <span className="block sm:inline">{gmailAuthError}</span>
+              <div className="mt-2">
                 <button
                   onClick={handleGmailReAuth}
                   disabled={isReAuthLoading}
                   className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ${
                     isReAuthLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
-                  data-oid="ge-y0f."
                 >
                   {isReAuthLoading ? "Connecting..." : "Reconnect Gmail"}
                 </button>
@@ -343,50 +330,35 @@ function SearchPageContent() {
             </div>
           )}
 
-          <SearchControls
-            initialQuery={query}
-            onSearch={performSearch}
-            data-oid="1x4azy_"
-          />
+          <SearchControls initialQuery={query} onSearch={performSearch} />
 
           {/* --- Use Quota Indicator Component --- */}
           <QuotaIndicator
             isLoading={quotaLoading}
             quota={quota as SearchLimits | null}
-            data-oid="a8nes4f"
           />
 
           {/* --- End Quota Indicator --- */}
 
           {status === "unauthenticated" ? (
-            <UnauthenticatedSearchWarning data-oid="-71_u7w" />
+            <UnauthenticatedSearchWarning />
           ) : (
             <>
               {/* Show thinking steps when available */}
               {thinkingSteps.length > 0 && (
-                <ThinkingProcess
-                  thinkingSteps={thinkingSteps}
-                  data-oid="9a3l.ep"
-                />
+                <ThinkingProcess thinkingSteps={thinkingSteps} />
               )}
 
               {showQuotaLimitError ? (
                 <QuotaLimitError
                   referralCode={referralStats?.referralCode || null}
-                  data-oid=":0h81aw"
                 />
               ) : loading ? (
-                <div className="flex justify-center py-8" data-oid="n:1lueq">
-                  <div
-                    className="animate-spin h-8 w-8 border-2 border-blue-500 rounded-full border-t-transparent"
-                    data-oid="6sp9_38"
-                  ></div>
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin h-8 w-8 border-2 border-blue-500 rounded-full border-t-transparent"></div>
                 </div>
               ) : error ? (
-                <div
-                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md"
-                  data-oid="a74gdr7"
-                >
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
                   {error}
                 </div>
               ) : (
@@ -395,7 +367,6 @@ function SearchPageContent() {
                   query={query}
                   selectedProfiles={selectedProfiles}
                   onProfileSelect={handleProfileSelect}
-                  data-oid="2pju_iv"
                 />
               )}
             </>
@@ -407,7 +378,6 @@ function SearchPageContent() {
       <SelectionChip
         count={selectedProfiles.length}
         onClick={toggleEmailComposer}
-        data-oid="zrrxznm"
       />
 
       {/* Email composer modal */}
@@ -416,7 +386,6 @@ function SearchPageContent() {
           selectedProfiles={selectedProfiles}
           onClose={toggleEmailComposer}
           onRemoveProfile={handleRemoveProfile}
-          data-oid="dwu.0wz"
         />
       )}
     </Layout>
