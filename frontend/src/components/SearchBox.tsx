@@ -54,12 +54,8 @@ export default function SearchBox({
   const isQueryEmpty = query.trim() === "";
 
   return (
-    <div className="w-full flex items-start space-x-2" data-oid="f7xpef3">
-      <form
-        onSubmit={handleSearch}
-        className="relative flex-grow"
-        data-oid="9rv2r0u"
-      >
+    <div className="w-full flex items-start space-x-2">
+      <form onSubmit={handleSearch} className="relative flex-grow">
         <textarea
           ref={textareaRef}
           value={query}
@@ -78,7 +74,6 @@ export default function SearchBox({
             target.style.height = "auto";
             target.style.height = `${Math.min(target.scrollHeight, 240)}px`;
           }}
-          data-oid="gjsl6g."
         />
       </form>
       <button
@@ -101,9 +96,8 @@ export default function SearchBox({
                 : "bg-blue-600 hover:bg-blue-700 text-white"
         }`}
         aria-label="Submit search"
-        data-oid="cy9_a2c"
       >
-        <FaArrowUp className="w-5 h-5" data-oid="vdmf_gs" />
+        <FaArrowUp className="w-5 h-5" />
       </button>
     </div>
   );

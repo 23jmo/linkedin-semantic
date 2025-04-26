@@ -14,36 +14,30 @@ export function QuotaDisplay() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-4" data-oid="1mw02k.">
-        <ReloadIcon className="h-5 w-5 animate-spin mr-2" data-oid="2k0:fst" />
-        <span data-oid="7ja_xco">Loading quota information...</span>
+      <div className="flex items-center justify-center p-4">
+        <ReloadIcon className="h-5 w-5 animate-spin mr-2" />
+        <span>Loading quota information...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className="mb-4" data-oid="t3dtcq2">
-        <AlertTitle data-oid=".tfuc9u">Error</AlertTitle>
-        <AlertDescription data-oid="et5yj_-">{error}</AlertDescription>
+      <Alert variant="destructive" className="mb-4">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
   if (!quota) {
     return (
-      <Alert className="mb-4" data-oid="nuob9_k">
-        <InfoCircledIcon className="h-4 w-4 mr-2" data-oid="snibgfo" />
-        <AlertTitle data-oid="ukcnn76">
-          No quota information available
-        </AlertTitle>
-        <AlertDescription data-oid=".zyp9:g">
+      <Alert className="mb-4">
+        <InfoCircledIcon className="h-4 w-4 mr-2" />
+        <AlertTitle>No quota information available</AlertTitle>
+        <AlertDescription>
           Your search quota information couldn&apos;t be loaded.
-          <button
-            onClick={() => refreshQuota()}
-            className="underline ml-2"
-            data-oid="z1wvnd3"
-          >
+          <button onClick={() => refreshQuota()} className="underline ml-2">
             Try again
           </button>
         </AlertDescription>
@@ -64,50 +58,40 @@ export function QuotaDisplay() {
     : null;
 
   return (
-    <div className="p-4 border rounded-lg shadow-sm bg-card" data-oid="ufumyzf">
-      <div className="flex justify-between mb-2" data-oid="sf4tcw8">
-        <h3 className="font-medium" data-oid="lgr9u8q">
-          Search Quota
-        </h3>
+    <div className="p-4 border rounded-lg shadow-sm bg-card">
+      <div className="flex justify-between mb-2">
+        <h3 className="font-medium">Search Quota</h3>
         <button
           onClick={() => refreshQuota()}
           className="text-xs text-muted-foreground hover:text-primary flex items-center"
-          data-oid="e7:7n-_"
         >
-          <ReloadIcon className="h-3 w-3 mr-1" data-oid="1m_mzz0" />
+          <ReloadIcon className="h-3 w-3 mr-1" />
           Refresh
         </button>
       </div>
 
-      <Progress
-        value={usagePercentage}
-        className="h-2 mb-2"
-        data-oid="bd0kvv9"
-      />
+      <Progress value={usagePercentage} className="h-2 mb-2" />
 
-      <div className="flex justify-between text-sm" data-oid="g4hr2d3">
-        <span data-oid="36itmh1">
+      <div className="flex justify-between text-sm">
+        <span>
           {quota.searches_this_month} / {quota.monthly_search_limit} searches
           used
         </span>
-        <span
-          className={limitReached ? "text-destructive font-medium" : ""}
-          data-oid="gd7k72o"
-        >
+        <span className={limitReached ? "text-destructive font-medium" : ""}>
           {limitReached ? "Limit reached" : `${remaining} remaining`}
         </span>
       </div>
 
       {resetDate && (
-        <p className="text-xs text-muted-foreground mt-2" data-oid="s:t5m6h">
+        <p className="text-xs text-muted-foreground mt-2">
           Resets on {formatDate(resetDate)}
         </p>
       )}
 
       {limitReached && (
-        <Alert variant="destructive" className="mt-4" data-oid="vt2cq_1">
-          <AlertTitle data-oid="mb3ltjn">Search Limit Reached</AlertTitle>
-          <AlertDescription data-oid="m8d5yth">
+        <Alert variant="destructive" className="mt-4">
+          <AlertTitle>Search Limit Reached</AlertTitle>
+          <AlertDescription>
             You&apos;ve reached your search quota limit for this period. Your
             quota will reset on{" "}
             {resetDate ? formatDate(resetDate) : "the next billing cycle"}.

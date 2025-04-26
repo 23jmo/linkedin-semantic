@@ -86,11 +86,11 @@ export default function CompleteProfilePage() {
     return (
       <div
         className="flex flex-col justify-center items-center min-h-screen"
-        data-oid="_bjui.t"
+        data-oid="u3gj2nr"
       >
         <div
           className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"
-          data-oid="-4jix39"
+          data-oid="vbto9ex"
         ></div>
         <Image
           src="/LogoBlack.png"
@@ -98,14 +98,14 @@ export default function CompleteProfilePage() {
           width={32}
           height={32}
           className="absolute"
-          data-oid="m.k7cu8"
+          data-oid="j:-kz6e"
         />
 
         {createStatus && (
-          <div className="text-center max-w-md mx-auto" data-oid="zehb.v1">
+          <div className="text-center max-w-md mx-auto" data-oid="idct2hq">
             <p
               className="text-lg font-medium text-gray-800 mb-2"
-              data-oid="c7b-df."
+              data-oid="4d.qh1a"
             >
               {createStatus}
             </p>
@@ -113,18 +113,18 @@ export default function CompleteProfilePage() {
             {createStage && (
               <div
                 className="w-full bg-gray-200 rounded-full h-2.5 mb-4"
-                data-oid="6c5nkt0"
+                data-oid="wxc9y1-"
               >
                 <div
                   className="bg-blue-600 h-2.5 rounded-full animate-pulse"
                   style={{ width: "100%" }}
-                  data-oid="so52plw"
+                  data-oid="37h0tw4"
                 ></div>
               </div>
             )}
 
             {createDetails && (
-              <p className="text-sm text-gray-600" data-oid="1wy.dz7">
+              <p className="text-sm text-gray-600" data-oid="_kx96rl">
                 {createDetails}
               </p>
             )}
@@ -132,7 +132,7 @@ export default function CompleteProfilePage() {
         )}
 
         {error && (
-          <div className="text-red-500 mt-4 text-center" data-oid="0f84x2_">
+          <div className="text-red-500 mt-4 text-center" data-oid="wxllbiu">
             {error}
           </div>
         )}
@@ -147,18 +147,18 @@ export default function CompleteProfilePage() {
   return (
     <div
       className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8"
-      data-oid="sbh3ov3"
+      data-oid="gj52v0g"
     >
-      <div className="sm:mx-auto sm:w-full sm:max-w-md" data-oid="gv_t9l4">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md" data-oid="r0bjidz">
         <h1
           className="text-center text-3xl font-extrabold text-gray-900"
-          data-oid="xxil3f_"
+          data-oid="y_vthu:"
         >
           Locked In
         </h1>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md" data-oid="bnymmqx">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md" data-oid="5y9.5wu">
         {
           session?.user?.id && (
             <LinkedInUrlForm
@@ -169,7 +169,7 @@ export default function CompleteProfilePage() {
                 image: session.user.image ?? undefined,
               }}
               onSubmit={handleSubmitLinkedInUrl}
-              data-oid="6qd7a7_"
+              data-oid="osk86ki"
             />
           )
 

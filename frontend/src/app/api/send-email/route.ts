@@ -187,12 +187,17 @@ export async function POST(request: NextRequest) {
       );
 
       // Create the message
+
+      const rawMessage = [
+        `To: ${recipientEmail}`,
+        `Subject: ${emailContent.subject}`,
+        `Content-Type: text/html; charset=utf-8`,
+        "", // Add empty string for the blank line separator
+        htmlBody, // Use the htmlBody directly
+      ].join("\r\n");
+
       const message = {
-        raw: Buffer.from(
-          `To: ${recipientEmail}\r\n` +
-            `Subject: ${emailContent.subject}\r\n\r\n` +
-            `${htmlBody}`
-        ).toString("base64url"),
+        raw: Buffer.from(rawMessage).toString("base64url"),
       };
 
       // Send the email via Gmail API

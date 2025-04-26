@@ -67,31 +67,25 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
       className={`max-w-md mx-auto p-6 rounded-lg shadow-md ${
         isDark ? "bg-gray-800" : "bg-white"
       }`}
-      data-oid="k1jskb7"
     >
       <h2
         className={`text-2xl font-bold mb-4 ${
           isDark ? "text-gray-200" : "text-gray-800"
         }`}
-        data-oid="ltoe.u9"
       >
         Complete Your Profile
       </h2>
-      <p
-        className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}
-        data-oid="r70b0qg"
-      >
+      <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
         Please enter your LinkedIn profile URL to complete your registration.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4" data-oid="79zjwh7">
-        <div data-oid="y0hzmed">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
           <label
             htmlFor="linkedInUrl"
             className={`block text-sm font-medium mb-1 ${
               isDark ? "text-gray-300" : "text-gray-700"
             }`}
-            data-oid="sm4koet"
           >
             LinkedIn Profile URL
           </label>
@@ -108,7 +102,6 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
             }`}
             disabled={isLoading}
             aria-describedby={error ? "url-error" : undefined}
-            data-oid="a2ao99r"
           />
 
           {error && (
@@ -116,7 +109,6 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
               id="url-error"
               className="mt-1 text-sm text-red-600"
               role="alert"
-              data-oid="mjs1bl1"
             >
               {error}
             </p>
@@ -131,19 +123,14 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
               ? "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
               : "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
           }`}
-          data-oid="qlq7mhn"
         >
           {isLoading ? (
-            <span
-              className="flex items-center justify-center"
-              data-oid="v.e7_94"
-            >
+            <span className="flex items-center justify-center">
               <svg
                 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                data-oid="nzz69j7"
               >
                 <circle
                   className="opacity-25"
@@ -152,13 +139,11 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
                   r="10"
                   stroke="currentColor"
                   strokeWidth="4"
-                  data-oid="26ebglo"
                 ></circle>
                 <path
                   className="opacity-75"
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  data-oid="cli5ztp"
                 ></path>
               </svg>
               Creating Profile...
@@ -168,8 +153,8 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
           )}
         </button>
       </form>
-      <div className="mt-4" data-oid="vrmfkt.">
-        <SignOut data-oid="ojkp1ik" />
+      <div className="mt-4">
+        <SignOut />
       </div>
     </div>
   );
@@ -225,55 +210,44 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
       className={`max-w-md mx-auto p-6 rounded-lg shadow-md ${
         isDark ? "bg-gray-800" : "bg-white"
       }`}
-      data-oid="s9:d0yu"
     >
       <h2
         className={`text-2xl font-bold mb-4 ${
           isDark ? "text-gray-200" : "text-gray-800"
         }`}
-        data-oid="i:w02x0"
       >
         Join Our Waitlist
       </h2>
-      <p
-        className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}
-        data-oid=".f4vpy7"
-      >
+      <p className={`mb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
         Sorry, but we&apos;re at capacity right now. Sign up for our waitlist to
         be notified when we open up more spots!
       </p>
 
       {isSuccess ? (
-        <div
-          className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md"
-          data-oid="dlz9xak"
-        >
-          <p className="flex items-center" data-oid="wct5gqw">
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
+          <p className="flex items-center">
             <svg
               className="w-5 h-5 mr-2"
               fill="currentColor"
               viewBox="0 0 20 20"
-              data-oid="36m8zjx"
             >
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                 clipRule="evenodd"
-                data-oid="7.59d8."
               />
             </svg>
             Thanks for joining! We&apos;ll notify you when spots open up.
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4" data-oid="l1.p84g">
-          <div data-oid="os4rgx9">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
             <label
               htmlFor="email"
               className={`block text-sm font-medium mb-1 ${
                 isDark ? "text-gray-300" : "text-gray-700"
               }`}
-              data-oid="6rl208p"
             >
               Email Address
             </label>
@@ -290,7 +264,6 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
               }`}
               disabled={isLoading}
               aria-describedby={error ? "email-error" : undefined}
-              data-oid="-p9492q"
             />
 
             {error && (
@@ -298,7 +271,6 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                 id="email-error"
                 className="mt-1 text-sm text-red-600"
                 role="alert"
-                data-oid="-d-s3ly"
               >
                 {error}
               </p>
@@ -313,19 +285,14 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                 ? "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
                 : "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500"
             }`}
-            data-oid="oa-z1or"
           >
             {isLoading ? (
-              <span
-                className="flex items-center justify-center"
-                data-oid="oug6t8e"
-              >
+              <span className="flex items-center justify-center">
                 <svg
                   className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  data-oid="1-tne-2"
                 >
                   <circle
                     className="opacity-25"
@@ -334,13 +301,11 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     r="10"
                     stroke="currentColor"
                     strokeWidth="4"
-                    data-oid="q1glk3l"
                   ></circle>
                   <path
                     className="opacity-75"
                     fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    data-oid="95r29k5"
                   ></path>
                 </svg>
                 Joining Waitlist...
@@ -351,8 +316,8 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
           </button>
         </form>
       )}
-      <div className="mt-4" data-oid=".v0ts:a">
-        <SignOut data-oid="a0sq00b" />
+      <div className="mt-4">
+        <SignOut />
       </div>
     </div>
   );

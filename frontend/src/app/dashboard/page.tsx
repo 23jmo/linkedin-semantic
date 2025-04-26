@@ -153,53 +153,53 @@ export default function DashboardPage() {
     return (
       <div
         className="flex justify-center items-center min-h-screen"
-        data-oid="0aa67ve"
+        data-oid="vfr8n2p"
       >
         <div
           className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
-          data-oid="go7_.u1"
+          data-oid="mvc83h9"
         ></div>
       </div>
     );
   }
 
   return (
-    <Layout data-oid="3ydseba">
-      <ToastWrapper data-oid="6lsg72w">
-        <div className="max-w-4xl mx-auto py-8 px-4" data-oid="2utadl7">
-          <h1 className="text-3xl font-bold mb-6" data-oid="5p1k23o">
+    <Layout data-oid="2n1t6t7">
+      <ToastWrapper data-oid="uy75n:g">
+        <div className="max-w-4xl mx-auto py-8 px-4" data-oid="u0u-gwr">
+          <h1 className="text-3xl font-bold mb-6" data-oid="5swqc7p">
             Dashboard
           </h1>
 
           {/* Referral Section */}
-          <Card className="p-6 mb-6" data-oid="ezq8sy_">
-            <h2 className="text-xl font-semibold mb-4" data-oid="_rri5rt">
+          <Card className="p-6 mb-6" data-oid="8:lowms">
+            <h2 className="text-xl font-semibold mb-4" data-oid="3.bgxn8">
               Refer Friends
             </h2>
             <p
               className="text-sm text-gray-600 dark:text-gray-300 mb-4"
-              data-oid="wchh_k6"
+              data-oid="ggc.fqq"
             >
               Share your referral link and get +10 monthly emails for each
               friend who signs up!
             </p>
 
-            <div className="flex items-center gap-3" data-oid="70uif_z">
+            <div className="flex items-center gap-3" data-oid="2fv76u6">
               <div
                 className={`flex-1 p-3 rounded-lg border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-700"
                     : "bg-gray-50 border-gray-200"
                 }`}
-                data-oid="6_4tfft"
+                data-oid="7od_ct-"
               >
                 {isLoadingCode ? (
                   <div
                     className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-                    data-oid="wzkjqod"
+                    data-oid="x1ot60r"
                   />
                 ) : (
-                  <code className="text-sm" data-oid="nb5hp97">
+                  <code className="text-sm" data-oid="u19vcpe">
                     {referralLink}
                   </code>
                 )}
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                     ? "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed"
                     : "bg-blue-600 text-white hover:bg-blue-700"
                 }`}
-                data-oid="ibjrt1c"
+                data-oid="g-yg4y0"
               >
                 Copy Link
               </button>
@@ -221,21 +221,21 @@ export default function DashboardPage() {
           </Card>
 
           {/* --- Corrected Quota Display Grid --- */}
-          <div className="grid gap-8 md:grid-cols-2 mb-6" data-oid="k:4qzlm">
+          <div className="grid gap-8 md:grid-cols-2 mb-6" data-oid="f4p6rxb">
             {/* Email Quota Card - Use EmailQuotaDisplay with props from useEmailLimits */}
-            <div data-oid=".1vxouk">
+            <div data-oid="tlwc22h">
               <EmailQuotaDisplay
                 usage={usage}
                 isLoading={isChecking}
                 quotaError={quotaError}
                 variant="dashboard"
-                data-oid="4.55q_z"
+                data-oid="ia01rw0"
               />
             </div>
 
             {/* Search Quota Card - Use QuotaDisplay (handles search internally) */}
-            <div data-oid=":mqkbcn">
-              <QuotaDisplay data-oid="qsf53p:" />
+            <div data-oid="1ie2suw">
+              <QuotaDisplay data-oid="5:k5bpe" />
             </div>
           </div>
           {/* --- End Quota Display Grid --- */}
@@ -246,22 +246,22 @@ export default function DashboardPage() {
                 ? "bg-gray-800 text-white"
                 : "bg-white text-gray-900"
             } shadow rounded-lg p-6 mb-6`}
-            data-oid="yhujbd7"
+            data-oid="fc-x43m"
           >
-            <h2 className="text-xl font-semibold mb-4" data-oid="7f1:a-m">
+            <h2 className="text-xl font-semibold mb-4" data-oid="t1i1c9w">
               Your Profile
             </h2>
-            <div className="space-y-2" data-oid="00uc_cb">
-              <p data-oid="hiaapfs">
-                <strong data-oid="ir4g_0h">Name:</strong>{" "}
+            <div className="space-y-2" data-oid="itw-1kb">
+              <p data-oid="27.exj2">
+                <strong data-oid="v317azj">Name:</strong>{" "}
                 {session?.user?.name || "Not available"}
               </p>
-              <p data-oid="w1vk:t4">
-                <strong data-oid="m0q66lo">Email:</strong>{" "}
+              <p data-oid="0.fqg:4">
+                <strong data-oid="23aqj1l">Email:</strong>{" "}
                 {session?.user?.email || "Not available"}
               </p>
-              <p data-oid="4xywf1l">
-                <strong data-oid="qbg2osn">Profile Status:</strong>{" "}
+              <p data-oid="12f.9dp">
+                <strong data-oid="iaehipb">Profile Status:</strong>{" "}
                 {session?.exists ? "Complete" : "Incomplete"}
               </p>
             </div>
@@ -273,16 +273,16 @@ export default function DashboardPage() {
                 ? "bg-gray-800 text-white"
                 : "bg-white text-gray-900"
             } shadow rounded-lg p-6 mb-6`}
-            data-oid="xgauef3"
+            data-oid="e1ydn1z"
           >
-            <h2 className="text-xl font-semibold mb-4" data-oid="0:76u7_">
+            <h2 className="text-xl font-semibold mb-4" data-oid="bo5bvj9">
               Recent Searches
             </h2>
             <p
               className={`${
                 resolvedTheme === "dark" ? "text-gray-300" : "text-gray-500"
               }`}
-              data-oid="iw6cobr"
+              data-oid="01tnr6j"
             >
               You haven&apos;t performed any searches yet.
             </p>
@@ -294,12 +294,12 @@ export default function DashboardPage() {
                 ? "bg-gray-800 text-white"
                 : "bg-white text-gray-900"
             } shadow rounded-lg p-6 mb-6`}
-            data-oid="x1tf3tm"
+            data-oid="1tz2k0y"
           >
-            <h2 className="text-xl font-semibold mb-4" data-oid="azxthjf">
+            <h2 className="text-xl font-semibold mb-4" data-oid="k1rf1rk">
               Email History
             </h2>
-            <EmailHistory data-oid="cwula78" />
+            <EmailHistory data-oid="q:bqkyj" />
           </div>
 
           <div
@@ -308,19 +308,19 @@ export default function DashboardPage() {
                 ? "bg-gray-800 text-white"
                 : "bg-white text-gray-900"
             } shadow rounded-lg p-6`}
-            data-oid="gcn4kyk"
+            data-oid="pfqgpms"
           >
-            <h2 className="text-xl font-semibold mb-4" data-oid="4qjmunh">
+            <h2 className="text-xl font-semibold mb-4" data-oid="387jrfr">
               Account Management
             </h2>
             <button
               onClick={() => setShowDeleteModal(true)}
               className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-              data-oid="dum.43z"
+              data-oid="gkq3nyg"
             >
               Delete Profile
             </button>
-            <p className="mt-2 text-sm text-gray-500" data-oid="re27-.1">
+            <p className="mt-2 text-sm text-gray-500" data-oid="58rc2j_">
               This will permanently delete your profile and all associated data.
             </p>
           </div>
@@ -330,7 +330,7 @@ export default function DashboardPage() {
         {showDeleteModal && (
           <div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-            data-oid="a2ug:f4"
+            data-oid="imhly:v"
           >
             <div
               className={`${
@@ -338,18 +338,18 @@ export default function DashboardPage() {
                   ? "bg-gray-800 text-white"
                   : "bg-white text-gray-900"
               } rounded-lg p-6 max-w-md w-full`}
-              data-oid="2:x4.m_"
+              data-oid="xzip.-r"
             >
-              <h2 className="text-xl font-bold mb-4" data-oid="ppux85a">
+              <h2 className="text-xl font-bold mb-4" data-oid="33nqxdj">
                 Delete Profile
               </h2>
-              <p className="mb-4" data-oid="gb5-h4t">
+              <p className="mb-4" data-oid="l4:n96-">
                 This action cannot be undone. All your profile data will be
                 permanently deleted.
               </p>
-              <p className="mb-4" data-oid="3g23:sq">
+              <p className="mb-4" data-oid="-2y.axy">
                 To confirm, please type your email address:{" "}
-                <strong data-oid="frc.8.e">{session?.user?.email}</strong>
+                <strong data-oid="vhzf5u-">{session?.user?.email}</strong>
               </p>
               <input
                 type="email"
@@ -362,15 +362,15 @@ export default function DashboardPage() {
                     : "bg-white border-gray-300"
                 }`}
                 disabled={isDeleting}
-                data-oid="usiorvx"
+                data-oid="e9wo36."
               />
 
               {deleteError && (
-                <p className="text-red-500 mb-4" data-oid="brfk2wg">
+                <p className="text-red-500 mb-4" data-oid="lpzd1ch">
                   {deleteError}
                 </p>
               )}
-              <div className="flex justify-end space-x-3" data-oid="p5ukr.7">
+              <div className="flex justify-end space-x-3" data-oid="xqmqi.p">
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   className={`px-4 py-2 rounded ${
@@ -379,7 +379,7 @@ export default function DashboardPage() {
                       : "bg-gray-200 hover:bg-gray-300"
                   } transition-colors`}
                   disabled={isDeleting}
-                  data-oid="129f2kl"
+                  data-oid="ixj:gxh"
                 >
                   Cancel
                 </button>
@@ -387,7 +387,7 @@ export default function DashboardPage() {
                   onClick={handleDeleteProfile}
                   className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
                   disabled={isDeleting || confirmEmail !== session?.user?.email}
-                  data-oid="xv7y.f2"
+                  data-oid="azf71l4"
                 >
                   {isDeleting ? "Deleting..." : "Delete Profile"}
                 </button>
