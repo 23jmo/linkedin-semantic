@@ -4,10 +4,6 @@ import { prompt } from "./prompt";
 import { createClient } from "@supabase/supabase-js";
 import { auth } from "@/auth";
 import { ProfileFrontend, Education, Experience, Project } from "@/types/types";
-import {
-  ensureValidProfile,
-  transformRawToFrontendProfile,
-} from "@/lib/utils/profile-transformers";
 
 // Initialize OpenAI client
 const openai = new OpenAI({

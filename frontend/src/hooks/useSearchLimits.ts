@@ -54,7 +54,7 @@ export function useSearchLimits(): UseSearchLimitsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [limitReached]);
 
   /**
    * Increments the usage count
