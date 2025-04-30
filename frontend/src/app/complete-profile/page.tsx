@@ -55,7 +55,7 @@ export default function CompleteProfilePage() {
       const handleProgress = (
         message: string,
         stage: string,
-        details?: string,
+        details?: string
       ) => {
         setCreateStatus(message);
         setCreateStage(stage);
@@ -75,7 +75,7 @@ export default function CompleteProfilePage() {
       console.error("Error creating user:", error);
       setIsLoading(false);
       setError(
-        error instanceof Error ? error.message : "Unknown error occurred",
+        error instanceof Error ? error.message : "Unknown error occurred"
       );
     }
   };
@@ -88,21 +88,22 @@ export default function CompleteProfilePage() {
         className="flex flex-col justify-center items-center min-h-screen"
         data-oid="u3gj2nr"
       >
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"
-          data-oid="vbto9ex"
-        ></div>
-        <Image
-          src="/LogoBlack.png"
-          alt="Logo"
-          width={32}
-          height={32}
-          className="absolute"
-          data-oid="j:-kz6e"
-        />
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black-500"></div>
+          <Image
+            className="absolute"
+            src="/LogoBlack.png"
+            alt="Logo"
+            width={32}
+            height={32}
+          />
+        </div>
 
         {createStatus && (
-          <div className="text-center max-w-md mx-auto" data-oid="idct2hq">
+          <div
+            className="text-center max-w-md mx-auto"
+            data-oid="idct2hq"
+          >
             <p
               className="text-lg font-medium text-gray-800 mb-2"
               data-oid="4d.qh1a"
@@ -124,7 +125,10 @@ export default function CompleteProfilePage() {
             )}
 
             {createDetails && (
-              <p className="text-sm text-gray-600" data-oid="_kx96rl">
+              <p
+                className="text-sm text-gray-600"
+                data-oid="_kx96rl"
+              >
                 {createDetails}
               </p>
             )}
@@ -132,7 +136,10 @@ export default function CompleteProfilePage() {
         )}
 
         {error && (
-          <div className="text-red-500 mt-4 text-center" data-oid="wxllbiu">
+          <div
+            className="text-red-500 mt-4 text-center"
+            data-oid="wxllbiu"
+          >
             {error}
           </div>
         )}
@@ -149,7 +156,10 @@ export default function CompleteProfilePage() {
       className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8"
       data-oid="gj52v0g"
     >
-      <div className="sm:mx-auto sm:w-full sm:max-w-md" data-oid="r0bjidz">
+      <div
+        className="sm:mx-auto sm:w-full sm:max-w-md"
+        data-oid="r0bjidz"
+      >
         <h1
           className="text-center text-3xl font-extrabold text-gray-900"
           data-oid="y_vthu:"
@@ -158,7 +168,10 @@ export default function CompleteProfilePage() {
         </h1>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md" data-oid="5y9.5wu">
+      <div
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
+        data-oid="5y9.5wu"
+      >
         {
           session?.user?.id && (
             <LinkedInUrlForm
