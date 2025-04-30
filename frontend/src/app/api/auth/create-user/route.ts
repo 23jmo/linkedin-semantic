@@ -55,10 +55,36 @@ export async function POST(request: NextRequest) {
           "validation",
           linkedin_url
         );
+        // Normalize LinkedIn URL to ensure consistent format
+        // Handle all possible variations of LinkedIn profile URLs
+        const linkedInUrlRegex =
+          /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w-]+\/?$/;
 
         let linkedin_url_to_fetch = linkedin_url;
-        if (linkedin_url_to_fetch.startsWith("linkedin.com")) {
-          linkedin_url_to_fetch = "https://www." + linkedin_url_to_fetch;
+
+        if (!linkedInUrlRegex.test(linkedin_url)) {
+          sendUpdate(
+            "error",
+            "Invalid LinkedIn URL format. URL must be a LinkedIn profile URL (linkedin.com/in/username)",
+            "validation"
+          );
+          controller.close();
+          return;
+        }
+
+        // Extract the username part and reconstruct the URL in standard format
+        const usernameMatch = linkedin_url.match(/linkedin\.com\/in\/([\w-]+)/);
+        if (usernameMatch && usernameMatch[1]) {
+          linkedin_url_to_fetch = `https://www.linkedin.com/in/${usernameMatch[1]}`;
+        } else {
+          // This should not happen if regex test passed, but handle it just in case
+          sendUpdate(
+            "error",
+            "Could not extract username from LinkedIn URL",
+            "validation"
+          );
+          controller.close();
+          return;
         }
 
         // Validate LinkedIn URL format

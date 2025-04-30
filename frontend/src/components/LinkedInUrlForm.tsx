@@ -36,7 +36,8 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
     }
 
     // Simple regex to validate LinkedIn URL format
-    const linkedInUrlRegex = /^https:\/\/(www\.)?linkedin\.com\/in\/[\w-]+\/?$/;
+    const linkedInUrlRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w-]+\/?$/;
+    
     if (!linkedInUrlRegex.test(linkedInUrl)) {
       setError(
         "Please enter a valid LinkedIn profile URL (e.g., https://www.linkedin.com/in/username)",
