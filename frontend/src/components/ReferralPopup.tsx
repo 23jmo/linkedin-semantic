@@ -17,41 +17,116 @@ export default function ReferralPopup() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // Check if popup was previously dismissed in this session
-    const isDismissed = sessionStorage.getItem(STORAGE_KEY) === "true";
-    if (isDismissed) return;
-
-    // Show popup after 30 seconds if user hasn't referred anyone
-    const timer = setTimeout(() => {
-      if (stats?.referralCount && stats.referralCount < 10) {
-        setShowPopup(true);
-      }
-    }, 10);
-
-    return () => clearTimeout(timer);
-  }, [stats?.referralCount]);
-
-  useEffect(() => {
     async function fetchStats() {
       if (session?.user?.id) {
-        const res = await fetch("/api/referrals/stats");
-        if (res.ok) {
-          const data = await res.json();
-          setStats(data);
+        try {
+          console.log(
+            "[ReferralPopup] Fetching referral stats for user:",
+            session.user.id
+          );
+          const res = await fetch("/api/referrals/stats");
+          if (res.ok) {
+            const data = await res.json();
+            console.log("[ReferralPopup] Received stats:", data);
+            setStats(data);
+          } else {
+            console.error(
+              "[ReferralPopup] Failed to fetch referral stats:",
+              res.status
+            );
+            try {
+              const errorData = await res.json();
+              console.error("[ReferralPopup] Error details:", errorData);
+            } catch (e) {
+              // Ignore if we can't parse the error response
+            }
+          }
+        } catch (error) {
+          console.error(
+            "[ReferralPopup] Error fetching referral stats:",
+            error
+          );
         }
+      } else {
+        console.log("[ReferralPopup] No user session, skipping stats fetch");
       }
     }
     fetchStats();
   }, [session?.user?.id]);
 
+  useEffect(() => {
+    // Check if popup was previously dismissed in this session
+    let isDismissed = false;
+
+    try {
+      isDismissed = sessionStorage.getItem(STORAGE_KEY) === "true";
+      console.log(
+        "[ReferralPopup] Session storage dismissed status:",
+        isDismissed
+      );
+    } catch (error) {
+      console.error("[ReferralPopup] Error accessing sessionStorage:", error);
+      // Fall back to showing the popup if we can't access sessionStorage
+    }
+
+    if (isDismissed) {
+      console.log(
+        "[ReferralPopup] Popup was previously dismissed, not showing"
+      );
+      return;
+    }
+
+    // Only show the popup if stats are loaded
+    if (!stats) {
+      console.log("[ReferralPopup] Stats not loaded yet, waiting");
+      return;
+    }
+
+    console.log(
+      "[ReferralPopup] Stats loaded, referralCount:",
+      stats.referralCount,
+      "referralCode:",
+      stats.referralCode
+    );
+
+    // Show popup after 3 seconds if user hasn't referred anyone or has fewer than 10 referrals
+    const timer = setTimeout(() => {
+      // Show popup only if referralCount is 0-9 (less than 10)
+      if (
+        stats.referralCode &&
+        (stats.referralCount === 0 ||
+          (stats.referralCount > 0 && stats.referralCount < 10))
+      ) {
+        console.log(
+          "[ReferralPopup] Showing popup with referral stats:",
+          stats
+        );
+        setShowPopup(true);
+      } else {
+        console.log(
+          "[ReferralPopup] Not showing popup, conditions not met:",
+          stats
+        );
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [stats]);
+
   const handleDismiss = () => {
     setShowPopup(false);
-    sessionStorage.setItem(STORAGE_KEY, "true");
+
+    try {
+      sessionStorage.setItem(STORAGE_KEY, "true");
+    } catch (error) {
+      console.error("Error setting sessionStorage:", error);
+      // Continue even if we can't set the sessionStorage item
+    }
   };
 
   if (!stats?.referralCode) return null;
 
-  const referralLink = `${window.location.origin}/ref=${stats.referralCode}`;
+  const referralLink = `${window.location.origin}/?ref=${stats.referralCode}`;
 
   return (
     <AnimatePresence>

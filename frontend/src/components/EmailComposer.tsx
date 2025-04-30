@@ -155,9 +155,8 @@ export default function EmailComposer({
         console.warn("[EmailComposer] No user ID available in session");
       }
 
-
       //structure sender profile to match the ProfileFrontend type
-      
+
       const frontendSenderProfile = ensureValidProfile(senderProfile);
 
       const emailPromises = selectedProfiles.map(

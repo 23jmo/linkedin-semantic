@@ -84,58 +84,38 @@ export default function CompleteProfilePage() {
     if (!isLoading) return null;
 
     return (
-      <div
-        className="flex flex-col justify-center items-center min-h-screen"
-        data-oid="u3gj2nr"
-      >
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"
-          data-oid="vbto9ex"
-        ></div>
+      <div className="flex flex-col justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
         <Image
           src="/LogoBlack.png"
           alt="Logo"
           width={32}
           height={32}
           className="absolute"
-          data-oid="j:-kz6e"
         />
 
         {createStatus && (
-          <div className="text-center max-w-md mx-auto" data-oid="idct2hq">
-            <p
-              className="text-lg font-medium text-gray-800 mb-2"
-              data-oid="4d.qh1a"
-            >
+          <div className="text-center max-w-md mx-auto">
+            <p className="text-lg font-medium text-gray-800 mb-2">
               {createStatus}
             </p>
 
             {createStage && (
-              <div
-                className="w-full bg-gray-200 rounded-full h-2.5 mb-4"
-                data-oid="wxc9y1-"
-              >
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
                 <div
                   className="bg-blue-600 h-2.5 rounded-full animate-pulse"
                   style={{ width: "100%" }}
-                  data-oid="37h0tw4"
                 ></div>
               </div>
             )}
 
             {createDetails && (
-              <p className="text-sm text-gray-600" data-oid="_kx96rl">
-                {createDetails}
-              </p>
+              <p className="text-sm text-gray-600">{createDetails}</p>
             )}
           </div>
         )}
 
-        {error && (
-          <div className="text-red-500 mt-4 text-center" data-oid="wxllbiu">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-red-500 mt-4 text-center">{error}</div>}
       </div>
     );
   };
@@ -145,20 +125,14 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8"
-      data-oid="gj52v0g"
-    >
-      <div className="sm:mx-auto sm:w-full sm:max-w-md" data-oid="r0bjidz">
-        <h1
-          className="text-center text-3xl font-extrabold text-gray-900"
-          data-oid="y_vthu:"
-        >
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h1 className="text-center text-3xl font-extrabold text-gray-900">
           Locked In
         </h1>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md" data-oid="5y9.5wu">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         {
           session?.user?.id && (
             <LinkedInUrlForm
@@ -169,7 +143,6 @@ export default function CompleteProfilePage() {
                 image: session.user.image ?? undefined,
               }}
               onSubmit={handleSubmitLinkedInUrl}
-              data-oid="osk86ki"
             />
           )
 
