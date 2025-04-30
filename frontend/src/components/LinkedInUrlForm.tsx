@@ -36,11 +36,12 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
     }
 
     // Simple regex to validate LinkedIn URL format
-    const linkedInUrlRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w-]+\/?$/;
-    
+    const linkedInUrlRegex =
+      /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w-]+\/?$/;
+
     if (!linkedInUrlRegex.test(linkedInUrl)) {
       setError(
-        "Please enter a valid LinkedIn profile URL (e.g., https://www.linkedin.com/in/username)",
+        "Please enter a valid LinkedIn profile URL (e.g., https://www.linkedin.com/in/username)"
       );
       return;
     }
@@ -80,7 +81,10 @@ export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
         Please enter your LinkedIn profile URL to complete your registration.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+      >
         <div>
           <label
             htmlFor="linkedInUrl"
@@ -242,7 +246,10 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           <div>
             <label
               htmlFor="email"
