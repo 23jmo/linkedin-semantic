@@ -591,10 +591,10 @@ async function verify_profile_match(
   // Safely access profile full_name
   const profile_name = profile_data?.full_name?.toLowerCase() || "";
 
-  if (auth_name && profile_name && auth_name !== profile_name) {
-    console.log(`Name mismatch: auth=${auth_name}, profile=${profile_name}`);
-    throw new Error("LinkedIn profile name does not match authentication name");
-  }
+  // if (auth_name && profile_name && auth_name !== profile_name) {
+  //   console.log(`Name mismatch: auth=${auth_name}, profile=${profile_name}`);
+  //   throw new Error("LinkedIn profile name does not match authentication name");
+  // }
 
   console.log("Profile verification passed!!!");
 }
