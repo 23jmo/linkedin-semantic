@@ -613,9 +613,9 @@ async function verify_profile_match(
   }
 
   // Compare names as fallback
-  const auth_name = auth_data?.name?.toLowerCase() || "";
-  // Safely access profile full_name
-  const profile_name = profile_data?.full_name?.toLowerCase() || "";
+  // const auth_name = auth_data?.name?.toLowerCase() || "";
+  // // Safely access profile full_name
+  // const profile_name = profile_data?.full_name?.toLowerCase() || "";
 
   // if (auth_name && profile_name && auth_name !== profile_name) {
   //   console.log(`Name mismatch: auth=${auth_name}, profile=${profile_name}`);

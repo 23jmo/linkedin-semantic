@@ -54,7 +54,7 @@ export function useSearchLimits(): UseSearchLimitsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [limitReached]);
+  }, []);
 
   /**
    * Increments the usage count
@@ -97,7 +97,7 @@ export function useSearchLimits(): UseSearchLimitsReturn {
       );
       return false;
     }
-  }, [refreshQuota]);
+  }, [refreshQuota, limitReached]);
 
   // Load quota on initial mount
   useEffect(() => {
