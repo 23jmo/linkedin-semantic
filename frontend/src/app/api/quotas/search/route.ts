@@ -131,7 +131,8 @@ export async function GET() {
 
 /**
  * POST handler for search quota API
- * Increments the search count for the authenticated user
+ * Atomically creates or increments the search count for the authenticated user
+ * Uses a Postgres function to handle the atomic upsert and increment operation
  */
 export async function POST() {
   const supabase = createClient(
@@ -155,172 +156,67 @@ export async function POST() {
   const userId = session.user.id;
 
   try {
-    // Get current quota - IMPORTANT: Use SERVICE_ROLE key for reliable reads before increment
-    const serviceSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    ).schema("usage_tracking");
+    // Call the RPC function that atomically handles both record creation and count increment
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "upsert_and_increment_search_count",
+      { input_user_id: userId }
+    );
 
-    const { data: currentDbData, error: fetchError } = await serviceSupabase
-      .from("search_limits")
-      .select(
-        "user_id, searches_this_month, monthly_search_limit, last_reset_date"
-      )
-      .eq("user_id", userId)
-      .single();
-
-    // Handle case where user record doesn't exist yet (should ideally be created by GET first)
-    if (fetchError && fetchError.code === "PGRST116") {
-      console.warn(
-        `Attempted POST for non-existent quota record for user ${userId}. Creating default.`
+    if (rpcError) {
+      console.error(
+        "Error in upsert_and_increment_search_count RPC:",
+        rpcError
       );
-      const newDbRecord = {
-        user_id: userId!,
-        ...DEFAULT_SEARCH_QUOTA_DB,
-        searches_this_month: 1, // Start with 1 since this is the first increment
-      };
-      const { error: insertError } = await serviceSupabase
-        .from("search_limits")
-        .insert(newDbRecord);
-
-      if (insertError) {
-        console.error("Error creating quota during POST:", insertError);
-        return NextResponse.json(
-          { quota: null, limitReached: false, error: "Failed to create quota" },
-          { status: 500 }
-        );
-      }
-      const quotaResponseData: SearchLimitsData = {
-        user_id: newDbRecord.user_id,
-        searches_this_month: newDbRecord.searches_this_month,
-        monthly_search_limit: newDbRecord.monthly_search_limit,
-        last_reset_date: newDbRecord.last_reset_date,
-      };
-      return NextResponse.json({
-        quota: quotaResponseData,
-        limitReached:
-          quotaResponseData.searches_this_month >=
-          quotaResponseData.monthly_search_limit,
-        error: null,
-      } as QuotaResponse);
-    }
-
-    // Handle other fetch errors
-    if (fetchError) {
-      console.error("Error fetching quota before increment:", fetchError);
       return NextResponse.json(
         {
           quota: null,
           limitReached: false,
-          error: "Failed to retrieve quota information",
+          error: "Failed to update search quota",
         } as QuotaResponse,
         { status: 500 }
       );
     }
 
-    // Check limit *before* incrementing
-    if (
-      currentDbData.searches_this_month >= currentDbData.monthly_search_limit
-    ) {
-      console.log(
-        `---> User ${userId} search limit reached (${currentDbData.searches_this_month}/${currentDbData.monthly_search_limit}). Preparing 403 response.`
+    // The RPC function should return exactly one row
+    if (!rpcResult || (Array.isArray(rpcResult) && rpcResult.length === 0)) {
+      console.error(
+        "No result returned from upsert_and_increment_search_count RPC"
       );
-      try {
-        const quotaResponseData: SearchLimitsData = {
-          user_id: currentDbData.user_id,
-          searches_this_month: currentDbData.searches_this_month,
-          monthly_search_limit: currentDbData.monthly_search_limit,
-          last_reset_date: currentDbData.last_reset_date,
-        };
-        console.log("---> Constructed quotaResponseData:", quotaResponseData); // Log the object
-
-        return NextResponse.json(
-          {
-            quota: quotaResponseData,
-            limitReached: true,
-            error: "Search limit reached",
-          } as QuotaResponse,
-          { status: 403 }
-        );
-      } catch (constructionError) {
-        console.error(
-          "---> ERROR constructing/returning 403 response:",
-          constructionError
-        );
-        return NextResponse.json(
-          { error: "Internal server error during quota limit check" },
-          { status: 500 }
-        );
-      }
+      return NextResponse.json(
+        {
+          quota: null,
+          limitReached: false,
+          error: "Failed to retrieve updated search quota",
+        } as QuotaResponse,
+        { status: 500 }
+      );
     }
 
-    // Increment the used count using Supabase atomic increment function (RPC)
-    // Assumes a function `increment_user_search_count` exists in `usage_tracking` schema
-    // You might need to create this SQL function:
-    // CREATE OR REPLACE FUNCTION usage_tracking.increment_user_search_count(user_id_param UUID)
-    // RETURNS TABLE(user_id UUID, searches_this_month INT, monthly_search_limit INT, last_reset_date TIMESTAMPTZ) AS $$
-    //   UPDATE usage_tracking.search_limits
-    //   SET searches_this_month = searches_this_month + 1,
-    //       updated_at = NOW()
-    //   WHERE user_id = user_id_param
-    //   RETURNING user_id, searches_this_month, monthly_search_limit, last_reset_date;
-    // $$ LANGUAGE sql VOLATILE;
+    // Get the first row if rpcResult is an array
+    const resultRow = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
 
-    const { data: updatedRpcData, error: rpcError } = await supabase.rpc(
-      "increment_user_search_count",
-      { user_id_param: userId }
-    );
-
-    console.log("increment_user_search_count", updatedRpcData);
-
-    if (rpcError || !updatedRpcData) {
-      console.error("Error incrementing quota via RPC:", rpcError);
-      // Fallback to potentially less atomic update (consider implications)
-      const { data: updatedManualData, error: updateManualError } =
-        await serviceSupabase
-          .from("search_limits")
-          .update({
-            searches_this_month: currentDbData.searches_this_month + 1,
-          })
-          .eq("user_id", userId)
-          .select(
-            "user_id, searches_this_month, monthly_search_limit, last_reset_date"
-          )
-          .single();
-
-      if (updateManualError || !updatedManualData) {
-        console.error("Error updating quota manually:", updateManualError);
-        return NextResponse.json(
-          { quota: null, limitReached: false, error: "Failed to update quota" },
-          { status: 500 }
-        );
-      }
-      const quotaResponseData: SearchLimitsData = {
-        user_id: updatedManualData.user_id,
-        searches_this_month: updatedManualData.searches_this_month,
-        monthly_search_limit: updatedManualData.monthly_search_limit,
-        last_reset_date: updatedManualData.last_reset_date,
-      };
-      return NextResponse.json({
-        quota: quotaResponseData,
-        limitReached:
-          quotaResponseData.searches_this_month >=
-          quotaResponseData.monthly_search_limit,
-        error: null,
-      } as QuotaResponse);
-    }
-
-    // If RPC succeeded, use its result
-    const updatedDataFromRpc = Array.isArray(updatedRpcData)
-      ? updatedRpcData[0]
-      : updatedRpcData;
+    // Prepare the quota data for the response
     const quotaResponseData: SearchLimitsData = {
-      user_id: updatedDataFromRpc.user_id,
-      searches_this_month: updatedDataFromRpc.searches_this_month,
-      monthly_search_limit: updatedDataFromRpc.monthly_search_limit,
-      last_reset_date: updatedDataFromRpc.last_reset_date,
+      user_id: resultRow.user_id,
+      searches_this_month: resultRow.searches_this_month,
+      monthly_search_limit: resultRow.monthly_search_limit,
+      last_reset_date: resultRow.last_reset_date,
     };
 
+    // If the limit was already reached before this operation
+    // Return a 403 status with appropriate message
+    if (resultRow.limit_was_reached) {
+      return NextResponse.json(
+        {
+          quota: quotaResponseData,
+          limitReached: true,
+          error: "Search limit reached",
+        } as QuotaResponse,
+        { status: 403 }
+      );
+    }
+
+    // Normal successful response
     return NextResponse.json({
       quota: quotaResponseData,
       limitReached:
