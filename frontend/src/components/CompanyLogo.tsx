@@ -17,14 +17,20 @@ export default function CompanyLogo({
 
   if (!logoUrl || hasError) {
     return (
-      <div className="w-10 h-10 rounded flex items-center justify-center bg-gray-100 text-gray-500">
-        <FaBuilding size={20} />
+      <div
+        className="w-10 h-10 rounded flex items-center justify-center bg-gray-100 text-gray-500"
+        data-oid="szcmbn6"
+      >
+        <FaBuilding size={20} data-oid="5w01dxk" />
       </div>
     );
   }
 
   return (
-    <div className="w-10 h-10 rounded bg-white p-1 flex items-center justify-center">
+    <div
+      className="w-10 h-10 rounded bg-white p-1 flex items-center justify-center"
+      data-oid="-ose-kd"
+    >
       <Image
         width={40}
         height={40}
@@ -32,6 +38,7 @@ export default function CompanyLogo({
         alt={`${companyName || "Company"} logo`}
         className="max-w-full max-h-full object-contain"
         onError={() => setHasError(true)}
+        data-oid="wwg9ton"
       />
     </div>
   );

@@ -7,5 +7,5 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return <SessionProvider data-oid="3.m.oq9">{children}</SessionProvider>;
 }

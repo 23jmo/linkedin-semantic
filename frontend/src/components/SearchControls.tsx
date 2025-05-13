@@ -10,8 +10,12 @@ export default function SearchControls({
   onSearch,
 }: SearchControlsProps) {
   return (
-    <div className="mb-8">
-      <SearchBox initialQuery={initialQuery} onSearch={onSearch} />
+    <div className="mb-8" data-oid="kcr-uy1">
+      <SearchBox
+        initialQuery={initialQuery}
+        onSearch={onSearch}
+        data-oid="bpedb2-"
+      />
     </div>
   );
 }

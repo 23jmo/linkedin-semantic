@@ -30,20 +30,21 @@ const meta: Meta<typeof LinkedInUrlForm> = {
   component: LinkedInUrlForm,
   decorators: [
     (Story) => (
-      <ThemeProvider>
-        <div className="p-4">
-          <Story />
+      <ThemeProvider data-oid="0w_9ns2">
+        <div className="p-4" data-oid="mejvzd1">
+          <Story data-oid="9ph-trt" />
         </div>
       </ThemeProvider>
     ),
   ],
+
   parameters: {
     // Add backgrounds for better theme visibility
     backgrounds: {
-      default: 'light',
+      default: "light",
       values: [
-        { name: 'light', value: '#ffffff' },
-        { name: 'dark', value: '#1a202c' },
+        { name: "light", value: "#ffffff" },
+        { name: "dark", value: "#1a202c" },
       ],
     },
   },
@@ -70,9 +71,9 @@ export const DarkTheme: LinkedInUrlFormStory = {
     onSubmit: mockSubmitLinkedIn,
   },
   parameters: {
-    backgrounds: { default: 'dark' },
+    backgrounds: { default: "dark" },
     themes: {
-      themeOverride: 'dark',
+      themeOverride: "dark",
     },
   },
 };
@@ -84,6 +85,7 @@ export const Waitlist: WaitlistFormStory = {
       userId="user-123"
       linkedInAuthData={mockAuthData}
       onSubmit={mockSubmitWaitlist}
+      data-oid="3khfdfl"
     />
   ),
 };
@@ -95,6 +97,7 @@ export const WaitlistSuccess: WaitlistFormStory = {
       userId="user-123"
       linkedInAuthData={mockAuthData}
       onSubmit={mockSubmitWaitlist}
+      data-oid="-oap:rk"
     />
   ),
 };

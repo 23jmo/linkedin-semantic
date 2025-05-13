@@ -31,28 +31,32 @@ export default function ReferralLink() {
     : "";
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow">
-      <h2 className="text-lg font-semibold mb-2">Your Referral Link</h2>
+    <div className="p-4 bg-white rounded-lg shadow" data-oid="v7o2c0s">
+      <h2 className="text-lg font-semibold mb-2" data-oid="hq:t_n6">
+        Your Referral Link
+      </h2>
       {loading ? (
-        <p>Loading...</p>
+        <p data-oid="af9edxh">Loading...</p>
       ) : (
         <>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-4" data-oid="py-.4y-">
             <input
               type="text"
               value={referralLink}
               readOnly
               className="flex-1 p-2 border rounded"
+              data-oid=":2gipap"
             />
 
             <button
               onClick={() => navigator.clipboard.writeText(referralLink)}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              data-oid="os.qoi5"
             >
               Copy
             </button>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600" data-oid="ats:sc8">
             Share this link with friends. When they sign up using your link,
             you&apos;ll get +10 monthly emails!
           </p>

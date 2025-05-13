@@ -30,7 +30,7 @@ export default function EmailComposer({
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isGmailConnected, setIsGmailConnected] = useState<boolean | null>(
-    null
+    null,
   );
   const { resolvedTheme } = useTheme();
   const { data: session } = useSession();
@@ -133,7 +133,7 @@ export default function EmailComposer({
           const userProfile = await checkUserExists(session.user, {});
           console.log(
             "[EmailComposer] Raw userProfile from checkUserExists:",
-            userProfile
+            userProfile,
           );
 
           // get the linkedin profile from the userProfile
@@ -179,7 +179,7 @@ export default function EmailComposer({
             const errorData = await response.json();
             throw new Error(
               errorData.error ||
-                `Failed to generate email for ${profile.firstName}`
+                `Failed to generate email for ${profile.firstName}`,
             );
           }
 
@@ -189,7 +189,7 @@ export default function EmailComposer({
             subject: data.subject,
             body: data.body,
           };
-        }
+        },
       );
 
       const results = await Promise.all(emailPromises);
@@ -212,7 +212,7 @@ export default function EmailComposer({
       await checkCanGenerateEmail();
     } catch (err) {
       setGenerationError(
-        err instanceof Error ? err.message : "Failed to generate emails"
+        err instanceof Error ? err.message : "Failed to generate emails",
       );
     } finally {
       setIsGenerating(false);
@@ -237,13 +237,16 @@ export default function EmailComposer({
 
     try {
       // Prepare the payload for the sendEmailBatch function
-      const emailContents = selectedProfiles.reduce((acc, profile) => {
-        acc[profile.id] = generatedEmails[profile.id] || {
-          subject: "",
-          body: "",
-        };
-        return acc;
-      }, {} as Record<string, { subject: string; body: string }>);
+      const emailContents = selectedProfiles.reduce(
+        (acc, profile) => {
+          acc[profile.id] = generatedEmails[profile.id] || {
+            subject: "",
+            body: "",
+          };
+          return acc;
+        },
+        {} as Record<string, { subject: string; body: string }>,
+      );
 
       const payload = {
         profiles: selectedProfiles,
@@ -273,7 +276,7 @@ export default function EmailComposer({
         // The page will reload after re-auth, so no specific UI update is needed here,
         // but we log it for clarity.
         console.log(
-          "[EmailComposer] sendEmailBatch initiated re-auth. No further action in handleSubmit."
+          "[EmailComposer] sendEmailBatch initiated re-auth. No further action in handleSubmit.",
         );
         // Keep isLoading true because the page will likely redirect/reload
         // setIsLoading(false); // Don't set loading to false here
@@ -289,18 +292,26 @@ export default function EmailComposer({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      data-oid="4o_zzc0"
+    >
       <div
         className={`${
           resolvedTheme === "light" ? "bg-white" : "bg-gray-800"
         } rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto`}
+        data-oid="te.r9u3"
       >
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="p-6" data-oid="x0lul2k">
+          <div
+            className="flex justify-between items-center mb-6"
+            data-oid="f4v2593"
+          >
             <h2
               className={`text-xl font-bold ${
                 resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
               }`}
+              data-oid=":sxrbfd"
             >
               Compose Cold Email
             </h2>
@@ -312,8 +323,9 @@ export default function EmailComposer({
                   : "text-gray-400 hover:text-gray-200"
               }`}
               aria-label="Close"
+              data-oid="y8j_be3"
             >
-              <FaTimes />
+              <FaTimes data-oid="avu664v" />
             </button>
           </div>
 
@@ -324,40 +336,44 @@ export default function EmailComposer({
                   ? "bg-green-50 text-green-800"
                   : "bg-green-900 text-green-100"
               } p-4 rounded-md mb-6`}
+              data-oid="ewqyif0"
             >
-              <p>Emails sent successfully!</p>
+              <p data-oid="_d:.o7c">Emails sent successfully!</p>
               <button
                 onClick={onClose}
                 className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                data-oid="h25qjst"
               >
                 Done
               </button>
             </div>
           ) : isGmailConnected === false ? (
-            <div>
+            <div data-oid="4a1o8l-">
               <p
                 className={`mb-4 ${
                   resolvedTheme === "light" ? "text-gray-700" : "text-gray-300"
                 }`}
+                data-oid="jjbzcdq"
               >
                 To send cold emails, you need to connect your Gmail account
                 first.
               </p>
-              <GmailConnector />
+              <GmailConnector data-oid="16oukwi" />
             </div>
           ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="mb-6">
+            <form onSubmit={handleSubmit} data-oid="ofdee5w">
+              <div className="mb-6" data-oid="wlcgp3_">
                 <label
                   className={`block text-sm font-medium ${
                     resolvedTheme === "light"
                       ? "text-gray-700"
                       : "text-gray-300"
                   } mb-2`}
+                  data-oid="fknv7ba"
                 >
                   Selected Recipients ({selectedProfiles.length}/3)
                 </label>
-                <div className="space-y-3">
+                <div className="space-y-3" data-oid="sn6ehtp">
                   {selectedProfiles.map((profile) => (
                     <div
                       key={profile.id}
@@ -366,24 +382,30 @@ export default function EmailComposer({
                           ? "border-gray-200"
                           : "border-gray-700"
                       }`}
+                      data-oid="o7w94hj"
                     >
-                      <div className="flex-shrink-0 mr-3">
+                      <div className="flex-shrink-0 mr-3" data-oid="v.izr2h">
                         <ProfileImage
                           imageUrl={profile.profilePicture}
                           firstName={profile.firstName}
                           lastName={profile.lastName}
                           size="sm"
+                          data-oid="8ies2n2"
                         />
                       </div>
-                      <div className="flex-grow">
-                        <div className="flex justify-between items-start">
-                          <div>
+                      <div className="flex-grow" data-oid="cdptg4m">
+                        <div
+                          className="flex justify-between items-start"
+                          data-oid="zs4o4fg"
+                        >
+                          <div data-oid="cyihq.l">
                             <h3
                               className={`font-medium ${
                                 resolvedTheme === "light"
                                   ? "text-gray-800"
                                   : "text-gray-200"
                               }`}
+                              data-oid="0xynfgk"
                             >
                               {profile.firstName} {profile.lastName}
                             </h3>
@@ -393,6 +415,7 @@ export default function EmailComposer({
                                   ? "text-gray-500"
                                   : "text-gray-400"
                               }`}
+                              data-oid="z6.:leo"
                             >
                               {profile.headline || ""}
                             </p>
@@ -406,17 +429,19 @@ export default function EmailComposer({
                                 : "text-gray-400 hover:text-gray-200"
                             }`}
                             aria-label={`Remove ${profile.firstName} ${profile.lastName}`}
+                            data-oid="nun6:uz"
                           >
-                            <FaTimes size={16} />
+                            <FaTimes size={16} data-oid="uyctk_j" />
                           </button>
                         </div>
-                        <div className="mt-2">
+                        <div className="mt-2" data-oid="u38.vls">
                           <label
                             className={`block text-xs font-medium ${
                               resolvedTheme === "light"
                                 ? "text-gray-500"
                                 : "text-gray-400"
                             } mb-1`}
+                            data-oid="rp4j3tg"
                           >
                             Additional notes for {profile.firstName}
                           </label>
@@ -432,6 +457,7 @@ export default function EmailComposer({
                             }`}
                             rows={2}
                             placeholder={`Specific points for ${profile.firstName}...`}
+                            data-oid="wdrndb1"
                           />
                         </div>
                       </div>
@@ -440,7 +466,7 @@ export default function EmailComposer({
                 </div>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-6" data-oid="isg7vot">
                 <label
                   htmlFor="purpose"
                   className={`block text-sm font-medium ${
@@ -448,6 +474,7 @@ export default function EmailComposer({
                       ? "text-gray-700"
                       : "text-gray-300"
                   } mb-2`}
+                  data-oid="c33m9ew"
                 >
                   What do you want to accomplish with this email?
                 </label>
@@ -463,6 +490,7 @@ export default function EmailComposer({
                   rows={4}
                   placeholder="E.g., Set up a coffee chat, ask about job opportunities, request advice..."
                   required
+                  data-oid="4m-jam3"
                 />
               </div>
 
@@ -472,6 +500,7 @@ export default function EmailComposer({
                 isLoading={isChecking}
                 quotaError={quotaError}
                 variant="compact"
+                data-oid="2pjfbsf"
               />
 
               {(generationError || quotaError) && (
@@ -481,12 +510,13 @@ export default function EmailComposer({
                       ? "bg-red-50 text-red-800"
                       : "bg-red-900 text-red-100"
                   } p-4 rounded-md mb-6`}
+                  data-oid="l_vy:.6"
                 >
-                  <p>{generationError || quotaError}</p>
+                  <p data-oid="ood8y0:">{generationError || quotaError}</p>
                 </div>
               )}
 
-              <div className="flex justify-end mb-6">
+              <div className="flex justify-end mb-6" data-oid="t25fjg1">
                 <button
                   type="button"
                   onClick={handleGenerateEmails}
@@ -496,6 +526,7 @@ export default function EmailComposer({
                       ? "opacity-70 cursor-not-allowed"
                       : ""
                   }`}
+                  data-oid="yhgn2.9"
                 >
                   {isGenerating ? (
                     <>
@@ -504,6 +535,7 @@ export default function EmailComposer({
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
+                        data-oid="wxr3.m2"
                       >
                         <circle
                           className="opacity-25"
@@ -512,11 +544,13 @@ export default function EmailComposer({
                           r="10"
                           stroke="currentColor"
                           strokeWidth="4"
+                          data-oid="1kh5:99"
                         ></circle>
                         <path
                           className="opacity-75"
                           fill="currentColor"
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          data-oid="j14x8xr"
                         ></path>
                       </svg>
                       Generating...
@@ -530,17 +564,18 @@ export default function EmailComposer({
               </div>
 
               {showGeneratedEmails && (
-                <div className="mb-6">
+                <div className="mb-6" data-oid="qblfoba">
                   <h3
                     className={`text-lg font-medium mb-4 ${
                       resolvedTheme === "light"
                         ? "text-gray-800"
                         : "text-gray-200"
                     }`}
+                    data-oid="ktaqmay"
                   >
                     Generated Emails
                   </h3>
-                  <div className="space-y-6">
+                  <div className="space-y-6" data-oid="m17v2bj">
                     {selectedProfiles.map((profile) => (
                       <div
                         key={`email-${profile.id}`}
@@ -549,22 +584,28 @@ export default function EmailComposer({
                             ? "border-gray-200 bg-gray-50"
                             : "border-gray-700 bg-gray-900"
                         }`}
+                        data-oid="9__vx3i"
                       >
-                        <div className="flex items-center mb-3">
+                        <div
+                          className="flex items-center mb-3"
+                          data-oid="eo_-2ek"
+                        >
                           <ProfileImage
                             imageUrl={profile.profilePicture}
                             firstName={profile.firstName}
                             lastName={profile.lastName}
                             size="sm"
+                            data-oid="vvjp69i"
                           />
 
-                          <div className="ml-3">
+                          <div className="ml-3" data-oid="ux5igx6">
                             <h4
                               className={`font-medium ${
                                 resolvedTheme === "light"
                                   ? "text-gray-800"
                                   : "text-gray-200"
                               }`}
+                              data-oid="re7r1.:"
                             >
                               {profile.firstName} {profile.lastName}
                             </h4>
@@ -574,19 +615,21 @@ export default function EmailComposer({
                                   ? "text-gray-500"
                                   : "text-gray-400"
                               }`}
+                              data-oid="56tu5f1"
                             >
                               {profile.profileUrl || "No profile URL available"}
                             </p>
                           </div>
                         </div>
 
-                        <div className="mb-3">
+                        <div className="mb-3" data-oid="vwxbbep">
                           <label
                             className={`block text-sm font-medium ${
                               resolvedTheme === "light"
                                 ? "text-gray-700"
                                 : "text-gray-300"
                             } mb-1`}
+                            data-oid="fis3nih"
                           >
                             Subject
                           </label>
@@ -596,7 +639,7 @@ export default function EmailComposer({
                             onChange={(e) =>
                               handleEmailSubjectChange(
                                 profile.id,
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className={`w-full border rounded-md p-2 ${
@@ -605,16 +648,18 @@ export default function EmailComposer({
                                 : "border-gray-600 bg-gray-700"
                             }`}
                             placeholder="Email subject"
+                            data-oid="adfl3d3"
                           />
                         </div>
 
-                        <div>
+                        <div data-oid="9tohfzh">
                           <label
                             className={`block text-sm font-medium ${
                               resolvedTheme === "light"
                                 ? "text-gray-700"
                                 : "text-gray-300"
                             } mb-1`}
+                            data-oid="2wsn1ue"
                           >
                             Message
                           </label>
@@ -630,6 +675,7 @@ export default function EmailComposer({
                             }`}
                             rows={8}
                             placeholder="Email body"
+                            data-oid="x8oowe3"
                           />
                         </div>
                       </div>
@@ -645,12 +691,13 @@ export default function EmailComposer({
                       ? "bg-red-50 text-red-800"
                       : "bg-red-900 text-red-100"
                   } p-4 rounded-md mb-6`}
+                  data-oid="u_19x1j"
                 >
-                  <p>{error}</p>
+                  <p data-oid="exae6du">{error}</p>
                 </div>
               )}
 
-              <div className="flex justify-end">
+              <div className="flex justify-end" data-oid="r7.2qmp">
                 <button
                   type="button"
                   onClick={onClose}
@@ -660,6 +707,7 @@ export default function EmailComposer({
                       : "bg-gray-700 hover:bg-gray-600 text-gray-200"
                   }`}
                   disabled={isLoading}
+                  data-oid="x66j5s5"
                 >
                   Cancel
                 </button>
@@ -670,7 +718,7 @@ export default function EmailComposer({
                     selectedProfiles.length === 0 ||
                     !showGeneratedEmails ||
                     !Object.values(generatedEmails).every(
-                      (email) => email?.subject?.trim() && email?.body?.trim()
+                      (email) => email?.subject?.trim() && email?.body?.trim(),
                     )
                       ? "opacity-70 cursor-not-allowed"
                       : ""
@@ -680,9 +728,10 @@ export default function EmailComposer({
                     selectedProfiles.length === 0 ||
                     !showGeneratedEmails ||
                     !Object.values(generatedEmails).every(
-                      (email) => email?.subject?.trim() && email?.body?.trim()
+                      (email) => email?.subject?.trim() && email?.body?.trim(),
                     )
                   }
+                  data-oid="nujpg32"
                 >
                   {isLoading ? (
                     <>
@@ -691,6 +740,7 @@ export default function EmailComposer({
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
+                        data-oid="ks:f6k6"
                       >
                         <circle
                           className="opacity-25"
@@ -699,11 +749,13 @@ export default function EmailComposer({
                           r="10"
                           stroke="currentColor"
                           strokeWidth="4"
+                          data-oid="qtc-x4s"
                         ></circle>
                         <path
                           className="opacity-75"
                           fill="currentColor"
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          data-oid="et0fppp"
                         ></path>
                       </svg>
                       Sending...
