@@ -430,258 +430,281 @@ export default function SearchResults({
 
   return (
     <div
-      className="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg"
+      className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg"
       ref={containerRef}
       data-oid="su5czmi"
     >
-      {/* Table header */}
-      <div
-        className="bg-gray-50 dark:bg-gray-800 flex border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10"
-        data-oid="x9yl6se"
-      >
-        <div className="w-12 px-3 py-3 text-left" data-oid="r76:6o.">
-          <span className="sr-only" data-oid="dchkrcy">
-            Select
-          </span>
-        </div>
+      <div className="min-w-[640px]" data-oid="z9qyddi">
+        {" "}
+        {/* Minimum width container to ensure scrolling on mobile */}
+        {/* Table header */}
         <div
-          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16"
-          data-oid="yq.vrgi"
+          className="bg-gray-50 dark:bg-gray-800 flex border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10"
+          data-oid="x9yl6se"
         >
-          Score
+          <div
+            className="w-10 sm:w-12 px-2 sm:px-3 py-2 sm:py-3 text-left"
+            data-oid="r76:6o."
+          >
+            <span className="sr-only" data-oid="dchkrcy">
+              Select
+            </span>
+          </div>
+          <div
+            className="px-2 sm:px-3 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-14 sm:w-16"
+            data-oid="yq.vrgi"
+          >
+            Score
+          </div>
+          <div
+            className="px-2 sm:px-3 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36 sm:w-56"
+            data-oid="i-p:xmp"
+          >
+            Name
+          </div>
+          <div
+            className="px-2 sm:px-3 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex-1"
+            data-oid="ycoerg4"
+          >
+            Relevant Info
+          </div>
+          <div
+            className="hidden sm:block px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-40"
+            data-oid="mhkezer"
+          >
+            Previous Emails
+          </div>
+          <div
+            className="px-2 sm:px-3 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 sm:w-24"
+            data-oid="gby033-"
+          >
+            LinkedIn
+          </div>
         </div>
-        <div
-          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56"
-          data-oid="i-p:xmp"
-        >
-          Name
-        </div>
-        <div
-          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex-1"
-          data-oid="ycoerg4"
-        >
-          Relevant Info
-        </div>
-        <div
-          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-40"
-          data-oid="mhkezer"
-        >
-          Previous Emails
-        </div>
-        <div
-          className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24"
-          data-oid="gby033-"
-        >
-          LinkedIn
-        </div>
-      </div>
+        {/* Top spacer */}
+        {topPlaceholderHeight > 0 && (
+          <div style={{ height: topPlaceholderHeight }} data-oid="kfstu9." />
+        )}
+        {/* Visible items */}
+        <div className="bg-white dark:bg-gray-900" data-oid="tbpmdyu">
+          {visibleResults.map((result) => {
+            const profile = convertToProfileFrontend(result);
+            const isSelected = selectedProfiles.some(
+              (p) => p.id === profile.id,
+            );
 
-      {/* Top spacer */}
-      {topPlaceholderHeight > 0 && (
-        <div style={{ height: topPlaceholderHeight }} data-oid="kfstu9." />
-      )}
-
-      {/* Visible items */}
-      <div className="bg-white dark:bg-gray-900" data-oid="tbpmdyu">
-        {visibleResults.map((result) => {
-          const profile = convertToProfileFrontend(result);
-          const isSelected = selectedProfiles.some((p) => p.id === profile.id);
-
-          return (
-            <div
-              key={profile.id}
-              className={`flex border-b border-gray-200 dark:border-gray-700 ${
-                isSelected
-                  ? "bg-blue-50 dark:bg-blue-900/20"
-                  : "hover:bg-gray-50 dark:hover:bg-gray-800"
-              } cursor-pointer transition-colors duration-150 ease-in-out`}
-              onMouseEnter={(e) => handleRowHover(profile, e)}
-              onMouseLeave={handleRowHoverEnd}
-              onClick={() => handleRowClick(profile)}
-              data-oid="5a:n_or"
-            >
-              {/* Checkbox column */}
+            return (
               <div
-                className="px-3 py-4 flex items-center w-12"
-                data-oid="643qp:e"
+                key={profile.id}
+                className={`flex border-b border-gray-200 dark:border-gray-700 ${
+                  isSelected
+                    ? "bg-blue-50 dark:bg-blue-900/20"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                } cursor-pointer transition-colors duration-150 ease-in-out`}
+                onMouseEnter={(e) => handleRowHover(profile, e)}
+                onMouseLeave={handleRowHoverEnd}
+                onClick={() => handleRowClick(profile)}
+                data-oid="5a:n_or"
               >
+                {/* Checkbox column */}
                 <div
-                  className="flex items-center h-5"
-                  onClick={(e) => e.stopPropagation()}
-                  data-oid="9gu2b:k"
+                  className="px-2 sm:px-3 py-3 sm:py-4 flex items-center w-10 sm:w-12"
+                  data-oid="643qp:e"
                 >
-                  <input
-                    type="checkbox"
-                    className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                    checked={isSelected}
-                    onChange={(e) => onProfileSelect(profile, e.target.checked)}
-                    data-oid="bgvnwkh"
-                  />
-                </div>
-              </div>
-
-              {/* Score column */}
-              <div
-                className="px-3 py-4 flex items-center justify-center w-16 min-h-[60px]"
-                data-oid="95z6q2w"
-              >
-                {result.trait_scores && result.trait_scores.length > 0 ? (
-                  <TraitScoreCircle
-                    traitScores={result.trait_scores}
-                    data-oid="7aw67hz"
-                  />
-                ) : (
-                  <span
-                    className="text-xs italic text-gray-400"
-                    data-oid="w.ore5k"
+                  <div
+                    className="flex items-center h-5"
+                    onClick={(e) => e.stopPropagation()}
+                    data-oid="9gu2b:k"
                   >
-                    No scores
-                  </span>
-                )}
-              </div>
-
-              {/* Name column */}
-              <div
-                className="px-3 py-4 flex items-center w-56"
-                data-oid="2vu6une"
-              >
-                <div className="flex items-center" data-oid="6wtult3">
-                  <div className="flex-shrink-0 h-10 w-10" data-oid="9iycs5p">
-                    <ProfileImage
-                      imageUrl={profile.profilePicture}
-                      firstName={profile.firstName}
-                      lastName={profile.lastName}
-                      size="sm"
-                      data-oid="xi1uial"
+                    <input
+                      type="checkbox"
+                      className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      checked={isSelected}
+                      onChange={(e) =>
+                        onProfileSelect(profile, e.target.checked)
+                      }
+                      data-oid="bgvnwkh"
                     />
                   </div>
-                  <div
-                    className="ml-4 max-w-[12rem] relative"
-                    data-oid="v:.uax8"
-                  >
-                    <div
-                      className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-full"
-                      data-oid="6b6vg:9"
+                </div>
+
+                {/* Score column */}
+                <div
+                  className="px-2 sm:px-3 py-3 sm:py-4 flex items-center justify-center w-14 sm:w-16 min-h-[50px] sm:min-h-[60px]"
+                  data-oid="95z6q2w"
+                >
+                  {result.trait_scores && result.trait_scores.length > 0 ? (
+                    <TraitScoreCircle
+                      traitScores={result.trait_scores}
+                      data-oid="7aw67hz"
+                    />
+                  ) : (
+                    <span
+                      className="text-xs italic text-gray-400"
+                      data-oid="w.ore5k"
                     >
-                      {profile.firstName} {profile.lastName}
-                    </div>
+                      No scores
+                    </span>
+                  )}
+                </div>
+
+                {/* Name column */}
+                <div
+                  className="px-2 sm:px-3 py-3 sm:py-4 flex items-center w-36 sm:w-56"
+                  data-oid="2vu6une"
+                >
+                  <div className="flex items-center" data-oid="6wtult3">
                     <div
-                      className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-full"
-                      data-oid=":fecss1"
+                      className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10"
+                      data-oid="9iycs5p"
                     >
-                      {profile.headline || "LinkedIn Member"}
-                    </div>
-                    {/* Add fade effect for long text */}
-                    {profile.firstName.length + profile.lastName.length >
-                      30 && (
-                      <div
-                        className="absolute top-0 right-0 h-full w-12 pointer-events-none"
-                        style={{
-                          background:
-                            resolvedTheme === "dark"
-                              ? "linear-gradient(to right, rgba(17,24,39,0), rgba(17,24,39,1))"
-                              : "linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1))",
-                        }}
-                        data-oid="g:xa.tt"
+                      <ProfileImage
+                        imageUrl={profile.profilePicture}
+                        firstName={profile.firstName}
+                        lastName={profile.lastName}
+                        size="sm"
+                        data-oid="xi1uial"
                       />
+                    </div>
+                    <div
+                      className="ml-2 sm:ml-4 max-w-[8rem] sm:max-w-[12rem] relative"
+                      data-oid="v:.uax8"
+                    >
+                      <div
+                        className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-full"
+                        data-oid="6b6vg:9"
+                      >
+                        {profile.firstName} {profile.lastName}
+                      </div>
+                      <div
+                        className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate max-w-full"
+                        data-oid=":fecss1"
+                      >
+                        {profile.headline || "LinkedIn Member"}
+                      </div>
+                      {/* Add fade effect for long text */}
+                      {profile.firstName.length + profile.lastName.length >
+                        30 && (
+                        <div
+                          className="absolute top-0 right-0 h-full w-12 pointer-events-none"
+                          style={{
+                            background:
+                              resolvedTheme === "dark"
+                                ? "linear-gradient(to right, rgba(17,24,39,0), rgba(17,24,39,1))"
+                                : "linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1))",
+                          }}
+                          data-oid="g:xa.tt"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Relevant Info column */}
+                <div
+                  className="px-2 sm:px-3 py-3 sm:py-4 flex-1"
+                  data-oid="852p:po"
+                >
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-400"
+                    data-oid="ya7d08j"
+                  >
+                    {result.trait_scores ? (
+                      <div data-oid="9_u-6e9">
+                        <ul
+                          className="list-disc pl-4 space-y-1"
+                          data-oid="41hhpzc"
+                        >
+                          {result.trait_scores.map((t, idx) => (
+                            <li
+                              key={idx}
+                              className="text-xs text-gray-700 dark:text-gray-300 break-words"
+                              data-oid="l2k1jw1"
+                            >
+                              <span
+                                className="font-semibold"
+                                data-oid="4:6xa76"
+                              >
+                                {t.trait}:
+                              </span>{" "}
+                              {t.score}
+                              {t.evidence && (
+                                <span
+                                  className="block text-xs italic text-gray-500 dark:text-gray-400 mt-0.5 ml-2"
+                                  data-oid="7d3kjtl"
+                                >
+                                  {t.evidence}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <span
+                        className="text-xs text-gray-400 dark:text-gray-500 italic"
+                        data-oid="i:vq0.7"
+                      >
+                        No trait scores available
+                      </span>
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* Relevant Info column */}
-              <div className="px-3 py-4 flex-1" data-oid="852p:po">
+                {/* Previous Emails column */}
                 <div
-                  className="text-sm text-gray-500 dark:text-gray-400"
-                  data-oid="ya7d08j"
+                  className="hidden sm:block px-3 py-4 w-40"
+                  data-oid="-4vw8xj"
                 >
-                  {result.trait_scores ? (
-                    <div data-oid="9_u-6e9">
-                      <ul
-                        className="list-disc pl-4 space-y-1"
-                        data-oid="41hhpzc"
-                      >
-                        {result.trait_scores.map((t, idx) => (
-                          <li
-                            key={idx}
-                            className="text-xs text-gray-700 dark:text-gray-300 break-words"
-                            data-oid="l2k1jw1"
-                          >
-                            <span className="font-semibold" data-oid="4:6xa76">
-                              {t.trait}:
-                            </span>{" "}
-                            {t.score}
-                            {t.evidence && (
-                              <span
-                                className="block text-xs italic text-gray-500 dark:text-gray-400 mt-0.5 ml-2"
-                                data-oid="7d3kjtl"
-                              >
-                                {t.evidence}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-400"
+                    data-oid="dn_t2qu"
+                  >
+                    {/* Placeholder for previous emails */}
+                    <span
+                      className="text-xs text-gray-400 dark:text-gray-500 italic"
+                      data-oid=":oh.skc"
+                    >
+                      Not implemented yet
+                    </span>
+                  </div>
+                </div>
+
+                {/* LinkedIn column */}
+                <div
+                  className="px-2 sm:px-3 py-3 sm:py-4 w-16 sm:w-24"
+                  data-oid="9t192rc"
+                >
+                  {profile.profileUrl ? (
+                    <a
+                      href={profile.profileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                      data-oid=":a2m9vd"
+                    >
+                      <FaLinkedin className="inline mr-1" data-oid="8aalofk" />
+                    </a>
                   ) : (
                     <span
                       className="text-xs text-gray-400 dark:text-gray-500 italic"
-                      data-oid="i:vq0.7"
+                      data-oid="hxqhcu5"
                     >
-                      No trait scores available
+                      No link
                     </span>
                   )}
                 </div>
               </div>
-
-              {/* Previous Emails column */}
-              <div className="px-3 py-4 w-40" data-oid="-4vw8xj">
-                <div
-                  className="text-sm text-gray-500 dark:text-gray-400"
-                  data-oid="dn_t2qu"
-                >
-                  {/* Placeholder for previous emails */}
-                  <span
-                    className="text-xs text-gray-400 dark:text-gray-500 italic"
-                    data-oid=":oh.skc"
-                  >
-                    Not implemented yet
-                  </span>
-                </div>
-              </div>
-
-              {/* LinkedIn column */}
-              <div className="px-3 py-4 w-24" data-oid="9t192rc">
-                {profile.profileUrl ? (
-                  <a
-                    href={profile.profileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                    data-oid=":a2m9vd"
-                  >
-                    <FaLinkedin className="inline mr-1" data-oid="8aalofk" />
-                  </a>
-                ) : (
-                  <span
-                    className="text-xs text-gray-400 dark:text-gray-500 italic"
-                    data-oid="hxqhcu5"
-                  >
-                    No link
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Bottom spacer */}
-      {bottomPlaceholderHeight > 0 && (
-        <div style={{ height: bottomPlaceholderHeight }} data-oid=":9uq9p5" />
-      )}
-
+            );
+          })}
+        </div>
+        {/* Bottom spacer */}
+        {bottomPlaceholderHeight > 0 && (
+          <div style={{ height: bottomPlaceholderHeight }} data-oid=":9uq9p5" />
+        )}
+      </div>{" "}
+      {/* End of min-width container */}
       {/* Profile Preview on Hover */}
       {hoveredProfile && previewPosition && (
         <div
@@ -734,7 +757,6 @@ export default function SearchResults({
           </div>
         </div>
       )}
-
       {/* Profile Detail Modal */}
       {selectedProfileForDetail && (
         <div
@@ -744,7 +766,7 @@ export default function SearchResults({
         >
           <div
             ref={modalRef}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl max-h-[90vh] overflow-auto p-6 m-4 w-full"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl max-h-[90vh] overflow-auto p-3 sm:p-6 m-2 sm:m-4 w-full"
             data-oid="c135mt_"
           >
             <div className="flex justify-between mb-4" data-oid="tg0mxv7">
