@@ -15,7 +15,7 @@ const DEFAULT_SEARCH_QUOTA_DB = {
   ).toISOString(),
 };
 
-/**
+/** 
  * GET handler for search quota API
  * Retrieves the current search quota for the authenticated user
  */
@@ -42,6 +42,7 @@ export async function GET() {
   const userId = session.user.id;
 
   try {
+    // should probably use upsert here instead of checking for error
     // Get current quota from database
     const { data: dbData, error: dbError } = await supabase
       .from("search_limits")

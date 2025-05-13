@@ -1,0 +1,43 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# this describes the rules needed when working with supabase
+
+# Supabase Rules
+
+## Service Role Key
+- Always use `SUPABASE_SERVICE_ROLE_KEY` for backend/admin actions (never expose to frontend).
+
+## Schema Organization
+- Place all custom tables and functions in a dedicated schema (e.g., `usage_tracking`).
+- Use schema-qualified names in SQL: `usage_tracking.table_name`.
+
+## Atomic Operations
+- Use single-statement upserts or RPCs for race-condition-prone operations.
+- Prefer `ON CONFLICT` for upserts; avoid "check-then-insert" logic in app code.
+
+## Function Naming
+- Name Postgres functions clearly and uniquely (e.g., `upsert_and_increment_search_count`).
+- Prefix with schema: `usage_tracking.upsert_and_increment_search_count`.
+
+## Error Handling
+- Always check and log errors from Supabase responses.
+- Return user-friendly error messages to the frontend; log full details on the server.
+
+## Column and Parameter Naming
+- Avoid naming function parameters the same as table columns.
+- Use explicit aliases in SQL queries; always qualify columns with their table alias.
+
+## Security
+- Restrict table access using Row Level Security (RLS) policies.
+- Allow only necessary operations for each role (e.g., users can only read/update their own records).
+
+## Testing
+- Test all new SQL functions and policies in the Supabase SQL editor before using in production.
+- Use the Supabase dashboard to verify data changes and permissions.
+
+## Documentation
+- Document all custom functions and policies in your codebase and in the Supabase dashboard for future reference.
+
