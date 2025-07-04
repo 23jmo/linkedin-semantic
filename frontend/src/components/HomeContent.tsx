@@ -82,7 +82,7 @@ export default function HomeContent({
             border: "1.5px solid rgba(147,197,253,0.35)", // subtle frosted edge
           }}
         >
-          ProxyCurl is a SCAM, our site is no longer functional
+          ProxyCurl is a SCAM, our site can no longer take new users.
         </div>
       </div>
       {/* End Liquid Glass Alert Tag */}
