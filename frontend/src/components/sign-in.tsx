@@ -28,10 +28,9 @@ export default function SignIn({ className }: { className?: string }) {
           ? "focus:ring-offset-white"
           : "focus:ring-offset-gray-800"
       }`}
-      data-oid="skuo8vs"
     >
-      <FaLinkedin className="h-5 w-5" data-oid="00mk:n5" />
-      <span data-oid=":da3w6:">Sign in</span>
+      <FaLinkedin className="h-5 w-5" />
+      <span>Sign in</span>
     </button>
   );
 }

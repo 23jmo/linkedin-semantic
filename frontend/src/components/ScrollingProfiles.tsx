@@ -76,14 +76,9 @@ export default function ScrollingProfiles({
     <div
       className={`w-full overflow-hidden py-12 ${className} z-10`}
       style={{ perspective: "1200px" }}
-      data-oid="pbl4d3k"
     >
-      <div
-        className="relative"
-        style={{ transform: "rotateX(30deg)" }}
-        data-oid="u-zbwtw"
-      >
-        <div className="space-y-8" data-oid="v84-3cf">
+      <div className="relative" style={{ transform: "rotateX(30deg)" }}>
+        <div className="space-y-8">
           {[0, 1, 2].map((rowIndex) => (
             <div
               key={rowIndex}
@@ -95,7 +90,6 @@ export default function ScrollingProfiles({
                 willChange: "transform",
                 transform: `translateZ(${-rowIndex * 500}px)`,
               }}
-              data-oid="sxkgzj7"
             >
               {repeatedProfiles.map((profile, i) =>
                 loadedProfiles.has(profile.id) ? (
@@ -103,13 +97,9 @@ export default function ScrollingProfiles({
                     key={`${profile.id}-${i}`}
                     profile={profile}
                     row={2 - rowIndex}
-                    data-oid="nahm5i7"
                   />
                 ) : (
-                  <SkeletonProfileCard
-                    key={`skeleton-${i}`}
-                    data-oid="p6tb1d9"
-                  />
+                  <SkeletonProfileCard key={`skeleton-${i}`} />
                 ),
               )}
             </div>

@@ -28,10 +28,9 @@ export default function SignIn({ className }: { className?: string }) {
           ? "focus:ring-offset-white"
           : "focus:ring-offset-gray-800"
       }`}
-      data-oid="9.cnlji"
     >
-      <FaSignOutAlt className="h-5 w-5" data-oid="mh2sv64" />
-      <span data-oid="ii--dgo">Sign out</span>
+      <FaSignOutAlt className="h-5 w-5" />
+      <span>Sign out</span>
     </button>
   );
 }

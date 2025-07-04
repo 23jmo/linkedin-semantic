@@ -55,25 +55,22 @@ export default function EmailGenerator() {
       className={`p-4 rounded-lg ${
         resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
       } shadow`}
-      data-oid="2y9hz75"
     >
       <h2
         className={`text-xl font-semibold mb-4 ${
           resolvedTheme === "dark" ? "text-white" : "text-gray-800"
         }`}
-        data-oid="obov0wa"
       >
         Email Generator
       </h2>
 
-      <div className="space-y-4 mb-4" data-oid="uf33jq9">
-        <div data-oid=".t_k.2w">
+      <div className="space-y-4 mb-4">
+        <div>
           <label
             className={`block mb-1 ${
               resolvedTheme === "dark" ? "text-gray-200" : "text-gray-700"
             }`}
             htmlFor="recipientName"
-            data-oid="nka2.6w"
           >
             Recipient Name
           </label>
@@ -88,17 +85,15 @@ export default function EmailGenerator() {
                 : "bg-white border-gray-300 text-gray-900"
             }`}
             placeholder="John Doe"
-            data-oid="884oyo9"
           />
         </div>
 
-        <div data-oid="dbahy77">
+        <div>
           <label
             className={`block mb-1 ${
               resolvedTheme === "dark" ? "text-gray-200" : "text-gray-700"
             }`}
             htmlFor="recipientRole"
-            data-oid="rzod.p1"
           >
             Recipient Role (optional)
           </label>
@@ -113,17 +108,15 @@ export default function EmailGenerator() {
                 : "bg-white border-gray-300 text-gray-900"
             }`}
             placeholder="Software Engineer"
-            data-oid="sk0-7hy"
           />
         </div>
 
-        <div data-oid="kyawhub">
+        <div>
           <label
             className={`block mb-1 ${
               resolvedTheme === "dark" ? "text-gray-200" : "text-gray-700"
             }`}
             htmlFor="purpose"
-            data-oid="tkqc5lj"
           >
             Email Purpose
           </label>
@@ -138,15 +131,10 @@ export default function EmailGenerator() {
             }`}
             rows={3}
             placeholder="Introduce yourself and ask about job opportunities"
-            data-oid="emkbv9u"
           />
         </div>
 
-        {error && (
-          <div className="text-red-500 text-sm" data-oid="xc69oa.">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-red-500 text-sm">{error}</div>}
 
         <button
           onClick={handleGenerate}
@@ -158,20 +146,18 @@ export default function EmailGenerator() {
               ? "bg-blue-600 hover:bg-blue-700 text-white"
               : "bg-blue-500 hover:bg-blue-600 text-white"
           }`}
-          data-oid="x:vfkdb"
         >
           {isGenerating ? "Generating..." : "Generate Email"}
         </button>
       </div>
 
       {generatedEmail && (
-        <div data-oid="r03_kzn">
+        <div>
           <label
             className={`block mb-1 ${
               resolvedTheme === "dark" ? "text-gray-200" : "text-gray-700"
             }`}
             htmlFor="generatedEmail"
-            data-oid="7b488fh"
           >
             Generated Email
           </label>
@@ -186,7 +172,6 @@ export default function EmailGenerator() {
             }`}
             rows={10}
             readOnly={false}
-            data-oid="p.3m-3-"
           />
         </div>
       )}

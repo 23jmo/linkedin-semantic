@@ -13,13 +13,12 @@ export default function AuthPrompt() {
           ? "bg-white border-gray-200"
           : "bg-gray-800 border-gray-700"
       } p-6 rounded-lg shadow-md text-center border`}
-      data-oid=":e64c1x"
     >
-      <p className="text-lg font-medium mb-4" data-oid="lnhkzaf">
+      <p className="text-lg font-medium mb-4">
         Please sign in to search your network
       </p>
-      <div className="flex justify-center" data-oid="wyze8y7">
-        <SignIn className="w-3/4" data-oid="y..nz90" />
+      <div className="flex justify-center">
+        <SignIn className="w-3/4" />
       </div>
     </div>
   );

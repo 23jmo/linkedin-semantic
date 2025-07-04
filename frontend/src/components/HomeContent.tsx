@@ -64,13 +64,33 @@ export default function HomeContent({
   }, [isAuthenticated]);
 
   return (
-    <div className="relative z-50 h-[470px]" data-oid="1g7t3z8">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6" data-oid="qf2l.k3">
+    <div className="relative z-50 h-[470px]">
+      {/* Liquid Glass Alert Tag */}
+      <div className="w-full flex justify-center absolute top-0 left-0 z-50">
+        <div
+          className={`backdrop-blur-lg font-small px-5 py-1 rounded-full shadow-md mt-4 ${
+            resolvedTheme === "light"
+              ? "text-blue-900 bg-blue-500/30 px-2 rounded"
+              : "text-blue-100 bg-blue-500/30 px-2 rounded"
+          }`}
+          style={{
+            boxShadow: "0 2px 16px 0 rgba(30, 64, 175, 0.10)",
+            fontSize: "0.7rem",
+            letterSpacing: "0.01em",
+            maxWidth: "80vw",
+            textAlign: "center",
+            border: "1.5px solid rgba(147,197,253,0.35)", // subtle frosted edge
+          }}
+        >
+          ProxyCurl is a SCAM, our site is no longer functional
+        </div>
+      </div>
+      {/* End Liquid Glass Alert Tag */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <h1
           className={`text-2xl md:text-3xl font-bold mb-10 pt-16 pb-8 text-center ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
-          data-oid="0_jjjs8"
         >
           Search{" "}
           <span
@@ -79,20 +99,19 @@ export default function HomeContent({
                 ? "text-blue-900 bg-blue-500/30 px-2 rounded"
                 : "text-blue-100 bg-blue-500/30 px-2 rounded"
             }`}
-            data-oid="psoiaad"
           >
             {isLoading ? "0" : count.toLocaleString()}
           </span>{" "}
           Profiles
         </h1>
-        <div className="mb-12 w-full" data-oid="98s.fdh">
-          <SearchBox onSearch={onSearch} data-oid="_2h3zuk" />
+        <div className="mb-12 w-full">
+          <SearchBox onSearch={onSearch} />
         </div>
 
         {isAuthenticated ? (
           <>
-            <div className="mt-10 mb-6" data-oid="-ucb2hc">
-              <div className="relative mx-2" data-oid="zd_3i11">
+            <div className="mt-10 mb-6">
+              <div className="relative mx-2">
                 <div
                   className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
                   style={{
@@ -101,20 +120,17 @@ export default function HomeContent({
                         ? "linear-gradient(to right, var(--background) 0%, transparent 100%)"
                         : "linear-gradient(to right, var(--background) 0%, transparent 100%)",
                   }}
-                  data-oid="o359z1a"
                 ></div>
 
                 <div
                   ref={scrollRef}
                   className="flex overflow-x-auto py-2 pb-6 gap-3 no-scrollbar relative w-full"
-                  data-oid="o-a5ul5"
                 >
                   {suggestions.map((suggestion, index) => (
                     <SuggestionBox
                       key={index}
                       suggestion={suggestion}
                       onClick={onSearch}
-                      data-oid="iwf.kt5"
                     />
                   ))}
                 </div>
@@ -127,13 +143,12 @@ export default function HomeContent({
                         ? "linear-gradient(to left, var(--background) 0%, transparent 100%)"
                         : "linear-gradient(to left, var(--background) 0%, transparent 100%)",
                   }}
-                  data-oid="aut_bnl"
                 ></div>
               </div>
             </div>
           </>
         ) : (
-          <AuthPrompt data-oid="_vo4_80" />
+          <AuthPrompt />
         )}
       </div>
     </div>

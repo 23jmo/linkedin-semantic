@@ -33,10 +33,9 @@ export const Button = ({
         " ",
       )}
       {...props}
-      data-oid="914r-0s"
     >
       {label}
-      <style jsx data-oid="ojw4t5f">{`
+      <style jsx>{`
         button {
           background-color: ${backgroundColor};
         }

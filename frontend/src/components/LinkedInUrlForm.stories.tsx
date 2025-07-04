@@ -30,9 +30,9 @@ const meta: Meta<typeof LinkedInUrlForm> = {
   component: LinkedInUrlForm,
   decorators: [
     (Story) => (
-      <ThemeProvider data-oid="0w_9ns2">
-        <div className="p-4" data-oid="mejvzd1">
-          <Story data-oid="9ph-trt" />
+      <ThemeProvider>
+        <div className="p-4">
+          <Story />
         </div>
       </ThemeProvider>
     ),
@@ -85,7 +85,6 @@ export const Waitlist: WaitlistFormStory = {
       userId="user-123"
       linkedInAuthData={mockAuthData}
       onSubmit={mockSubmitWaitlist}
-      data-oid="3khfdfl"
     />
   ),
 };
@@ -97,7 +96,6 @@ export const WaitlistSuccess: WaitlistFormStory = {
       userId="user-123"
       linkedInAuthData={mockAuthData}
       onSubmit={mockSubmitWaitlist}
-      data-oid="-oap:rk"
     />
   ),
 };

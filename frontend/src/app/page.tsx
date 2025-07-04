@@ -61,40 +61,29 @@ export default function HomePage() {
     (status === "authenticated" && session?.exists === false)
   ) {
     return (
-      <div
-        className="flex justify-center items-center min-h-screen"
-        data-oid="xh4d40-"
-      >
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black-500"
-          data-oid="esczh3l"
-        ></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black-500"></div>
         <Image
           className="absolute"
           src="/LogoBlack.png"
           alt="Logo"
           width={32}
           height={32}
-          data-oid="j47e2la"
         />
       </div>
     );
   }
 
   return (
-    <Layout data-oid="0xsmb8f">
-      <div className="relative" data-oid="t5e9_ze">
+    <Layout>
+      <div className="relative">
         <HomeContent
           isAuthenticated={status === "authenticated"}
           suggestions={suggestions}
           onSearch={handleHomeSearch}
-          data-oid="a:rmyza"
         />
 
-        <ScrollingProfiles
-          className="md:block hidden fixed bottom-0 left-0 right-0 w-full"
-          data-oid="xn0z8s0"
-        />
+        <ScrollingProfiles className="md:block hidden fixed bottom-0 left-0 right-0 w-full" />
       </div>
     </Layout>
   );

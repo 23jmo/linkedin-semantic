@@ -17,15 +17,14 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning data-oid="wkixay8">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen`}
-        data-oid="ztm:3nz"
       >
-        <AuthProvider data-oid="g.3qr0o">
-          <ThemeProvider data-oid="8pctlma">
-            <ProfileRedirect data-oid="vt3:p8.">{children}</ProfileRedirect>
-            <Toaster data-oid="geofv0s" />
+        <AuthProvider>
+          <ThemeProvider>
+            <ProfileRedirect>{children}</ProfileRedirect>
+            <Toaster />
           </ThemeProvider>
         </AuthProvider>
       </body>

@@ -83,13 +83,11 @@ export default function GmailConnector() {
         className={`mb-6 p-4 border rounded-lg ${
           resolvedTheme === "light" ? "border-gray-200" : "border-gray-700"
         }`}
-        data-oid="k4zm:5q"
       >
         <h3
           className={`text-lg font-medium mb-2 ${
             resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
           }`}
-          data-oid="yce6o1p"
         >
           Email Connection
         </h3>
@@ -97,7 +95,6 @@ export default function GmailConnector() {
           className={`${
             resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
           }`}
-          data-oid="wyzn_2x"
         >
           Checking connection status...
         </p>
@@ -110,29 +107,26 @@ export default function GmailConnector() {
       className={`mb-6 p-4 border rounded-lg ${
         resolvedTheme === "light" ? "border-gray-200" : "border-gray-700"
       }`}
-      data-oid="j053w.m"
     >
       <h3
         className={`text-lg font-medium mb-2 ${
           resolvedTheme === "light" ? "text-gray-800" : "text-gray-200"
         }`}
-        data-oid="h7_iuhj"
       >
         Email Connection
       </h3>
 
       {isConnected ? (
-        <div className="flex items-center text-green-600" data-oid="7z8msut">
-          <FaCheck className="mr-2" data-oid="2eou0mr" />
-          <span data-oid="3333dky">Gmail connected</span>
+        <div className="flex items-center text-green-600">
+          <FaCheck className="mr-2" />
+          <span>Gmail connected</span>
         </div>
       ) : (
-        <div data-oid="bmyy2-q">
+        <div>
           <p
             className={`mb-3 ${
               resolvedTheme === "light" ? "text-gray-600" : "text-gray-400"
             }`}
-            data-oid="r-l4_5h"
           >
             Connect your Gmail account to send cold emails directly from the
             app.
@@ -147,9 +141,8 @@ export default function GmailConnector() {
                 ? "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                 : "bg-gray-700 border border-gray-600 text-gray-200 hover:bg-gray-600"
             }`}
-            data-oid="wmaje-g"
           >
-            <FaGoogle className="mr-2 text-red-500" data-oid="_dem_g8" />
+            <FaGoogle className="mr-2 text-red-500" />
             {isConnecting ? "Connecting..." : "Connect Gmail"}
           </button>
         </div>
