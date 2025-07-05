@@ -5,6 +5,7 @@ import { useState } from "react";
 import SignOut from "./sign-out";
 import { AuthData } from "../types/types";
 import { useTheme } from "@/lib/theme-context";
+import { isWaitlistActive } from "@/lib/waitlist-config";
 
 interface WaitlistFormProps {
   userId: string;
@@ -19,6 +20,22 @@ interface LinkedInUrlFormProps {
 }
 
 export function LinkedInUrlForm({ onSubmit }: LinkedInUrlFormProps) {
+  // Check if waitlist is active and render appropriate form
+  if (isWaitlistActive()) {
+    // Convert LinkedInUrlForm props to WaitlistForm props
+    const waitlistProps: WaitlistFormProps = {
+      userId: "", // Not needed for waitlist
+      linkedInAuthData: {} as AuthData, // Not needed for waitlist
+      onSubmit: async (email: string) => {
+        // Handle waitlist submission differently
+        // For now, just log - you might want to call a different API
+        console.log("Waitlist submission:", email);
+        // You might want to call a waitlist API here instead
+      },
+    };
+    return <WaitlistForm {...waitlistProps} />;
+  }
+
   const [linkedInUrl, setLinkedInUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
